@@ -1,0 +1,33 @@
+---
+title: Mobile Robot Control — Kobuki & Webots
+summary: Vision-guided control of a Kobuki mobile base on a Raspberry Pi with Kinect RGB-D input and OpenCV, alongside a Webots simulation environment for testing behaviours before hardware.
+order: 5
+year: '2025'
+status: complete
+domain: Robotics
+repo: https://github.com/Platinum-Saber/robo_games
+stack: ['Python', 'OpenCV', 'Webots', 'Raspberry Pi', 'Kobuki', 'Kinect']
+---
+
+## The problem
+
+Getting a mobile robot to react to what it sees, and being able to iterate on that
+behaviour without needing the hardware powered up and in front of you every time.
+
+## Two halves
+
+**Real hardware.** Control code for a **Kobuki** mobile base driven from a **Raspberry Pi**,
+with a **Kinect** supplying RGB and depth streams and **OpenCV** doing the perception —
+object detection, obstacle avoidance and vision-driven navigation.
+
+**Simulation.** A **Webots** environment for developing and testing algorithms against
+physics without hardware in the loop. Deliberately kept as a general robotics playground
+rather than a digital twin of the Kobuki — the goal was fast iteration on behaviours, and a
+faithful twin would have cost more to build than it saved.
+
+## What I took from it
+
+The gap between the two halves is the actual lesson. Behaviour that is clean in Webots meets
+motor deadband, sensor noise and latency on the Kobuki, and the discipline is deciding which
+of those to model and which to simply handle robustly on hardware. Modelling everything is a
+trap; modelling nothing means simulation buys you nothing.

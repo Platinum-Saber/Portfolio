@@ -1,0 +1,50 @@
+---
+title: Autonomous Drone Platform
+summary: A vision-guided autonomous quadrotor built around a Jetson Orin Nano and an Orbbec depth camera, with a laser-cut carbon fibre airframe. Final year project.
+order: 1
+year: '2026'
+status: in-progress
+domain: Robotics
+featured: true
+stack: ['Jetson Orin Nano', 'ROS 2', 'Orbbec Gemini 336', 'C++', 'Python', 'CAD']
+---
+
+## The problem
+
+Autonomous flight in cluttered, GPS-denied environments needs the whole stack to work
+together: a depth sensor that returns usable geometry indoors, enough onboard compute to
+close the perception loop without a ground station, and an airframe stiff enough that the
+vibration doesn't destroy your state estimate.
+
+This is my final year project — building that platform end to end rather than buying it.
+
+## Approach
+
+I took the Stanford MSL **TrajBridge** drone as the hardware reference design and worked
+outward from the compute and sensing I already had.
+
+**Perception and compute.** An **Orbbec Gemini 336** depth camera paired with an
+**NVIDIA Jetson Orin Nano** for onboard inference. The Orin Nano is the pivot point of the
+design — it's enough to run depth processing and a navigation policy onboard, which means
+the aircraft doesn't depend on a radio link to stay alive.
+
+**Airframe.** I originally planned a 3D-printed frame and abandoned it after working the
+numbers: for the stiffness required it came out both **too heavy and too weak** compared to
+carbon fibre. The design moved to **laser-cut carbon fibre sheet** for the primary
+structure, keeping 3D printing for non-structural mounts and sensor brackets, where its
+geometric freedom actually pays for itself.
+
+**Propulsion.** Built around AIR 2216/KV920 motors, sized against the mass budget the
+carbon frame and the Orin Nano impose.
+
+## Where it stands
+
+In progress. The frame design and the compute and sensing selection are settled; the
+current work is propulsion sizing and integration.
+
+## What I took from it
+
+The frame decision was the useful lesson. The 3D-printed version was the obvious path, and
+the analysis said no — a good reminder that convenient manufacturing is not the same as
+appropriate manufacturing, and that on an airframe the mass budget arbitrates every
+argument.

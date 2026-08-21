@@ -1,0 +1,53 @@
+---
+title: Real-Time Sobel Edge Detection on FPGA
+summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 — OV7670 capture, streaming Sobel convolution, VGA output, with no frame buffer in the critical path.
+order: 3
+year: '2026'
+status: in-progress
+domain: Embedded / Digital Design
+featured: true
+stack: ['Verilog', 'Vivado', 'Basys 3', 'Artix-7 FPGA', 'OV7670', 'VGA']
+---
+
+## The problem
+
+Sobel edge detection is trivial in software and interesting in hardware. On an FPGA you
+can't just index into an image — the pixels arrive as a stream, one per clock, and you need
+a 3×3 neighbourhood. The whole design problem is buffering exactly enough of the past to
+compute the present, and doing it fast enough to keep up with the camera without ever
+falling behind the display.
+
+Built for **CS4362 (Hardware Description Languages)** as a group project.
+
+## Approach
+
+A streaming pipeline from an **OV7670** camera module through to **VGA** output on a
+**Basys 3** (Xilinx Artix-7), written in **Verilog** and simulated in **Vivado**.
+
+The core of it is a **line buffer**: hold two previous rows on-chip so that a 3×3 window is
+always available as pixels stream past, letting the Sobel kernels convolve continuously
+without ever storing a full frame. Horizontal and vertical gradient kernels run in
+parallel, then the magnitude is combined and thresholded.
+
+Clock domain management matters here — the camera, the processing pipeline and the VGA
+timing generator do not naturally agree on a clock, and reconciling them is most of the
+real engineering.
+
+## Why Verilog over VHDL
+
+A deliberate choice for this project. Verilog's terser syntax for the structural, repetitive
+description of a datapath like this one kept the design readable — though the counterpart
+project below is in VHDL, and having built non-trivial designs in both, I'd rather choose
+per-project than defend either as universally better.
+
+## Where it stands
+
+In progress. Simulation in Vivado is the current focus; the Basys 3, monitor and VGA cable
+are on hand, with an OV7670 module sourced for the capture side.
+
+## The interesting part
+
+This is the same algorithm I later intend to run as a GPU fragment shader on this site.
+Sobel in Verilog on an FPGA, in C on a CPU, and in GLSL on a GPU are three genuinely
+different engineering problems wearing the same mathematics — which is most of why the
+algorithm is worth revisiting in each.

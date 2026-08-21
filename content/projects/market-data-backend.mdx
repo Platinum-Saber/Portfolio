@@ -1,0 +1,43 @@
+---
+title: Financial Market Data Backend
+summary: Low-latency VWAP computation in Redis Lua and Kafka-based market data pipelines for a production trading platform.
+order: 6
+year: '2025—2026'
+status: complete
+domain: Backend / Distributed Systems
+stack: ['Java', 'Spring Boot', 'Redis', 'Lua', 'Apache Kafka', 'Apache Solr', 'AWS MSK']
+---
+
+## Context
+
+Professional work on market data infrastructure — the systems that ingest, compute over and
+serve financial data under latency constraints that make the naive approach unusable.
+
+## VWAP in Redis Lua
+
+Volume-weighted average price has to be computed over a live stream, and the round trip
+between application and datastore is the expensive part. Moving the computation **into**
+Redis as a Lua script removes it.
+
+The interesting work was iterative optimisation of the data representation. The first
+version stored trade records as **JSON** and parsed them inside the script — correct, and
+wasteful: every VWAP call paid for deserialising structure it barely used. The final version
+**embeds the fields directly into the sorted-set member format**, so the script reads what it
+needs straight out of the key with no parsing step at all.
+
+That is the shape of most real optimisation work: the algorithm was never the bottleneck,
+the serialisation boundary was.
+
+## Streaming and search
+
+- **Kafka** pipelines on **AWS MSK Serverless** — request/response topics (`VWAP_SUB` /
+  `VWAP_RESP`) for distributing computed values to subscribers
+- **Spring Boot** services with `@ConfigurationProperties` YAML binding for configuration
+- **Apache Solr** query construction against a news collection
+- Planning for a **Redis → Valkey** migration
+
+## What I took from it
+
+Production systems taught me something coursework can't: that the cost model matters more
+than the algorithm. Parsing JSON a few million times is not a line of code anyone flags in
+review, and it dominated the profile.

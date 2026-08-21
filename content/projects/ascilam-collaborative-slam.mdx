@@ -1,0 +1,56 @@
+---
+title: 'ASCILAM: Collaborative Multi-Robot SLAM'
+summary: Two LiDAR-equipped scout robots map terrain independently and stream to a Raspberry Pi coordinator that fuses their maps into a single global view in real time.
+order: 2
+year: '2025'
+status: in-progress
+domain: Robotics
+featured: true
+repo: https://github.com/Platinum-Saber/ASCILAM
+stack: ['ROS 2 Foxy', 'C++', 'Python', 'RPLiDAR', 'Raspberry Pi 4', 'ESP32', 'RViz2']
+---
+
+## The problem
+
+One robot mapping a space is a solved problem. Several robots mapping the *same* space and
+agreeing on what they found is not — you inherit drift in every scout's local estimate, and
+merging two maps means solving for the unknown transform between two coordinate frames that
+have each been quietly lying to themselves since startup.
+
+**ASCILAM** — Autonomous Simultaneous Collaborative Integrated Localization And Mapping — is
+my attempt at that problem on real hardware.
+
+## Architecture
+
+The system splits into scouts and a coordinator.
+
+**Scouts (×2).** Modified M-Bots, each carrying a 2D LiDAR (RPLiDAR A1 / STL-19P), wheel
+encoders and an IMU. Each runs SLAM locally — GMapping or Cartographer — so a scout keeps
+producing a usable local map even if the link drops.
+
+**Coordinator.** A Raspberry Pi 4 running Ubuntu 20.04 and **ROS 2 Foxy**, which receives
+scout maps and fuses them into one global occupancy grid, visualised in RViz2.
+
+**Communication.** Scouts stream over **UDP on Wi-Fi** via ESP32 modules. UDP was
+deliberate: for a stream of map updates, a dropped packet is cheaper than a stalled
+pipeline waiting for a retransmit.
+
+**Fusion.** Map merging through `multirobot_map_merge` and custom ROS nodes, with
+`robot_localization` running an EKF over wheel odometry and IMU on each scout to keep the
+local estimate honest before it's ever sent.
+
+## Design decisions worth defending
+
+**SLAM on the scouts, not the coordinator.** Centralising SLAM would have simplified the
+fusion problem, but it makes every scout useless the moment Wi-Fi degrades, and it puts the
+full computational load on the weakest node. Distributing it keeps the system degrading
+gracefully.
+
+**EKF before transmission.** Fusing odometry and IMU locally means the coordinator receives
+a map that is already internally consistent, which makes the registration problem between
+scouts substantially better conditioned.
+
+## Where it stands
+
+In progress. Planned extensions: autonomous navigation on the scouts, RGB-D sensing for
+richer maps than a 2D grid, and a web monitoring interface.

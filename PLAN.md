@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Foundations | Repo + Vercel deploy pipeline live | ✅ Done |
 | 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 In progress |
-| 2 | 3D layer | Hero scene over the content, within budget | ⬜ Not started |
+| 2 | 3D layer | Airframe Explorer on /lab, within budget | 🟡 Built, needs device test |
 | 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⬜ Not started |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | ⬜ Not started |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | ⬜ Not started |
@@ -23,7 +23,7 @@
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
-**Currently working on:** Phase 1 — site is built and building clean; remaining items are the CV PDF, the LinkedIn URL, and picking the final project order.
+**Currently working on:** Phase 2 built — `/lab` Airframe Explorer is live-ready. Outstanding: test on a real mid-range Android, plus the Phase 1 CV PDF and LinkedIn URL.
 
 ---
 
@@ -97,16 +97,31 @@ These are settled. Changing one means updating this file and noting why in the D
 ### Phase 2 — 3D layer
 *Goal: one well-executed scene layered over the content — not five janky ones.*
 
-- [ ] Decide the concept (hero scene? interactive project navigator? ambient background?) — write it down here
-- [ ] Install `three`, `@react-three/fiber`, `@react-three/drei`
-- [ ] Build the scene; lazy-load the canvas, content renders first
-- [ ] `prefers-reduced-motion` respected
-- [ ] WebGL capability detection → clean 2D fallback
-- [ ] Pause rendering when tab is hidden / canvas off-screen (battery + fps)
-- [ ] Mobile: lower DPR cap, simplified scene, touch controls that don't fight page scroll
-- [ ] Measure on a real mid-range Android, not a throttled desktop
+**Concept (settled):** the **Airframe Explorer** at `/lab` — an interactive schematic of the
+FYP quadrotor. Six numbered markers on leader lines; selecting one shows the component's
+specs, what it's wired to, and its honest build status. Wireframe/instrument styling in the
+site accent. Reached from the drone project write-up, not from the main nav, so the reading
+path stays clean.
 
-**Done when:** the scene hits the performance budget on a real phone and the page is fully usable with WebGL disabled.
+**Geometry:** generated procedurally from primitives in `src/components/lab/Airframe.tsx`,
+not loaded from a mesh file. Costs kilobytes rather than megabytes, needs no asset pipeline,
+and stays editable as code as the real build changes.
+
+- [x] Decide the concept — Airframe Explorer, documented above
+- [x] Install `three`, `@react-three/fiber`, `@react-three/drei`
+- [x] Build the scene; lazy-load the canvas, content renders first
+- [x] `prefers-reduced-motion` respected — stops prop spin and auto-rotate
+- [x] WebGL capability detection → clean fallback (full component reference is static HTML)
+- [x] Pause rendering when tab is hidden / canvas off-screen (IntersectionObserver + visibilitychange)
+- [x] Mobile: DPR capped at 1.75, closer default camera under 640px, constant-size tap targets
+- [x] Auto-rotate stops on first interaction — a drifting model makes markers hard to hit
+- [ ] **Measure on a real mid-range Android**, not a throttled desktop ← only open item
+
+**Measured so far (SwiftShader, desktop):** content pages load 455 KB uncompressed JS;
+`/lab` loads 1,382 KB, so three.js and drei (~930 KB, ~240 KB gzipped) are isolated to that
+one route and fetched only after it renders. No console errors.
+
+**Done when:** the scene holds up on a real phone. Everything else is verified.
 
 ---
 
@@ -194,13 +209,17 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-21** — Next.js kept on the default output rather than `output: 'export'`. Every page prerenders statically either way, but the default leaves room for the Vercel Function the Phase 5 contact form needs.
 - **2026-08-21** — System font stack instead of `next/font` + Inter. Saves a network round trip and eliminates font-driven layout shift, against a strict performance budget. `src/app/layout.tsx` documents the switch back.
 - **2026-08-21** — Theme state lives in the DOM (`data-theme` attribute), not React state. A synchronous inline script sets it before first paint; the toggle reads and writes the attribute and CSS picks the icon. No flash, no hydration mismatch, no mount effect.
+- **2026-08-21** — 3D scene is an **interactive drone schematic on its own `/lab` page**, linked from the drone write-up rather than sitting in the nav. Content pages stay pure text and fast; three.js loads on one route only.
+- **2026-08-21** — Airframe geometry is **procedural, not a CAD import**. The intended source (Stanford MSL TrajBridge) turned out to have no CAD at all — it's a PX4↔ROS 2 bridge. The hardware CAD lives in `StanfordMSL/msl_quad`, is SolidWorks-only (`.SLDPRT`/`.SLDASM`) for every structural part, and describes an F330 frame with an Odroid XU4 — not this build. Procedural geometry is smaller, needs no conversion, no licence question, and is honestly *this* aircraft.
+- **2026-08-21** — Auto-rotation stops permanently on first pointer interaction. Found while testing: a slowly drifting model makes the hotspots genuinely hard to hit, especially on touch.
+- **2026-08-21** — Hotspot markers use fixed screen size (no `distanceFactor`) with leader lines back to the component. Perspective-scaled markers shrank to untappable sizes and piled up on each other.
 - **2026-08-21** — `site.cv` and `socials.linkedin` ship as `null` and their links render conditionally, so the live site never carries a dead link while those are outstanding.
 
 ---
 
 ## 5. Open questions
 
-- [ ] What's the concept for the 3D scene? (blocks Phase 2)
+- [x] ~~What's the concept for the 3D scene?~~ — Airframe Explorer, see Phase 2
 - [ ] Which domain name? (blocks Phase 6)
 - [x] ~~Which projects make the cut, and in what order?~~ — six written, ordered robotics → embedded → backend. Revisit if any feels weak.
 

@@ -1,0 +1,56 @@
+# Supabase pauses a free project after roughly a week of inactivity, and a
+# portfolio's traffic pattern is precisely "nothing for a week, then the one
+# visitor who matters". This is the cheapest possible heartbeat: a single
+# authenticated request every other day, well inside the free tier.
+#
+# It calls public.healthcheck() rather than GET /rest/v1/. Measured on this
+# project, that root endpoint answers 401 to the anon key, so the original
+# version of this workflow would have failed on every run — and PostgREST
+# serves it from a cached schema anyway, so it may never touch Postgres, which
+# is the one thing a pause-prevention ping has to do. The RPC is unambiguous:
+# it executes in the database and a 200 means 200.
+#
+# Requires supabase/migrations/0002_healthcheck.sql to have been applied.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # 06:17 UTC on odd-numbered days. Off the hour on purpose: GitHub delays
+    # cron jobs scheduled at :00 when the whole platform queues up there.
+    - cron: '17 6 1-31/2 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call healthcheck()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY repository secrets are not set."
+            exit 1
+          fi
+
+          body=$(mktemp)
+          status=$(curl --silent --show-error --location \
+            --max-time 30 \
+            --request POST \
+            --output "${body}" \
+            --write-out '%{http_code}' \
+            --header "apikey: ${SUPABASE_ANON_KEY}" \
+            --header "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            --header 'Content-Type: application/json' \
+            --data '{}' \
+            "${SUPABASE_URL}/rest/v1/rpc/healthcheck")
+
+          echo "healthcheck() responded ${status}: $(cat "${body}")"
+
+          if [ "${status}" != "200" ]; then
+            echo "::error::Expected 200, got ${status}. The project may be paused, or 0002_healthcheck.sql was never applied."
+            exit 1
+          fi

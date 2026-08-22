@@ -17,17 +17,19 @@
 | 2 | 3D layer | Airframe Explorer on /lab, within budget | 🟡 Built, needs device test |
 | 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⏸️ Parked — nothing to process |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | 🟡 Built, needs device test |
-| 5 | Supabase | Contact form, RLS, degrades gracefully | ⬜ Not started |
+| 5 | Supabase | Contact form, RLS, degrades gracefully | 🟡 Code done, needs your accounts |
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started |
 | 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
-**Currently working on:** Phase 4 built — `/lab/sobel` runs Sobel edge detection as a
-WebGL2 fragment shader on live camera input. Phase 3 is parked (see below). Outstanding:
-one pass on a real mid-range Android covering **both** `/lab` and `/lab/sobel`, plus the
-Phase 1 CV PDF and LinkedIn URL. Those three items are the whole remaining backlog before
-Phase 5.
+**Currently working on:** Phase 5 code is written and its failure paths are tested. What
+is left is account work only — running the SQL, setting two env vars in Vercel, deploying
+the notification function, adding two GitHub secrets. Step-by-step in
+[`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md).
+
+Still outstanding from earlier phases: one pass on a real mid-range Android covering both
+`/lab` and `/lab/sobel`, the CV PDF, and the LinkedIn URL.
 
 ---
 
@@ -179,15 +181,49 @@ visitor's camera. Reached from the FPGA write-up and from `/lab`, not from the m
 ### Phase 5 — Supabase
 *Goal: a contact form that works, and that cannot take the site down.*
 
-- [ ] Create project (note the region — pick something reasonable for a global audience)
-- [ ] `contacts` table
-- [ ] **RLS on. Insert-only policy for `anon`. No select.** (the anon key is public by definition)
-- [ ] Form submission via Vercel Function or Supabase Edge Function
-- [ ] Spam mitigation (honeypot field + basic rate limit)
-- [ ] Email notification on new submission
-- [ ] **Failure path:** if Supabase is unreachable or paused, the form degrades to a `mailto:` link with a clear message — never an error state
-- [ ] GitHub Actions cron every 2–3 days issuing a trivial query, to prevent inactivity pause
-- [ ] Test the failure path deliberately (bad key / offline) and confirm graceful degradation
+**Setup runbook:** [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md) — the account
+steps, each with a way to check it worked.
+
+- [x] Create project
+- [x] `contacts` table — `supabase/migrations/0001_contacts.sql`, re-runnable
+- [x] **RLS on. Insert-only for `anon`. No select.** Grants revoked and handed back
+      *column-level* (`name, email, message, source`) so `id` and `created_at` cannot be
+      forged either
+- [x] Form submission via Vercel Function — `src/app/api/contact/route.ts`, plain `fetch`
+      to PostgREST, no `@supabase/supabase-js`
+- [x] Spam mitigation — honeypot, minimum fill time, in-memory sliding window on a hashed
+      IP. Limits documented honestly in the runbook
+- [x] Email notification — Resend, via a Supabase Edge Function fired by a database
+      webhook, so notification is downstream of storage and cannot fail the submission
+- [x] **Failure path:** every non-success path ends in a `mailto:` link prefilled with what
+      the visitor typed. Verified against a stubbed PostgREST returning 401, 403 and a hung
+      connection, plus a wholly unconfigured deployment — all four produce the same calm
+      panel, the hang inside a 6 s timeout
+- [x] GitHub Actions cron every other day — hits the PostgREST root, not the table, since
+      `anon` has no select privilege
+- [x] `SUPABASE_URL` and `SUPABASE_ANON_KEY` set in `.env.local` (2026-08-22) — confirmed
+      to parse cleanly through `@next/env` despite CRLF line endings, and the JWT payload
+      confirms `role: anon`, not `service_role`
+- [x] `npm run verify:supabase` — a re-runnable probe of the live project: key role, table
+      exists, anon cannot read, forged `created_at` refused, CHECK constraints bite
+- [x] **Database side verified against the live project (2026-08-22).** `0001_contacts.sql`
+      is applied and behaving: anon cannot read (401), cannot delete (401), cannot forge
+      `created_at` (401); the insert path returns 201; CHECK constraints reject a
+      5-character message (400). Note this project maps permission-denied to **401**, not
+      403 — do not read those as auth failures
+- [ ] Apply `0002_healthcheck.sql`, then re-run `npm run verify:supabase` — it should be
+      all PASS
+- [ ] Clear the probe rows: `delete from public.contacts where source = 'verify-probe';`
+      plus the four rows from the first two runs (see the runbook)
+- [ ] **Commit and push the Phase 5 files.** As of the `e30c5ff` deploy none of them were
+      tracked, which is why `/api/contact` is absent from that build's route list
+- [ ] Remaining runbook steps — the two Vercel env vars, the notify function deploy, the
+      two GitHub secrets
+- [ ] Repeat the bad-key test once on a real preview deployment
+
+> Neither this container nor the desktop sandbox can reach `*.supabase.co`. Everything
+> known about the live project came from Suhan running `npm run verify:supabase` and
+> pasting the output. A session cannot check this itself — do not let one claim otherwise.
 
 **Done when:** the form works, *and* the site is still perfect with Supabase fully down.
 
@@ -236,6 +272,14 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-21** — Airframe geometry is **procedural, not a CAD import**. The intended source (Stanford MSL TrajBridge) turned out to have no CAD at all — it's a PX4↔ROS 2 bridge. The hardware CAD lives in `StanfordMSL/msl_quad`, is SolidWorks-only (`.SLDPRT`/`.SLDASM`) for every structural part, and describes an F330 frame with an Odroid XU4 — not this build. Procedural geometry is smaller, needs no conversion, no licence question, and is honestly *this* aircraft.
 - **2026-08-21** — Auto-rotation stops permanently on first pointer interaction. Found while testing: a slowly drifting model makes the hotspots genuinely hard to hit, especially on touch.
 - **2026-08-21** — Hotspot markers use fixed screen size (no `distanceFactor`) with leader lines back to the component. Perspective-scaled markers shrank to untappable sizes and piled up on each other.
+- **2026-08-22** — The contact API route uses the **anon key, not the service role key**, and talks to PostgREST with plain `fetch`. The anon key plus insert-only RLS is exactly the authority the endpoint needs; a service role key would let it read every message ever sent, for no benefit. `@supabase/supabase-js` would have added ~100 KB to the function bundle to save four lines.
+- **2026-08-22** — ~~`Prefer: return=minimal` is load-bearing~~ — **wrong, corrected same day.** Measured against the live project: PostgREST already defaults to `return=minimal` for POST, so the header-less insert returns 201 exactly the same. The claim came from `@supabase/supabase-js`, which defaults to `return=representation` — true of the client library, not of PostgREST. The header stays as an explicit statement of a real constraint (anon has no select, so asking for the row back *is* a 401, verified), which protects whoever later swaps the raw `fetch` for the client library. Kept for that reason, not the one originally written down.
+- **2026-08-22** — Anon's INSERT grant is **column-level** (`name, email, message, source`). A table-level grant would let whoever holds the public key supply their own `id` and `created_at`. A CHECK constraint cannot substitute — Postgres only accepts IMMUTABLE functions in CHECK, and `now()` is STABLE.
+- **2026-08-22** — The spam timing check **fails open**. Found in testing: `Number(null)` is `0`, which is finite and below the floor, so a submission arriving without a measurement was being silently binned. Quietly losing a real message is far worse than accepting one more bot, which still has the honeypot and the rate limiter to get past. The route now judges only an actual number.
+- **2026-08-22** — The contact form has no error state at all. Rate limited, database paused, key rotated, network dropped, Supabase never configured — every path renders the same calm paragraph and a `mailto:` link carrying what the visitor already typed. The static contact details stay on the page underneath, in the HTML, JavaScript or not.
+- **2026-08-22** — Email notification runs on a **database webhook**, not from the site. Notification is therefore downstream of the write: if Resend is down or the free tier is spent, the row is still saved and the visitor still sees success. A notification failure must never look like a submission failure.
+- **2026-08-22** — The keep-alive cron calls a `public.healthcheck()` RPC, after the first version — pinging the PostgREST root — turned out to answer **401** to the anon key on this project, which would have failed every scheduled run. A 401 is also useless as a health signal: it is indistinguishable from a wrong key or a dropped grant. And PostgREST serves that root from a cached schema, so it may never touch Postgres, which is the one thing a pause-prevention ping must do. The RPC returns `now()` and nothing else, executes in the database, and a 200 means 200. Requires `0002_healthcheck.sql`.
+- **2026-08-22** — Added `vercel.json` pinning `"framework": "nextjs"`. The `e30c5ff` deploy failed with `No Output Directory named "public" found` — not a build failure at all (`next build` completed and generated all 17 pages), but Vercel treating the project as Framework Preset *Other*, which runs the build and then hunts for a folder of static files to serve. Pinning it in the repo makes the setting version-controlled rather than a dashboard checkbox nobody remembers ticking.
 - **2026-08-22** — Phase 3 parked before Phase 4 rather than built in order. There are no mesh files in the repo to optimise, so the pipeline would have had no inputs; a CI job with nothing to do fails quietly and teaches you nothing. Unpark when a real `.glb` first needs to ship.
 - **2026-08-22** — The Sobel demo is **plain WebGL2, not three.js**. One shader over two triangles; a scene graph would have added ~930 KB to save about forty lines. This is why `/lab/sobel` is 468 KB against `/lab`'s 1,382 KB — three.js stays confined to the one route that genuinely needs it.
 - **2026-08-22** — The no-camera fallback is a **procedurally drawn test target**, not a bundled sample clip, for the same reason the airframe is procedural: a video would have been the heaviest asset on the site. It also animates, which matters — a still image cannot demonstrate that the convolution runs per frame. Its content is diagnostic on purpose (contrast staircase, resolution wedge, smooth gradient), so the page can point at what the operator does and does not respond to.
@@ -249,7 +293,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 ## 5. Open questions
 
 - [x] ~~What's the concept for the 3D scene?~~ — Airframe Explorer, see Phase 2
-- [ ] Which domain name? (blocks Phase 6)
+- [ ] Which domain name? (blocks Phase 6, and blocks a proper Resend sender address — until then the form notifies via `onboarding@resend.dev`, which can only mail your own signup address)
 - [x] ~~Which projects make the cut, and in what order?~~ — six written, ordered robotics → embedded → backend. Revisit if any feels weak.
 
 ---

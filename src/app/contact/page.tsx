@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ContactForm } from '@/components/contact/ContactForm';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -32,12 +33,24 @@ export default function ContactPage() {
         problems. Email is the fastest way to reach me.
       </p>
 
+      <div className="mt-9 max-w-xl">
+        <ContactForm />
+      </div>
+
       {/*
-        Phase 5 replaces this list with a real form backed by Supabase.
-        Keep this markup as the fallback: if the form fails or the database is
-        paused, it degrades to exactly this.
+        Kept deliberately, not left over. The form's every failure path ends in
+        a mailto: link, and this list is the same promise made statically — it
+        is in the HTML whether or not JavaScript runs, whether or not Supabase
+        exists. Do not remove it to tidy up the page.
       */}
-      <dl className="mt-9 space-y-5">
+      <h2
+        className="mt-16 text-sm font-semibold tracking-widest uppercase"
+        style={{ color: 'var(--fg-muted)' }}
+      >
+        Or reach me directly
+      </h2>
+
+      <dl className="mt-6 space-y-5">
         {LINKS.map(({ label, value, href }) => (
           <div
             key={label}

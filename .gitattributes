@@ -1,0 +1,23 @@
+# Normalise line endings in the repository to LF, and check out LF everywhere.
+#
+# Without this, editing on Windows rewrites whole files to CRLF and git reports
+# every line as changed — the LICENSE showed a 21-insertion, 21-deletion diff
+# whose content was byte-identical. That noise hides real changes in review.
+#
+# LF also matches Prettier's default, so `npm run format` and git agree.
+#
+# After adding this file, run once to rewrite the index:
+#   git add --renormalize .
+* text=auto eol=lf
+
+# Never touch these, whatever they contain.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.glb binary
+*.ktx2 binary

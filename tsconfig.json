@@ -29,5 +29,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  // supabase/functions is Deno, not Node: it has its own globals and
+  // remote imports, and typechecking it with this config is meaningless.
+  "exclude": ["node_modules", "supabase/functions"]
 }

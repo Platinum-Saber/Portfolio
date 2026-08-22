@@ -59,58 +59,31 @@ export default function ExplorePage() {
         <Explorer zones={zones} />
       </div>
 
-      <section className="mt-16 max-w-2xl">
-        <h2
-          className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: 'var(--fg-muted)' }}
-        >
-          Controls
-        </h2>
-        <dl className="mt-5 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-          {[
-            ['W / S', 'forward and back'],
-            ['A / D', 'strafe left and right'],
-            ['↑ / ↓ or space / shift', 'climb and descend'],
-            ['← / →', 'yaw'],
-            ['Left stick (touch)', 'throttle and yaw'],
-            ['Right stick (touch)', 'pitch and roll'],
-          ].map(([keys, action]) => (
-            <div
-              key={keys}
-              className="flex justify-between gap-4 border-b pb-1 text-sm"
-              style={{ borderColor: 'var(--border)' }}
-            >
-              <dt className="font-mono text-xs">{keys}</dt>
-              <dd className="text-right" style={{ color: 'var(--fg-muted)' }}>
-                {action}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <p
-          className="mt-4 text-sm leading-relaxed"
-          style={{ color: 'var(--fg-muted)' }}
-        >
-          The touch sticks are laid out Mode 2, the way a real transmitter is —
-          throttle and yaw on the left, pitch and roll on the right. It cost
-          nothing to get right and it is the layout anyone who has flown a quad
-          already has in their hands.
-        </p>
-      </section>
-
       {/*
         Everything in the world, as ordinary HTML. This is not a fallback bolted
         on afterwards — it is the same `zones` array the canvas renders, so the
         two cannot disagree. A recruiter with WebGL disabled, a screen reader,
         and a search crawler all get the whole thing.
+
+        Collapsed rather than removed. It was crowding the page under a world
+        that now fills most of the screen, but deleting it would take the
+        no-WebGL path and the indexable text with it. A <details> is closed by
+        default and still ships every word in the HTML.
       */}
-      <section className="mt-16">
-        <h2
-          className="text-sm font-semibold tracking-widest uppercase"
+      <details className="group mt-16">
+        <summary
+          className="cursor-pointer list-none text-sm font-semibold tracking-widest uppercase"
           style={{ color: 'var(--fg-muted)' }}
         >
           Everything in the world
-        </h2>
+          <span
+            className="ml-2 font-mono text-[11px] normal-case"
+            style={{ color: 'var(--accent)' }}
+          >
+            <span className="group-open:hidden">show text version</span>
+            <span className="hidden group-open:inline">hide</span>
+          </span>
+        </summary>
 
         <div className="mt-6 space-y-10">
           {zones.map((zone) => (
@@ -170,7 +143,7 @@ export default function ExplorePage() {
             </article>
           ))}
         </div>
-      </section>
+      </details>
 
       <nav
         className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"

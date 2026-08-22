@@ -52,6 +52,31 @@ function readSupport(): Support {
 const NEVER_CHANGES = () => () => {};
 const SERVER_SNAPSHOT = (): Support => 'checking';
 
+/**
+ * Whether the primary pointer is a finger.
+ *
+ * It decides which control surface is offered: thumb sticks on touch, a
+ * keyboard legend on a mouse. Showing both put two large stick pads in the
+ * bottom corners of a desktop screen that nobody was ever going to drag.
+ */
+function useCoarsePointer(): boolean {
+  const [coarse, setCoarse] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(pointer: coarse)');
+    const sync = () => setCoarse(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return coarse;
+}
+
+const KEY_LEGEND: ReadonlyArray<[string, string]> = [
+  ['W A S D', 'move'],
+  ['↑ ↓', 'altitude'],
+  ['← →', 'yaw'],
+];
+
 const EMPTY: Telemetry = {
   altitude: 0,
   speed: 0,
@@ -83,6 +108,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     readSupport,
     SERVER_SNAPSHOT,
   );
+  const coarsePointer = useCoarsePointer();
 
   const [flying, setFlying] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -209,12 +235,18 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   const nearest = zones.find((zone) => zone.id === telemetry.nearestId);
 
   return (
-    <div>
+    /*
+      The world breaks out of the page's max-w-3xl prose column. 94vw rather
+      than 100vw deliberately: a full-viewport-width child inside a centred
+      column overflows by exactly the scrollbar's width and gives the whole
+      page a horizontal scrollbar.
+    */
+    <div className="relative left-1/2 w-[min(94vw,1700px)] -translate-x-1/2">
       <div
         ref={frame}
-        // Portrait on phones. At 4:3 a 390px-wide screen leaves barely 290px of
-        // sky, and the two thumb sticks sit in most of it.
-        className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border sm:aspect-[16/9]"
+        // Tall enough to fly in. min-h keeps it usable on a short laptop
+        // window, where 80vh can be under 400px.
+        className="relative h-[80vh] max-h-[900px] min-h-[420px] w-full overflow-hidden rounded-lg border"
         style={{
           borderColor: 'var(--border)',
           backgroundColor: 'var(--bg-subtle)',
@@ -274,14 +306,41 @@ export function Explorer({ zones }: { zones: Zone[] }) {
                 Take control
               </button>
               <p className="mt-3 text-xs" style={{ color: '#9aa1ac' }}>
-                WASD to fly, arrow keys for altitude and yaw. On a phone, two
-                thumb sticks appear.
+                {coarsePointer
+                  ? 'Two thumb sticks appear — throttle and yaw on the left, pitch and roll on the right.'
+                  : 'WASD to fly, arrow keys for altitude and yaw.'}
               </p>
             </div>
           </div>
         )}
 
-        {flying && (
+        {/* Keyboard legend, bottom right, for anyone flying with a mouse and
+            keyboard — where the right thumb stick would otherwise sit. */}
+        {flying && !coarsePointer && (
+          <dl
+            className="pointer-events-none absolute right-4 bottom-4 space-y-1 text-right"
+            aria-label="Flight controls"
+          >
+            {KEY_LEGEND.map(([keys, action]) => (
+              <div key={keys} className="flex items-baseline justify-end gap-3">
+                <dd
+                  className="font-mono text-[10px]"
+                  style={{ color: '#5f6570' }}
+                >
+                  {action}
+                </dd>
+                <dt
+                  className="font-mono text-[11px] tracking-wide"
+                  style={{ color: '#7d8794' }}
+                >
+                  {keys}
+                </dt>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {flying && coarsePointer && (
           <FlightSticks
             onLeft={(axes) => {
               sticks.current.left = axes;

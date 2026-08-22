@@ -1,49 +1,11 @@
 import type { Metadata } from 'next';
+import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'About',
   description: site.description,
 };
-
-const SKILLS = [
-  {
-    group: 'Robotics',
-    items: [
-      'ROS 2',
-      'SLAM (Cartographer, GMapping)',
-      'EKF sensor fusion',
-      'RPLiDAR',
-      'RGB-D perception',
-      'Webots',
-    ],
-  },
-  {
-    group: 'Embedded & hardware',
-    items: [
-      'Verilog',
-      'VHDL',
-      'Vivado',
-      'Basys 3 / Artix-7',
-      'Raspberry Pi',
-      'Jetson Orin Nano',
-      'ESP32',
-      'Arduino',
-    ],
-  },
-  {
-    group: 'Software',
-    items: [
-      'C++',
-      'Python',
-      'Java / Spring Boot',
-      'OpenCV',
-      'Redis / Lua',
-      'Apache Kafka',
-      'Linux',
-    ],
-  },
-];
 
 export default function AboutPage() {
   return (
@@ -90,7 +52,7 @@ export default function AboutPage() {
           Tools I reach for
         </h2>
         <dl className="mt-5 space-y-6">
-          {SKILLS.map(({ group, items }) => (
+          {SKILL_GROUPS.map(({ group, items }) => (
             <div key={group}>
               <dt className="text-sm font-medium">{group}</dt>
               <dd className="mt-2">

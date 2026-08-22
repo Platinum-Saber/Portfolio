@@ -4,6 +4,7 @@ summary: Two LiDAR-equipped scout robots map terrain independently and stream to
 order: 2
 year: '2025'
 status: in-progress
+demo: /lab/ascilam
 domain: Robotics
 featured: true
 repo: https://github.com/Platinum-Saber/ASCILAM
@@ -50,6 +51,23 @@ gracefully.
 **EKF before transmission.** Fusing odometry and IMU locally means the coordinator receives
 a map that is already internally consistent, which makes the registration problem between
 scouts substantially better conditioned.
+
+## Watch it fail, then work
+
+I built [an interactive simulation of this exact problem](/lab/ascilam) — two scouts sweeping
+an arena, their odometry drifting apart in real time, and four views of the result: each
+scout's own map, the two overlaid with no correction, and the fused version. You can take
+control of a scout and map wherever you drive it.
+
+The **unaligned** view is the one worth clicking. Both maps are faithful records of what
+their sensor saw; they disagree only about where the sensor was standing. Two ghosts of the
+same corridor, a few degrees apart. That is the problem stated in one picture, and it makes
+the fused view mean something.
+
+To be clear about what the simulation does and does not do: the fused map is built from
+known-true poses, standing in for a solved alignment. It demonstrates the shape of the
+problem, not a browser reimplementation of the EKF and `multirobot_map_merge` that earn the
+result on the real hardware.
 
 ## Where it stands
 

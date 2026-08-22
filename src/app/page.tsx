@@ -47,6 +47,18 @@ export default function HomePage() {
           >
             View projects
           </Link>
+          {/*
+            The invitation, not the front door. This page stays text-first and
+            loads no three.js — see the Decision Log. Anyone who wants the
+            other version is one click away, and nobody is made to fly.
+          */}
+          <Link
+            href="/explore"
+            className="rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+            style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+          >
+            Or fly through it →
+          </Link>
           <a
             href={site.socials.github}
             className="rounded-md border px-4 py-2 text-sm font-medium transition-colors"

@@ -155,6 +155,13 @@ export default function LabPage() {
         >
           Sobel edge detection in a shader →
         </Link>
+        <Link
+          href="/lab/ascilam"
+          className="hover:underline"
+          style={{ color: 'var(--accent)' }}
+        >
+          Collaborative SLAM arena →
+        </Link>
       </nav>
     </div>
   );

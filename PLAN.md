@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Foundations | Repo + Vercel deploy pipeline live | ✅ Done |
 | 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 In progress |
-| 2 | 3D layer | Airframe Explorer on /lab, within budget | 🟡 Built, needs device test |
+| 2 | 3D layer | Three interactive scenes + the explorable world | 🟡 Built, needs device test |
 | 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⏸️ Parked — nothing to process |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | 🟡 Built, needs device test |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | 🟡 Code done, needs your accounts |
@@ -22,6 +22,18 @@
 | 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
+
+**The lab, as of 2026-08-22.** Four interactive pieces, each on its own route so three.js
+is never loaded by a content page:
+
+| Route | What | Uncompressed JS |
+|---|---|---|
+| `/lab` | Airframe Explorer — the FYP quadrotor as a schematic | 1,402 KB |
+| `/lab/sobel` | Sobel edge detection as a WebGL2 shader, live on camera | 475 KB (no three.js) |
+| `/lab/ascilam` | Collaborative SLAM arena — two scouts, drift, fusion | 1,395 KB |
+| `/explore` | The whole portfolio as a world you fly through | 1,390 KB |
+
+Content routes are unchanged at 462–475 KB. `/` gained only a link.
 
 **Currently working on:** Phase 5 code is written and its failure paths are tested. What
 is left is account work only — running the SQL, setting two env vars in Vercel, deploying
@@ -121,7 +133,11 @@ and stays editable as code as the real build changes.
 - [x] Pause rendering when tab is hidden / canvas off-screen (IntersectionObserver + visibilitychange)
 - [x] Mobile: DPR capped at 1.75, closer default camera under 640px, constant-size tap targets
 - [x] Auto-rotate stops on first interaction — a drifting model makes markers hard to hit
-- [ ] **Measure on a real mid-range Android**, not a throttled desktop ← only open item
+- [ ] **Measure on a real mid-range Android**, not a throttled desktop — now covering
+      `/lab`, `/lab/ascilam` and `/explore`. The explore world is the heaviest of the three
+      and the one most likely to disappoint on a phone
+- [ ] Drop the real scout CAD in when it is exported — swap-in point documented in
+      `ScoutModel.tsx`, and that is the moment Phase 3 unparks
 
 **On the model looking like bare lines:** that is the intended styling, not a missing
 texture. Every mesh is `meshBasicMaterial` at 18–35% opacity with a drei `<Edges>` overlay
@@ -280,6 +296,17 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-22** — Email notification runs on a **database webhook**, not from the site. Notification is therefore downstream of the write: if Resend is down or the free tier is spent, the row is still saved and the visitor still sees success. A notification failure must never look like a submission failure.
 - **2026-08-22** — The keep-alive cron calls a `public.healthcheck()` RPC, after the first version — pinging the PostgREST root — turned out to answer **401** to the anon key on this project, which would have failed every scheduled run. A 401 is also useless as a health signal: it is indistinguishable from a wrong key or a dropped grant. And PostgREST serves that root from a cached schema, so it may never touch Postgres, which is the one thing a pause-prevention ping must do. The RPC returns `now()` and nothing else, executes in the database, and a 200 means 200. Requires `0002_healthcheck.sql`.
 - **2026-08-22** — Added `vercel.json` pinning `"framework": "nextjs"`. The `e30c5ff` deploy failed with `No Output Directory named "public" found` — not a build failure at all (`next build` completed and generated all 17 pages), but Vercel treating the project as Framework Preset *Other*, which runs the build and then hunts for a folder of static files to serve. Pinning it in the repo makes the setting version-controlled rather than a dashboard checkbox nobody remembers ticking.
+- **2026-08-22** — The ASCILAM visualisation shows **2D scans accumulating into an occupancy grid**, not a point cloud. The scouts carry RPLiDAR A1 / STL-19P — 2D sensors — and the coordinator fuses occupancy grids. A 3D point cloud would have looked better to a general viewer and implied hardware that does not exist. The log-odds grid at 5 cm is what the real system actually produces.
+- **2026-08-22** — The SLAM arena models **odometry drift explicitly**, and each scout files its scans at its *believed* pose. That one detail generates the whole demonstration: self-consistent-but-wrong local maps, two ghosts that refuse to align when overlaid, and a fused map that means something. Drift is seeded, not random — the unaligned view is a teaching illustration and must not occasionally come out looking nearly correct.
+- **2026-08-22** — The scouts' patrol routes were **rewritten to overlap**. The first version kept each scout strictly in its own half, which told the "fusion buys coverage" story but left nothing mapped twice — so there was no doubled wall to see and the unaligned view just looked like two tidy halves. Both now cross the doorway twice a lap.
+- **2026-08-22** — The fused view is built from **known-true poses, standing in for a solved alignment**. Not a browser reimplementation of scan matching, and the page says so in as many words rather than letting the visualisation imply more than it does.
+- **2026-08-22** — Wheel slip is kept, not fixed. Driving a scout into a wall stops the robot while its odometry keeps counting, tearing the map within seconds. It reads as a bug for about two seconds and then as the best interactive explanation of drift on the page, so it is documented and invited rather than clamped away.
+- **2026-08-22** — The drone game lives at **`/explore`, not on `/`**. The homepage stays text-first, ATS-scrapeable and free of three.js; the invitation is one button. A recruiter on a slow phone must never meet a loading canvas where the CV should be.
+- **2026-08-22** — Explore zones are **derived from the same MDX frontmatter the project pages read**, and the same `zones` array renders both the 3D world and the full static list beneath it. The world cannot say something the site does not, and a visitor with WebGL off gets every word.
+- **2026-08-22** — The jump list uses per-project **labels, not domains**. Three projects share the domain "Robotics", so a list built from `zone.short` had three identical buttons — found by a test that could not tell them apart either.
+- **2026-08-22** — Zone panels are positioned by a **custom `calculatePosition` that clamps them inside the canvas**. drei's default projects the anchor and leaves it there, which put the top of every panel off-frame at exactly the moment you arrived to read it. Clamping also makes an off-screen marker's panel slide along the edge, pointing back at what it belongs to.
+- **2026-08-22** — Touch controls are laid out **Mode 2** — throttle and yaw left, pitch and roll right — because that is how a real transmitter is arranged and it cost nothing to get right.
+- **2026-08-22** — Seeded randomness moved to `src/lib/random.ts`, shared by the SLAM drift and the explore skyline. Both need stable-but-scattered, and `Math.random` in a render path is a hydration mismatch waiting to happen.
 - **2026-08-22** — Phase 3 parked before Phase 4 rather than built in order. There are no mesh files in the repo to optimise, so the pipeline would have had no inputs; a CI job with nothing to do fails quietly and teaches you nothing. Unpark when a real `.glb` first needs to ship.
 - **2026-08-22** — The Sobel demo is **plain WebGL2, not three.js**. One shader over two triangles; a scene graph would have added ~930 KB to save about forty lines. This is why `/lab/sobel` is 468 KB against `/lab`'s 1,382 KB — three.js stays confined to the one route that genuinely needs it.
 - **2026-08-22** — The no-camera fallback is a **procedurally drawn test target**, not a bundled sample clip, for the same reason the airframe is procedural: a video would have been the heaviest asset on the site. It also animates, which matters — a still image cannot demonstrate that the convolution runs per frame. Its content is diagnostic on purpose (contrast staircase, resolution wedge, smooth gradient), so the page can point at what the operator does and does not respond to.
@@ -308,6 +335,10 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go — 
 | 2026-08-21 | `/lab` (three.js + drei), uncompressed JS | 1,382 KB |
 | 2026-08-22 | `/lab/sobel`, uncompressed JS | 468 KB — **+13 KB over baseline**, no three.js |
 | 2026-08-22 | `/lab/sobel` under SwiftShader (software rasteriser, worst case) | 16–23 fps, camera and test target alike |
+| 2026-08-22 | `/lab/ascilam`, uncompressed JS | 1,395 KB (three.js, isolated to this route) |
+| 2026-08-22 | `/explore`, uncompressed JS | 1,390 KB (three.js, isolated to this route) |
+| 2026-08-22 | SLAM arena, 45 s autonomous run | fused coverage 74.8%; α drift 1.76 m / 6.5°, β 0.99 m / −1.9° |
+| 2026-08-22 | Content routes after both additions | 462–475 KB, still no three.js |
 
 Measured by loading each route from `next start` in headless Chromium and summing JS
 response bodies. The number worth keeping: a real-time CV demo cost 13 KB, because it is

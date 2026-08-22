@@ -7,12 +7,13 @@ status: in-progress
 domain: Robotics
 featured: true
 repo: https://github.com/Platinum-Saber/ASCILAM
-stack: ['ROS 2 Foxy', 'C++', 'Python', 'RPLiDAR', 'Raspberry Pi 4', 'ESP32', 'RViz2']
+stack:
+  ['ROS 2 Foxy', 'C++', 'Python', 'RPLiDAR', 'Raspberry Pi 4', 'ESP32', 'RViz2']
 ---
 
 ## The problem
 
-One robot mapping a space is a solved problem. Several robots mapping the *same* space and
+One robot mapping a space is a solved problem. Several robots mapping the _same_ space and
 agreeing on what they found is not — you inherit drift in every scout's local estimate, and
 merging two maps means solving for the unknown transform between two coordinate frames that
 have each been quietly lying to themselves since startup.

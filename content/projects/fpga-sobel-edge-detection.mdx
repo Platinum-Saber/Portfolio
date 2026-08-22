@@ -4,6 +4,7 @@ summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 —
 order: 3
 year: '2026'
 status: in-progress
+demo: /lab/sobel
 domain: Embedded / Digital Design
 featured: true
 stack: ['Verilog', 'Vivado', 'Basys 3', 'Artix-7 FPGA', 'OV7670', 'VGA']
@@ -45,9 +46,18 @@ per-project than defend either as universally better.
 In progress. Simulation in Vivado is the current focus; the Basys 3, monitor and VGA cable
 are on hand, with an OV7670 module sourced for the capture side.
 
-## The interesting part
+## The same operator, on a GPU
 
-This is the same algorithm I later intend to run as a GPU fragment shader on this site.
+I've since built [the same 3×3 convolution as a WebGL2 fragment shader](/lab/sobel) — it
+runs live on your camera, in the browser, no server involved. Worth clicking, because the
+comparison is the point.
+
+Almost nothing carries over. On the FPGA there is no image: pixels arrive one per clock and
+a 3×3 neighbourhood only exists because block RAM is holding the previous two rows. That
+line buffer, plus reconciling the clock domains around it, _is_ the design. On a GPU the
+frame is already in memory and every output pixel reads whatever it likes, so the hard part
+simply isn't there — and instead every pixel is computed at once, which the FPGA cannot do.
+
 Sobel in Verilog on an FPGA, in C on a CPU, and in GLSL on a GPU are three genuinely
-different engineering problems wearing the same mathematics — which is most of why the
-algorithm is worth revisiting in each.
+different engineering problems wearing the same fifteen multiply-accumulates. That is most
+of why the algorithm is worth building more than once.

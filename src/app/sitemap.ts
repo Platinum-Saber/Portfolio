@@ -3,14 +3,19 @@ import { getProjectSlugs } from '@/lib/projects';
 import { site } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ['', '/projects', '/about', '/contact', '/lab'].map(
-    (route) => ({
-      url: `${site.url}${route}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: route === '' ? 1 : 0.8,
-    }),
-  );
+  const staticRoutes = [
+    '',
+    '/projects',
+    '/about',
+    '/contact',
+    '/lab',
+    '/lab/sobel',
+  ].map((route) => ({
+    url: `${site.url}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: route === '' ? 1 : 0.8,
+  }));
 
   const projectRoutes = getProjectSlugs().map((slug) => ({
     url: `${site.url}/projects/${slug}`,

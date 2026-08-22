@@ -138,7 +138,7 @@ export default function LabPage() {
       </section>
 
       <nav
-        className="mt-16 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
@@ -147,6 +147,13 @@ export default function LabPage() {
           style={{ color: 'var(--accent)' }}
         >
           ← Autonomous Drone Platform write-up
+        </Link>
+        <Link
+          href="/lab/sobel"
+          className="hover:underline"
+          style={{ color: 'var(--accent)' }}
+        >
+          Sobel edge detection in a shader →
         </Link>
       </nav>
     </div>

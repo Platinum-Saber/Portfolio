@@ -2,7 +2,7 @@
 
 **Owner:** Suhan · **Repo:** `D:\Projects\Portfolio`
 **Architecture rationale:** see [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-**Started:** 2026-08-21 · **Last updated:** 2026-08-21
+**Started:** 2026-08-21 · **Last updated:** 2026-08-22
 
 > **How to use this file.** Each phase is independently completable and ends in something deployed and working. Tick boxes as you go, update the status table, and append to the Decision Log whenever you make a call that a future session would otherwise have to re-litigate. To resume after a break, read §1 and §2, then jump to the first phase not marked ✅.
 
@@ -15,15 +15,19 @@
 | 0 | Foundations | Repo + Vercel deploy pipeline live | ✅ Done |
 | 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 In progress |
 | 2 | 3D layer | Airframe Explorer on /lab, within budget | 🟡 Built, needs device test |
-| 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⬜ Not started |
-| 4 | In-browser demo | One live CV/graphics demo, client-side | ⬜ Not started |
+| 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⏸️ Parked — nothing to process |
+| 4 | In-browser demo | One live CV/graphics demo, client-side | 🟡 Built, needs device test |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | ⬜ Not started |
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started |
 | 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
-**Currently working on:** Phase 2 built — `/lab` Airframe Explorer is live-ready. Outstanding: test on a real mid-range Android, plus the Phase 1 CV PDF and LinkedIn URL.
+**Currently working on:** Phase 4 built — `/lab/sobel` runs Sobel edge detection as a
+WebGL2 fragment shader on live camera input. Phase 3 is parked (see below). Outstanding:
+one pass on a real mid-range Android covering **both** `/lab` and `/lab/sobel`, plus the
+Phase 1 CV PDF and LinkedIn URL. Those three items are the whole remaining backlog before
+Phase 5.
 
 ---
 
@@ -117,6 +121,12 @@ and stays editable as code as the real build changes.
 - [x] Auto-rotate stops on first interaction — a drifting model makes markers hard to hit
 - [ ] **Measure on a real mid-range Android**, not a throttled desktop ← only open item
 
+**On the model looking like bare lines:** that is the intended styling, not a missing
+texture. Every mesh is `meshBasicMaterial` at 18–35% opacity with a drei `<Edges>` overlay
+in the site accent — an instrument schematic, deliberately not a render. It is also what
+keeps the scene unlit (no lights, no shadow maps, no PBR) and therefore cheap. If it ever
+*should* look solid, that is a concept change, not a bug fix: see the Decision Log.
+
 **Measured so far (SwiftShader, desktop):** content pages load 455 KB uncompressed JS;
 `/lab` loads 1,382 KB, so three.js and drei (~930 KB, ~240 KB gzipped) are isolated to that
 one route and fetched only after it renders. No console errors.
@@ -125,8 +135,13 @@ one route and fetched only after it renders. No console errors.
 
 ---
 
-### Phase 3 — Asset pipeline
+### Phase 3 — Asset pipeline — ⏸️ PARKED (2026-08-22)
 *Goal: asset optimisation is reproducible and automatic. Skip until you have more than a couple of models.*
+
+**Parked, not abandoned.** The repo contains no mesh files at all — the airframe is
+procedural geometry and the Sobel demo is two triangles — so every task below would build
+a pipeline that processes zero assets, and a CI job with no inputs rots silently. Unpark
+the moment a real `.glb` needs to ship; the checklist below is still the right one.
 
 - [ ] Source/author models; keep originals in `assets/raw/` (git-lfs if large)
 - [ ] `gltf-transform optimize` (or `gltfpack`) — Draco/meshopt geometry compression
@@ -142,12 +157,20 @@ one route and fetched only after it renders. No console errors.
 ### Phase 4 — In-browser demo
 *Goal: one live, interactive demo that shows real CV/graphics skill. Client-side only.*
 
-- [ ] Pick the demo. Recommended first choice: **WebGL/WebGPU shader edge detection on webcam input** — real time, no model, no server, thematically adjacent to the FPGA Sobel project (nice narrative link: "same algorithm, three implementations — FPGA, CPU, GPU shader")
-- [ ] Implement behind a **"Run demo"** button — never auto-start, never load on page load
-- [ ] Camera permission handled gracefully; offer a sample image/video for anyone who declines
-- [ ] If using a model instead: export to ONNX, quantise to int8, keep under ~25 MB, run in a Web Worker
-- [ ] Loading/warming state with an honest message
-- [ ] Short write-up next to it explaining what it's doing
+**Built:** `/lab/sobel` — Sobel edge detection as a WebGL2 fragment shader, live on the
+visitor's camera. Reached from the FPGA write-up and from `/lab`, not from the main nav.
+
+- [x] Pick the demo — **GLSL Sobel on webcam input**. Same 3×3 convolution as the Basys 3 Verilog build, so the two write-ups explain each other
+- [x] Implement behind a **"Run demo"** button — never auto-start, never load on page load
+- [x] Camera permission handled gracefully; every failure mode (`NotAllowedError`, `NotFoundError`, `NotReadableError`, no `mediaDevices`) gets its own sentence and a one-click route to the fallback
+- [x] Fallback source is a **procedurally drawn test target**, not a bundled clip — contrast staircase, converging-line resolution wedge, soft gradient, moving hard-edged shapes. Costs ~2 KB of JS and moves, which a still image would not
+- [x] `prefers-reduced-motion` freezes the test target's animation
+- [x] WebGL2 capability detection → clean fallback; the kernels are printed in the page, so nothing is hidden inside the shader
+- [x] Render loop stops when the tab is hidden or the canvas scrolls off-screen; camera tracks are stopped on unmount
+- [x] Loading/warming state with an honest message
+- [x] Short write-up next to it explaining what it's doing, and why it isn't a Python API
+- [ ] ~~ONNX / int8 / Web Worker~~ — not applicable, there is no model
+- [ ] **Try it on a real mid-range Android** ← only open item
 
 **Done when:** a stranger can click one button and see something visibly impressive within a few seconds, on a phone.
 
@@ -213,6 +236,12 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-21** — Airframe geometry is **procedural, not a CAD import**. The intended source (Stanford MSL TrajBridge) turned out to have no CAD at all — it's a PX4↔ROS 2 bridge. The hardware CAD lives in `StanfordMSL/msl_quad`, is SolidWorks-only (`.SLDPRT`/`.SLDASM`) for every structural part, and describes an F330 frame with an Odroid XU4 — not this build. Procedural geometry is smaller, needs no conversion, no licence question, and is honestly *this* aircraft.
 - **2026-08-21** — Auto-rotation stops permanently on first pointer interaction. Found while testing: a slowly drifting model makes the hotspots genuinely hard to hit, especially on touch.
 - **2026-08-21** — Hotspot markers use fixed screen size (no `distanceFactor`) with leader lines back to the component. Perspective-scaled markers shrank to untappable sizes and piled up on each other.
+- **2026-08-22** — Phase 3 parked before Phase 4 rather than built in order. There are no mesh files in the repo to optimise, so the pipeline would have had no inputs; a CI job with nothing to do fails quietly and teaches you nothing. Unpark when a real `.glb` first needs to ship.
+- **2026-08-22** — The Sobel demo is **plain WebGL2, not three.js**. One shader over two triangles; a scene graph would have added ~930 KB to save about forty lines. This is why `/lab/sobel` is 468 KB against `/lab`'s 1,382 KB — three.js stays confined to the one route that genuinely needs it.
+- **2026-08-22** — The no-camera fallback is a **procedurally drawn test target**, not a bundled sample clip, for the same reason the airframe is procedural: a video would have been the heaviest asset on the site. It also animates, which matters — a still image cannot demonstrate that the convolution runs per frame. Its content is diagnostic on purpose (contrast staircase, resolution wedge, smooth gradient), so the page can point at what the operator does and does not respond to.
+- **2026-08-22** — Gradient magnitude passes through a `smoothstep(0.06, 0.55)` rather than a hard threshold. A binary cut looks crisp on a test chart and turns to speckle on a noisy phone camera.
+- **2026-08-22** — The render loop lives in an effect keyed by a session id that is also the `<canvas>` key. Disposing a WebGL context calls `loseContext()`, which permanently poisons that canvas element — found in testing, where a second run failed with "shader failed to compile". Every run therefore gets a brand-new canvas. Do not "simplify" this back into the click handler.
+- **2026-08-22** — Confirmed the `/lab` airframe's bare-lines appearance is the intended instrument-schematic styling (unlit `meshBasicMaterial` + `<Edges>`), not a missing texture. Recorded because it reads as a defect at first glance and will otherwise be "fixed" by a future session.
 - **2026-08-21** — `site.cv` and `socials.linkedin` ship as `null` and their links render conditionally, so the live site never carries a dead link while those are outstanding.
 
 ---
@@ -231,4 +260,11 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go — 
 
 | Date | What | Measurement |
 |---|---|---|
-| | | |
+| 2026-08-21 | Content routes, uncompressed JS | 455 KB |
+| 2026-08-21 | `/lab` (three.js + drei), uncompressed JS | 1,382 KB |
+| 2026-08-22 | `/lab/sobel`, uncompressed JS | 468 KB — **+13 KB over baseline**, no three.js |
+| 2026-08-22 | `/lab/sobel` under SwiftShader (software rasteriser, worst case) | 16–23 fps, camera and test target alike |
+
+Measured by loading each route from `next start` in headless Chromium and summing JS
+response bodies. The number worth keeping: a real-time CV demo cost 13 KB, because it is
+one shader and two triangles rather than a scene graph.

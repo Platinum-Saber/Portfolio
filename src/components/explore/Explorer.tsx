@@ -1,17 +1,18 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { NEUTRAL, type FlightInput } from '@/lib/explore/flight';
 import type { Zone } from '@/lib/explore/zones';
 import { FlightSticks } from './FlightSticks';
+import { useWebGLSupport } from './useWebGLSupport';
+import {
+  IMMERSIVE_FRAME,
+  OVERLAY_BUTTON,
+  overlayButtonStyle,
+  useImmersive,
+} from './useImmersive';
 import type { JumpRequest, Telemetry } from './Scene';
 
 const Scene = dynamic(() => import('./Scene').then((m) => m.Scene), {
@@ -30,27 +31,6 @@ const Scene = dynamic(() => import('./Scene').then((m) => m.Scene), {
     </div>
   ),
 });
-
-type Support = 'checking' | 'ok' | 'unsupported';
-let cachedSupport: Support | null = null;
-
-function readSupport(): Support {
-  if (cachedSupport) return cachedSupport;
-  try {
-    const canvas = document.createElement('canvas');
-    cachedSupport =
-      window.WebGLRenderingContext &&
-      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-        ? 'ok'
-        : 'unsupported';
-  } catch {
-    cachedSupport = 'unsupported';
-  }
-  return cachedSupport;
-}
-
-const NEVER_CHANGES = () => () => {};
-const SERVER_SNAPSHOT = (): Support => 'checking';
 
 /**
  * Whether the primary pointer is a finger.
@@ -103,11 +83,7 @@ const KEYS: Record<string, keyof FlightInput | undefined> = {
 };
 
 export function Explorer({ zones }: { zones: Zone[] }) {
-  const support = useSyncExternalStore(
-    NEVER_CHANGES,
-    readSupport,
-    SERVER_SNAPSHOT,
-  );
+  const support = useWebGLSupport();
   const coarsePointer = useCoarsePointer();
 
   const [flying, setFlying] = useState(false);
@@ -123,7 +99,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   // marker register as a new request.
   const [jump, setJump] = useState<JumpRequest | null>(null);
   const held = useRef(new Set<string>());
-  const frame = useRef<HTMLDivElement>(null);
+  const { frame, immersive, enter, exit } = useImmersive<HTMLDivElement>();
   // Touch contributions are kept apart from keyboard ones so releasing a key
   // cannot cancel a stick that is still being held, and vice versa.
   const sticks = useRef({ left: { x: 0, y: 0 }, right: { x: 0, y: 0 } });
@@ -170,8 +146,9 @@ export function Explorer({ zones }: { zones: Zone[] }) {
    */
   const takeControl = useCallback(() => {
     setFlying(true);
+    void enter();
     frame.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, []);
+  }, [enter, frame]);
 
   useEffect(() => {
     if (!flying) {
@@ -241,15 +218,31 @@ export function Explorer({ zones }: { zones: Zone[] }) {
       column overflows by exactly the scrollbar's width and gives the whole
       page a horizontal scrollbar.
     */
-    <div className="relative left-1/2 w-[min(94vw,1700px)] -translate-x-1/2">
+    /*
+      The centring transform has to come off while the canvas is immersive.
+      `position: fixed` resolves against the nearest transformed ancestor, not
+      the viewport, so `-translate-x-1/2` silently turns a fixed frame into an
+      absolutely-positioned box inside this 94vw column.
+    */
+    <div
+      className={
+        immersive
+          ? ''
+          : 'relative left-1/2 w-[min(94vw,1700px)] -translate-x-1/2'
+      }
+    >
       <div
         ref={frame}
         // Tall enough to fly in. min-h keeps it usable on a short laptop
         // window, where 80vh can be under 400px.
-        className="relative h-[80vh] max-h-[900px] min-h-[420px] w-full overflow-hidden rounded-lg border"
+        className={
+          immersive
+            ? IMMERSIVE_FRAME
+            : 'relative h-[80vh] max-h-[900px] min-h-[420px] w-full overflow-hidden rounded-lg border'
+        }
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
+          borderColor: immersive ? 'transparent' : 'var(--border)',
+          backgroundColor: immersive ? '#0b0e11' : 'var(--bg-subtle)',
         }}
       >
         {support === 'ok' && (
@@ -280,8 +273,43 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           )}
         </div>
 
+        {/*
+          The jump list follows the canvas into fullscreen. It is the
+          accessible route to every marker, and leaving it behind on a page the
+          visitor can no longer see would be a regression dressed as a feature.
+          The copy below stays mounted but hidden, so focus never jumps.
+        */}
+        {immersive && (
+          <div className="absolute top-3 right-3 flex max-w-[min(70vw,52rem)] flex-wrap justify-end gap-2">
+            {zones.map((zone) => (
+              <button
+                key={zone.id}
+                type="button"
+                onClick={() =>
+                  setJump((previous) => ({
+                    id: zone.id,
+                    nonce: (previous?.nonce ?? 0) + 1,
+                  }))
+                }
+                className={OVERLAY_BUTTON}
+                style={overlayButtonStyle(discovered.has(zone.id))}
+              >
+                {zone.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={exit}
+              className={OVERLAY_BUTTON}
+              style={overlayButtonStyle()}
+            >
+              exit ✕
+            </button>
+          </div>
+        )}
+
         {/* Instruments. */}
-        {flying && (
+        {flying && !immersive && (
           <p
             className="pointer-events-none absolute top-3 right-3 text-right font-mono text-[11px]"
             style={{ color: '#7d8794' }}
@@ -312,6 +340,18 @@ export function Explorer({ zones }: { zones: Zone[] }) {
               </p>
             </div>
           </div>
+        )}
+
+        {flying && immersive && (
+          <p
+            className="pointer-events-none absolute bottom-4 left-4 font-mono text-[11px]"
+            style={{ color: '#7d8794' }}
+          >
+            alt {telemetry.altitude.toFixed(1)} m · {telemetry.speed.toFixed(1)}{' '}
+            m/s · hdg {telemetry.heading.toFixed(0).padStart(3, '0')}
+            <br />
+            esc to leave fullscreen
+          </p>
         )}
 
         {/* Keyboard legend, bottom right, for anyone flying with a mouse and
@@ -359,7 +399,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
         this site, never a requirement, and nobody should have to be good at it
         to reach the contact details.
       */}
-      <div className="mt-5">
+      <div className="mt-5" hidden={immersive}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2
             className="font-mono text-[11px] tracking-widest uppercase"

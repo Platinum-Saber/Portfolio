@@ -157,11 +157,18 @@ export default function ExplorePage() {
           ← Back to the readable version
         </Link>
         <Link
+          href="/explore/lab"
+          className="hover:underline"
+          style={{ color: 'var(--accent)' }}
+        >
+          Inside the lab →
+        </Link>
+        <Link
           href="/lab"
           className="hover:underline"
           style={{ color: 'var(--accent)' }}
         >
-          Lab →
+          Airframe explorer →
         </Link>
       </nav>
     </div>

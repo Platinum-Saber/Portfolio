@@ -1,0 +1,61 @@
+# Phase 3 — the asset pipeline, as CI.
+#
+# Raw models live in `assets/raw/`; the web-ready output lives in
+# `public/models/` and is committed, so a Vercel build never processes a mesh
+# and never needs this toolchain installed. Push a raw file, get an optimised
+# one back in the same branch.
+#
+# Committing generated output is the deliberate choice here. The alternative —
+# building assets during the Vercel build — makes every deploy depend on a
+# toolchain that has nothing to do with Next.js, and makes a broken pipeline
+# look like a broken site.
+name: Build 3D assets
+
+on:
+  push:
+    paths:
+      - 'assets/raw/**'
+      - 'scripts/build-assets.mjs'
+      - '.github/workflows/assets.yml'
+  workflow_dispatch:
+
+# The job commits back to the branch that triggered it.
+permissions:
+  contents: write
+
+concurrency:
+  group: assets-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Optimise
+        run: npm run assets:build
+
+      # No texture step. Every scene on this site renders unlit, so the
+      # pipeline deletes textures rather than compressing them — see the header
+      # of scripts/build-assets.mjs. When an asset first ships a texture, add
+      # KTX-Software here and a textured profile there, in one commit.
+
+      - name: Commit optimised output
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/models
+          if git diff --cached --quiet; then
+            echo 'Assets unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore(assets): rebuild optimised models [skip ci]'
+          git push

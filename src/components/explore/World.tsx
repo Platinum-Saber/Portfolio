@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { Suspense, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BufferAttribute, BufferGeometry, type Group } from 'three';
 import { makeSeededRandom } from '@/lib/random';
+import { PbrModel } from './LoadedModel';
 import { WORLD_HALF, ZONE_RADIUS, type Zone } from '@/lib/explore/zones';
 
 const ACCENT = '#3ddba0';
@@ -76,6 +77,52 @@ function Scenery() {
     <lineSegments geometry={geometry}>
       <lineBasicMaterial color={STRUCTURE} transparent opacity={0.75} />
     </lineSegments>
+  );
+}
+
+/**
+ * The ground: a stylised city plate, scaled across the whole 120-unit world.
+ *
+ * It sits *under* the procedural skyline rather than replacing it, because the
+ * two are doing different jobs and neither can do the other's. This plate is a
+ * regular grid of identical towers on a gradient — handsome, and completely
+ * uniform, which is exactly what you want underfoot and exactly what you do
+ * not want as the thing you navigate by. `Scenery` above is seeded and
+ * irregular, so no two parts of the sky look alike and you can tell where you
+ * are; it also keeps a 12-unit hole in the middle where the drone starts and
+ * the first three markers live, which a uniform grid cannot.
+ *
+ * ── The two numbers ────────────────────────────────────────────────────────
+ * RELIEF squashes it vertically. At true scale the towers stand about 10 units
+ * — straight through the flight volume, so you would fly inside buildings that
+ * have no collision, and markers at y = 4–9 would be swallowed. Flattened they
+ * read as a city seen from a great height, which is what a drone at altitude
+ * should see anyway. Non-uniform scale on an authored mesh is usually a smell;
+ * on a stylised plate whose whole content is "boxes on a square" it is free.
+ *
+ * TINT is multiplied into the unlit material. The source is near-white and
+ * very bright, and this world is deliberately dark so that the markers and the
+ * craft own every bright pixel in the frame. Untinted, the ground shouts over
+ * both. Multiply only ever removes light, so the gradient the author drew
+ * survives intact — just quieter.
+ */
+const CITY_RELIEF = 0.32;
+const CITY_TINT = '#1b4f52';
+
+function CityPlate() {
+  return (
+    // No fallback: before it arrives the dark ground plane below is already a
+    // complete floor, so the world is never broken, only plainer.
+    <Suspense fallback={null}>
+      <group scale={[1, CITY_RELIEF, 1]}>
+        <PbrModel
+          url="/models/city.glb"
+          span={WORLD_HALF * 2}
+          anchor="floor"
+          tint={CITY_TINT}
+        />
+      </group>
+    </Suspense>
   );
 }
 
@@ -206,11 +253,14 @@ export function World({
       <Boundary />
 
       {/* Ground. Dark and matte so the markers and the drone carry all the
-          brightness in the frame. */}
+          brightness in the frame. Kept under the city plate: it is what the
+          floor is until that loads, and what it is past the plate's edge. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
         <planeGeometry args={[WORLD_HALF * 2, WORLD_HALF * 2]} />
         <meshBasicMaterial color="#0b0e11" />
       </mesh>
+
+      <CityPlate />
 
       {zones.map((zone) => (
         <Marker

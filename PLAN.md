@@ -2,7 +2,7 @@
 
 **Owner:** Suhan · **Repo:** `D:\Projects\Portfolio`
 **Architecture rationale:** see [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-**Started:** 2026-08-21 · **Last updated:** 2026-08-22
+**Started:** 2026-08-21 · **Last updated:** 2026-08-23
 
 > **How to use this file.** Each phase is independently completable and ends in something deployed and working. Tick boxes as you go, update the status table, and append to the Decision Log whenever you make a call that a future session would otherwise have to re-litigate. To resume after a break, read §1 and §2, then jump to the first phase not marked ✅.
 
@@ -15,7 +15,7 @@
 | 0 | Foundations | Repo + Vercel deploy pipeline live | ✅ Done |
 | 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 In progress |
 | 2 | 3D layer | Three interactive scenes + the explorable world | 🟡 Built, needs device test |
-| 3 | Asset pipeline | Optimised GLB/KTX2 built in CI | ⏸️ Parked — nothing to process |
+| 3 | Asset pipeline | Optimised GLB built in CI | ✅ Done |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | 🟡 Built, needs device test |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | 🟡 Code done, needs your accounts |
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started |
@@ -31,12 +31,20 @@ is never loaded by a content page:
 | `/lab` | Airframe Explorer — the FYP quadrotor as a schematic | 1,402 KB |
 | `/lab/sobel` | Sobel edge detection as a WebGL2 shader, live on camera | 475 KB (no three.js) |
 | `/lab/ascilam` | Collaborative SLAM arena — two scouts, drift, fusion | 1,395 KB |
-| `/explore` | The whole portfolio as a world you fly through | 1,390 KB |
+| `/explore` | The whole portfolio as a world you fly through | 1,469 KB + 437 KB models |
+| `/explore/lab` | The portfolio as a room, with an interactive console | 1,468 KB + 3,100 KB models |
 
 Content routes are unchanged at 462–475 KB. `/` gained only a link.
 
-**Currently working on:** Phase 5 code is written and its failure paths are tested. What
-is left is account work only — running the SQL, setting two env vars in Vercel, deploying
+**Currently working on:** Phase 3 landed on 2026-08-23, out of order, because the first
+real meshes arrived. `assets/raw/` → `npm run assets:build` → `public/models/`, wired to CI.
+Both models are placed in `/explore`: the VT-802 is the craft you fly, in full PBR with a
+generated environment map, and the quadcopter is parked scenery in the schematic language.
+The world has a ground — a stylised city plate under the procedural skyline — and there is
+now a second scene on the route: `/explore/lab`, an interior you fly a small drone around,
+with a console that lists and opens every project. `/lab` is untouched and stays procedural
+(see the Decision Log for why). Phase 5 code is written and its failure paths are tested. What
+is left there is account work only — running the SQL, setting two env vars in Vercel, deploying
 the notification function, adding two GitHub secrets. Step-by-step in
 [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md).
 
@@ -137,7 +145,8 @@ and stays editable as code as the real build changes.
       `/lab`, `/lab/ascilam` and `/explore`. The explore world is the heaviest of the three
       and the one most likely to disappoint on a phone
 - [ ] Drop the real scout CAD in when it is exported — swap-in point documented in
-      `ScoutModel.tsx`, and that is the moment Phase 3 unparks
+      `ScoutModel.tsx`. The pipeline is live now: add it to `ASSETS` in
+      `scripts/build-assets.mjs` and render it through `SchematicModel`, as `/explore` does
 
 **On the model looking like bare lines:** that is the intended styling, not a missing
 texture. Every mesh is `meshBasicMaterial` at 18–35% opacity with a drei `<Edges>` overlay
@@ -153,22 +162,43 @@ one route and fetched only after it renders. No console errors.
 
 ---
 
-### Phase 3 — Asset pipeline — ⏸️ PARKED (2026-08-22)
-*Goal: asset optimisation is reproducible and automatic. Skip until you have more than a couple of models.*
+### Phase 3 — Asset pipeline — ✅ Done (2026-08-23)
+*Goal: asset optimisation is reproducible and automatic.*
 
-**Parked, not abandoned.** The repo contains no mesh files at all — the airframe is
-procedural geometry and the Sobel demo is two triangles — so every task below would build
-a pipeline that processes zero assets, and a CI job with no inputs rots silently. Unpark
-the moment a real `.glb` needs to ship; the checklist below is still the right one.
+**Unparked on 2026-08-23**, the moment two real `.glb` files existed. `assets/raw/` holds
+the untouched sources; `npm run assets:build` (`scripts/build-assets.mjs`) writes
+web-ready GLBs into `public/models/`; `.github/workflows/assets.yml` runs the same command
+on any push touching `assets/raw/` and commits the result back. A Vercel build never sees
+a mesh toolchain.
 
-- [ ] Source/author models; keep originals in `assets/raw/` (git-lfs if large)
-- [ ] `gltf-transform optimize` (or `gltfpack`) — Draco/meshopt geometry compression
-- [ ] KTX2/Basis texture compression (`toktx`)
-- [ ] GitHub Action: run on push to `assets/raw/`, emit to `public/models/`
-- [ ] Record before/after sizes in the Notes section — good portfolio material
-- [ ] Confirm the optimised assets still render correctly
+- [x] Source/author models; originals in `assets/raw/` — plain git, no LFS. **Now 101 MB,
+      and `lab.glb` is 59 MB, past GitHub's 50 MB per-file warning though under the 100 MB
+      hard limit.** The no-LFS call still stands but it is no longer comfortable: one more
+      asset this size and it needs revisiting. `models/environments/` is gitignored and
+      must stay that way — it holds a 402 MB file that can never be committed
+- [x] `gltf-transform` — flatten → dedup → join → **weld** → simplify (meshopt) → prune →
+      quantize → EXT_meshopt_compression
+- [x] Three profiles: `schematic` (appearance deleted, POSITION only), `pbr` (materials
+      intact, NORMAL + TEXCOORD_0 kept), and `interior` — `pbr` that additionally does
+      **not merge meshes**, so a room's objects stay individually addressable
+- [x] Texture compression — **WebP via sharp**, not KTX2/Basis. Revisited and **measured**
+      on the lab, as this line previously said to: KTX2 came out 5.92 MB on the wire
+      against WebP's 2.53 MB, because UASTC normal maps are large and the KTX2 step
+      decodes `EXT_meshopt_compression` on the way through. It buys ~12 MB VRAM against
+      ~95 MB, but 5.92 MB alone breaches the 5 MB payload budget. The lever for VRAM here
+      is **fewer maps, not a different codec**
+- [x] GitHub Action on push to `assets/raw/`, emitting to `public/models/`
+- [x] Before/after sizes recorded in §6
+- [x] Optimised assets confirmed rendering — headless Chromium against `next start`,
+      both models visible in `/explore`
 
-**Done when:** dropping a raw `.glb` into the repo produces an optimised, budget-compliant asset with no manual steps.
+**Done when:** ~~dropping a raw `.glb` into the repo produces an optimised,
+budget-compliant asset with no manual steps.~~ It does.
+
+**The one number that matters:** `weld` is the whole pipeline. The sources are unwelded —
+vertices duplicated per triangle — so the simplifier sees no shared edges and can collapse
+nothing at all. Without that single call the quadcopter comes out at 501,338 triangles
+instead of 5,940.
 
 ---
 
@@ -298,6 +328,37 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-22** — Added `vercel.json` pinning `"framework": "nextjs"`. The `e30c5ff` deploy failed with `No Output Directory named "public" found` — not a build failure at all (`next build` completed and generated all 17 pages), but Vercel treating the project as Framework Preset *Other*, which runs the build and then hunts for a folder of static files to serve. Pinning it in the repo makes the setting version-controlled rather than a dashboard checkbox nobody remembers ticking.
 - **2026-08-22** — The ASCILAM visualisation shows **2D scans accumulating into an occupancy grid**, not a point cloud. The scouts carry RPLiDAR A1 / STL-19P — 2D sensors — and the coordinator fuses occupancy grids. A 3D point cloud would have looked better to a general viewer and implied hardware that does not exist. The log-odds grid at 5 cm is what the real system actually produces.
 - **2026-08-22** — The SLAM arena models **odometry drift explicitly**, and each scout files its scans at its *believed* pose. That one detail generates the whole demonstration: self-consistent-but-wrong local maps, two ghosts that refuse to align when overlaid, and a fused map that means something. Drift is seeded, not random — the unaligned view is a teaching illustration and must not occasionally come out looking nearly correct.
+- **2026-08-23** — Phase 3 **unparked and completed**, still out of order, because two real `.glb` files arrived. The parked note said "unpark the moment a real `.glb` needs to ship"; it did, so it was.
+- **2026-08-23** — **`/lab` keeps its procedural airframe.** The obvious move was to swap the new quadcopter mesh in, and it was wrong. `Airframe.tsx` is a dimensioned model of *this* build — the Jetson block is 100 × 79 mm because that is the Orin Nano carrier, and there is a frustum drawn at the Gemini 336's real 90° × 65° FOV. The six hotspots in `drone.ts` sit at those component coordinates. The new mesh is a generated ducted hobby quad with prop guards and a strapped LiPo; nothing on it corresponds to any of that, so "NVIDIA Jetson Orin Nano 8GB" would point at a stranger's airframe. Same reasoning as the 2026-08-21 CAD-import decision: the procedural one is honestly this aircraft.
+- **2026-08-23** — ~~Both models render schematic, not textured~~ — **revised the same day.** The rule now applies to *scenery only*: the world stays unlit fill plus edges, and the craft you fly is the single PBR object in it. That contrast turns out to do the work the uniform version was trying to do — the one real thing in a drawing of a place is exactly where a visitor's eye should go, and the craft is what they are steering. Scenery still gets textures deleted, which is still where its 99.9% reduction comes from.
+- **2026-08-23** — The **VT-802 flies, the quadcopter parks** — the reverse of the first arrangement. The VT-802 has an asymmetric silhouette that reads as a heading from behind, hull markings worth seeing up close, and separately-authored materials; the ducted quad is four-way symmetric and needed a bolted-on nose cone to be flyable at all. Putting the more legible craft under the visitor's hands and the simpler one on the ground was the right way round.
+- **2026-08-23** — The craft is **PBR with a generated environment map**, and those are one decision, not two. Metal reflects its surroundings and emits nothing of its own, so a metallic material with no environment renders very nearly black however many lamps you point at it. `RoomEnvironment` prefiltered through `PMREMGenerator` is procedural geometry — code, not a downloaded HDR — so it costs zero bytes on the wire and cannot fail to load, which matters on a site whose architecture is "nothing on the render path can break". The two directional lights on top are for *shape*, not brightness: the environment alone lights the hull evenly, which is legible but flat and makes attitude hard to read while flying.
+- **2026-08-23** — Textures are **WebP at 1024, not KTX2**. KTX2 keeps maps compressed in VRAM (~3 MB here against ~24 MB) but wants a `toktx` binary in CI plus a ~250 KB transcoder on the render path, and its ETC1S mode mangles normal maps — a move would need UASTC for that slot specifically. At one textured asset the transcoder costs more than it saves. This is now the closest call in the pipeline rather than a non-question.
+- **2026-08-23** — TANGENT is dropped even though normal maps are kept. three derives tangents in the shader when the attribute is absent, which is fine at this scale and saves a vec4 per vertex.
+- **2026-08-23** — `gradient_city` **underlies the procedural skyline rather than replacing it**, because the two are doing different jobs. The plate is a regular grid of identical towers — handsome, and completely uniform, which is what you want underfoot and precisely what you cannot navigate by. `Scenery` is seeded and irregular so no two parts of the sky look alike, and it keeps a 12-unit hole in the middle for the spawn point and the first three markers, which a uniform grid cannot. Keeping both gave the world a horizon line it never had.
+- **2026-08-23** — The city plate is **squashed to 32% height and tinted dark**. At true scale across 120 units its towers stand ~10 units — straight through the flight volume, so you would fly inside collisionless buildings and markers at y = 4–9 would be swallowed. Flattened, it reads as a city seen from height, which is what a drone at altitude should see. The tint is a multiply into the unlit material: the source is near-white and this world is deliberately dark so the markers and the craft own every bright pixel. Multiply only removes light, so the author's gradient survives, just quieter.
+- **2026-08-23** — Environment candidates **measured before choosing, and three of four rejected.** `a_metaverse_bar` floors at ~400k triangles and ~7 MB no matter the budget requested — 3,366 primitives across 68 materials, and the simplifier works per-primitive and cannot merge across a material boundary, so a thousand tiny props are each already at their minimum. `sci_fi_hallway` is 402 MB and 7M triangles: structurally much better (12 materials, 657 primitives, would likely land ~2–3 MB) but it exceeds GitHub's 100 MB per-file hard limit, so it cannot enter the repo at all. `scifi_room_interior` builds fine at 170–262 KB but is an interior. The deeper point: three of the four are rooms, and `/explore` is an open 120-unit world flown at 17 m/s. `gradient_city` was the only flyable exterior, the cheapest by two orders of magnitude, one draw call, and already authored `KHR_materials_unlit` — the site's visual language, for free.
+- **2026-08-23** — `models/environments/` is **gitignored**, not adopted as a second raw-asset folder. It is a 467 MB staging area holding a file that cannot be committed under any arrangement short of LFS. Anything that ships is copied into `assets/raw/` first, and only if its source is small enough to live in git.
+- **2026-08-23** — The lab is a **second scene on its own route** (`/explore/lab`), not a replacement for the open world. The two are different machines: 2.2 m/s in a 14 m room against 17 m/s in a 120 m world, with collision against without. Folding them into one component would have meant a file of conditionals; keeping both means the outdoor world survives and either can earn the front door later.
+- **2026-08-23** — Lab objects are addressed by **material name, not node name**. The source's nodes are `Object_2` … `Object_30`, which say nothing; its materials are descriptive (Polish, from the original author) — `Panel_sterowania` the control panel, `drzwi` the door, `szafka_body` the cabinet, `rura_gwna_baza` the tank. Every mesh has exactly one primitive with exactly one material, so material name is a reliable one-to-one handle, and the only one available.
+- **2026-08-23** — Hence the `interior` profile **must not merge meshes**. Merging is the pipeline's default and saves draw calls; here it would leave nothing to attach behaviour to. This is the one place a performance optimisation is deliberately switched off for a functional reason.
+- **2026-08-23** — Lab textures at **512, not 1024**. Indoors the binding constraint is VRAM, not bytes: the source ships 110 maps, which cost ~380 MB of texture memory at 1024 against ~95 MB at 512. 95 MB is still high and the mid-range Android pass is now the check that decides it — the fallback is dropping normal and metallic-roughness, which takes it to ~54 MB in one edit.
+- **2026-08-23** — Collision is **axis-aligned boxes, resolved one axis at a time**. Boxes because at 2.2 m/s the difference between a box and a pipe's true silhouette is centimetres nobody feels, and a physics engine would outweigh the whole scene. Per-axis because resolving all three together and rejecting the result sticks you to any wall you brush; per-axis leaves the other two free, so you slide along the surface instead.
+- **2026-08-23** — While the projects terminal is open the **arrow keys drive the list, not altitude** (space and shift still climb). A control that silently changes meaning is bad, so the on-screen legend changes with it. The alternative — a separate modifier — puts a chord between the visitor and the only content on the page.
+- **2026-08-23** — The terminal is operable by **click, tap and keyboard**, and every station also has a plain button under the canvas that flies the craft to it. Nothing in the room is reachable only by flying well; the same rule the outdoor jump list follows.
+- **2026-08-23** — Four things were extracted to their own files while building the second scene — `Lighting`, `panelPosition`, `useWebGLSupport`, and the model loaders in `LoadedModel`. Extracted rather than copied specifically because the environment map is load-bearing: it should not be possible to write a new scene that forgets it and renders every metal surface black.
+- **2026-08-23** — The parked quadcopter is **out of `/explore`**. Its pipeline entry and built 24 KB asset are deliberately left in place rather than deleted, so the model is one line from being placed somewhere again — but it currently has no caller, and neither does `SchematicModel`. If neither finds a home, remove both: unreferenced render code that nothing exercises is the same rot as a CI job with no inputs.
+- **2026-08-23** — Taking control goes **fullscreen in both explore scenes**, through one shared hook (`useImmersive`). Standardised rather than copied because every interesting part of it is an edge case, and a second hand-written copy would get one of them wrong. Same frame classes, same overlay button styling, same exit affordance and Escape hint in both.
+- **2026-08-23** — Fullscreen, by two routes. The Fullscreen API where it exists, and a fixed-position overlay where it does not — iPhone Safari has never implemented `Element.requestFullscreen` (iPad has), so the one platform where a small canvas hurts most is the one the standard route does not reach. Feature-detected, never browser-sniffed. The request must be made inside the click handler or the browser refuses it as a non-gesture, and the refusal is a rejected promise rather than a visible error.
+- **2026-08-23** — The station buttons **follow the canvas into fullscreen**. They are the accessible route to every station, and leaving them behind on a page you can no longer see would have been a regression dressed as a feature. The outer nav is hidden rather than unmounted so focus does not move.
+- **2026-08-23** — The lab set is **open-fronted**, like almost every downloadable interior: above y = 2 it has walls only at z = -7 and x = 11, so from most of the room you look out through a hole and the canvas shows through as black. `RoomShell` closes it with a dark inward-facing box and a schematic grid. Drawn on **all six faces**, not just the two that are missing — the real walls are in front of it and hide it, so this cannot fall out of step if the room is ever re-exported. Enumerating the gaps instead would be a list that silently goes stale. The drone could never reach the openings anyway; `ROOM.bounds` sits ~0.6 m inside on every axis. This was only ever about what you can see.
+- **2026-08-23** — The shell's first pass was near-black with faint lines, on the theory that a backdrop should recede. It receded so far it was indistinguishable from the void it covered — the gap still read as a hole, just a hole with two lines in it. A backdrop has to be visibly *something*; the tone went up until it read as a wall.
+- **2026-08-23** — `position: fixed` **resolves against the nearest transformed ancestor, not the viewport** — and `/explore` centres its canvas with `left-1/2 -translate-x-1/2`. Going fullscreen there silently produced an absolutely-positioned box inside a 94vw column rather than a full-screen canvas. The wrapper's transform is dropped while immersive. Verified rather than assumed: the fullscreen element measures 1280x820 at 0,0 on both routes.
+- **2026-08-23** — Meshopt compression, **not Draco**. `useGLTF`'s `useDraco` defaults to *true* and points a DRACOLoader at `https://www.gstatic.com/draco/...` — a third-party CDN fetch on the render path of a site whose entire architecture is "nothing on the render path can break". `useGLTF(url, false)` turns it off; drei bundles the meshopt decoder locally, so nothing is fetched from any origin but ours.
+- **2026-08-23** — Optimised output is **committed to the repo**, not built during the Vercel deploy. Building assets at deploy time would make every deploy depend on a toolchain unrelated to Next.js, and would make a broken pipeline look like a broken site.
+- **2026-08-23** — ~~The craft got a nose cone it did not have in the mesh~~ — **moot once the VT-802 took over as the craft.** The cone existed because a ducted quad is four-way symmetric at flying distance and heading otherwise reads as broken controls. The VT-802's silhouette carries its own heading, so the cone is gone. Keep the reasoning: any radially symmetric craft put under the visitor's hands will need the cue back.
+- **2026-08-23** — **The rotors do not turn**, and that is a limitation rather than a choice. The pipeline merges each source into a single mesh, so there is nothing to attach a rotation to. Overlaying fake discs on modelled props looks worse than stillness. The fix is upstream: export rotors as their own nodes, set `keepNamed: true` on the `join` step, then find and turn them by name.
+- **2026-08-23** — The procedural drone is **kept as the Suspense fallback**, not deleted. It costs a few KB and it is what flies while the GLB is in flight — or for good, if that fetch never lands. A flight sim with no aircraft is a worse failure than a plain one.
 - **2026-08-22** — The scouts' patrol routes were **rewritten to overlap**. The first version kept each scout strictly in its own half, which told the "fusion buys coverage" story but left nothing mapped twice — so there was no doubled wall to see and the unaligned view just looked like two tidy halves. Both now cross the doorway twice a lap.
 - **2026-08-22** — The fused view is built from **known-true poses, standing in for a solved alignment**. Not a browser reimplementation of scan matching, and the page says so in as many words rather than letting the visualisation imply more than it does.
 - **2026-08-22** — Wheel slip is kept, not fixed. Driving a scout into a wall stops the robot while its odometry keeps counting, tearing the map within seconds. It reads as a bug for about two seconds and then as the best interactive explanation of drift on the page, so it is documented and invited rather than clamped away.
@@ -342,7 +403,25 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go — 
 | 2026-08-22 | `/explore`, uncompressed JS | 1,390 KB (three.js, isolated to this route) |
 | 2026-08-22 | SLAM arena, 45 s autonomous run | fused coverage 74.8%; α drift 1.76 m / 6.5°, β 0.99 m / −1.9° |
 | 2026-08-22 | Content routes after both additions | 462–475 KB, still no three.js |
+| 2026-08-23 | `quadcopter.glb` raw → built, `schematic` profile | 16,881 KB → **24 KB** (99.9%), 501,338 → 4,956 triangles |
+| 2026-08-23 | `vt-802.glb` raw → built, `pbr` profile | 25,144 KB → **410 KB** (98.4%), 43,384 → 18,146 triangles; textures 21,909 KB → 93 KB |
+| 2026-08-23 | `city.glb` raw → built, `pbr` profile | 260 KB → **27 KB** (89.6%), 2,616 triangles unchanged, 1 draw call |
+| 2026-08-23 | `/explore` after all three models | 1,467 KB JS (**+77 KB**: GLTFLoader, meshopt decoder, PMREM/RoomEnvironment) + **460 KB** of asset |
+| 2026-08-23 | `lab.glb` raw → built, `interior` profile | 59,397 KB → **2,690 KB** (95.5%), 179,429 → 91,213 triangles; 110 maps 49,090 KB → 1,371 KB at 512 |
+| 2026-08-23 | KTX2 measured against WebP on the lab | WebP 2.53 MB wire / ~95 MB VRAM · KTX2 (UASTC+ETC1S) 5.92 MB wire / ~12 MB VRAM — WebP kept |
+| 2026-08-23 | `/explore/lab` | 1,465 KB JS + 3,100 KB models = 4.57 MB, inside the 5 MB payload budget with little room |
+| 2026-08-23 | Environment candidates rejected on measurement | `a_metaverse_bar` floors at 400k tris / 7.1 MB; `sci_fi_hallway` 402 MB source, over GitHub's 100 MB file limit; `scifi_room_interior` 170–262 KB but an interior |
 
 Measured by loading each route from `next start` in headless Chromium and summing JS
 response bodies. The number worth keeping: a real-time CV demo cost 13 KB, because it is
 one shader and two triangles rather than a scene graph.
+
+**Harness note, learned the hard way on 2026-08-23.** A first pass read every route ~17%
+low and wildly unstable (`/projects` came out at 22 KB once). Two bugs, both worth not
+repeating: the response handler `await`ed `response.body()` inside the listener and the
+page was closed before those promises settled, so whole chunks vanished silently; and all
+routes shared one browser context, so each route was credited only with what the previous
+one had not already cached. Collect the body promises and `Promise.all` them before
+closing, and give every route a fresh `browser.newContext()`. With both fixed the
+unchanged routes reproduce the 2026-08-22 figures exactly — `/lab` 1,402 KB, `/lab/ascilam`
+1,395 KB, `/lab/sobel` 475 KB — which is the check that says the harness is honest.

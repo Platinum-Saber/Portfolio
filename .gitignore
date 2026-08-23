@@ -9,3 +9,11 @@ build/
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+_to_delete/
+
+# Unprocessed environment sources — a 467 MB staging folder, of which one file
+# is 402 MB. GitHub's hard per-file limit is 100 MB, so this cannot be
+# committed even with the raw-assets convention. Anything from here that ships
+# gets copied into assets/raw/ first, and only if the source is small enough to
+# live in git. See PLAN.md Phase 3.
+models/environments/

@@ -1,0 +1,61 @@
+{
+  "builtAt": "2026-08-23T13:53:39.829Z",
+  "assets": [
+    {
+      "name": "public/models/lab.glb",
+      "profile": "interior",
+      "before": {
+        "bytes": 60822996,
+        "triangles": 179429,
+        "textureBytes": 50267987
+      },
+      "after": {
+        "bytes": 2754572,
+        "triangles": 91213,
+        "textureBytes": 1403482
+      }
+    },
+    {
+      "name": "public/models/vt-802.glb",
+      "profile": "pbr",
+      "before": {
+        "bytes": 25747468,
+        "triangles": 43384,
+        "textureBytes": 22435120
+      },
+      "after": {
+        "bytes": 419328,
+        "triangles": 18146,
+        "textureBytes": 95440
+      }
+    },
+    {
+      "name": "public/models/city.glb",
+      "profile": "pbr",
+      "before": {
+        "bytes": 266352,
+        "triangles": 2616,
+        "textureBytes": 152493
+      },
+      "after": {
+        "bytes": 27664,
+        "triangles": 2616,
+        "textureBytes": 2184
+      }
+    },
+    {
+      "name": "public/models/quadcopter.glb",
+      "profile": "schematic",
+      "before": {
+        "bytes": 17285640,
+        "triangles": 501338,
+        "textureBytes": 2322859
+      },
+      "after": {
+        "bytes": 24260,
+        "triangles": 4956,
+        "textureBytes": 0
+      }
+    }
+  ]
+}

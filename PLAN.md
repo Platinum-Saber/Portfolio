@@ -2,7 +2,7 @@
 
 **Owner:** Suhan · **Repo:** `D:\Projects\Portfolio`
 **Architecture rationale:** see [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-**Started:** 2026-08-21 · **Last updated:** 2026-08-23
+**Started:** 2026-08-21 · **Last updated:** 2026-08-24
 
 > **How to use this file.** Each phase is independently completable and ends in something deployed and working. Tick boxes as you go, update the status table, and append to the Decision Log whenever you make a call that a future session would otherwise have to re-litigate. To resume after a break, read §1 and §2, then jump to the first phase not marked ✅.
 
@@ -18,8 +18,10 @@
 | 3 | Asset pipeline | Optimised GLB built in CI | ✅ Done |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | 🟡 Built, needs device test |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | 🟡 Code done, needs your accounts |
-| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started |
+| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — *gates Phase 8* |
 | 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
+| 8 | Design architecture | One visual language across every route | 🟡 In progress — 8.1, 8.2, 8.4 done · 8.3 parked |
+| 9 | Diegetic world | Zone info delivered inside the scene, not over it | ⬜ Not started — *after 8.2 + the Android pass* |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
@@ -48,8 +50,25 @@ is left there is account work only — running the SQL, setting two env vars in 
 the notification function, adding two GitHub secrets. Step-by-step in
 [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md).
 
+**Next up: Phase 8 — Design architecture** (8.1 started 2026-08-24), added 2026-08-24 after a study of three
+reference sites. The site is functional but does not read as one thing: `/explore` and `/lab`
+speak a console language the content routes do not. Phase 8 closes that gap and runs *before*
+Phase 6, since gating a design that has not been built yet is worthless. Rules in
+[`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md).
+
 Still outstanding from earlier phases: one pass on a real mid-range Android covering both
-`/lab` and `/lab/sobel`, the CV PDF, and the LinkedIn URL.
+`/lab` and `/lab/sobel`.
+
+**Resolved 2026-08-24:** both addresses are real — `sansikawaduge@` is the professional one
+and `sansikasuhan5@` the personal one. The site now uses the professional address everywhere
+(`site.email`, one change, six call sites), matching the CV.
+
+**One content gap the CV exposed (2026-08-24), and it is not code:**
+1. **The GTN Technologies internship is invisible on the site.** Nov 2025 – May 2026, Market
+   Backend team — a named industry role with shipped work (Horus, the VWAP service). `/about`
+   describes it as "production market data infrastructure" without the employer, the dates or
+   the title, and there is no work-experience section anywhere. This is the single strongest
+   ATS signal in the CV and the site does not carry it.
 
 ---
 
@@ -110,10 +129,10 @@ These are settled. Changing one means updating this file and noting why in the D
   - [x] Kobuki + Webots mobile robot control
   - [ ] Review the set and cut any that don't earn their place
 - [x] Each project page: problem → approach → what you built → result → stack → links (repo/demo/video)
-- [ ] **CV as a PDF** → drop at `public/suhan-waduge-cv.pdf`, then set `cv` in `src/lib/site.ts` (currently `null`, so no dead link ships)
+- [x] **CV as a PDF** → `public/suhan-waduge-cv.pdf`, `site.cv` set (2026-08-24). Served 200, 115,706 bytes, linked from `/about`
 - [x] Responsive layout, clean typography, dark/light
 - [x] Basic SEO: title/description per page, OpenGraph image, sitemap, robots.txt
-- [ ] **LinkedIn URL** → set `socials.linkedin` in `src/lib/site.ts` (currently `null`)
+- [x] **LinkedIn URL** → `socials.linkedin` set (2026-08-24); renders in the footer site-wide and on `/contact`
 - [ ] Deploy and read it on a phone end-to-end
 
 **Done when:** you'd be comfortable sending the link to a recruiter *today*, with no 3D on the page.
@@ -173,8 +192,14 @@ a mesh toolchain.
 
 - [x] Source/author models; originals in `assets/raw/` — plain git, no LFS. **Now 101 MB,
       and `lab.glb` is 59 MB, past GitHub's 50 MB per-file warning though under the 100 MB
-      hard limit.** The no-LFS call still stands but it is no longer comfortable: one more
-      asset this size and it needs revisiting. `models/environments/` is gitignored and
+      hard limit.** GitHub warned on the first push (2026-08-24) exactly as expected, and
+      the push succeeded — 85.6 MiB, `.git` now 87 MB. The blob is permanent in history;
+      shrinking it later means a rewrite, not a `.gitignore`. Three ways out when it stops
+      being tolerable, in increasing order of disruption: leave it and never add another
+      asset this size; move `assets/raw/` to LFS going forward (history unchanged); or stop
+      committing raw sources at all and keep only built output — which costs the CI
+      workflow its trigger, and that trigger is the whole reason raw sources are in the
+      repo. `models/environments/` is gitignored and
       must stay that way — it holds a 402 MB file that can never be committed
 - [x] `gltf-transform` — flatten → dedup → join → **weld** → simplify (meshopt) → prune →
       quantize → EXT_meshopt_compression
@@ -279,6 +304,12 @@ steps, each with a way to check it worked.
 - [ ] Buy the domain, point it at Vercel, verify HTTPS
 - [ ] Accessibility pass: keyboard nav, focus states, alt text, contrast, real text (not baked into canvas)
 - [ ] Lighthouse CI or bundle-size check gating PRs (stops the slow rot into a 40 MB page)
+- [ ] **Favicon.** `/favicon.ico`, `/icon.png` and `/apple-icon.png` all 404 today — found
+      2026-08-24 chasing an intermittent console 404 on `/`. Every first-time visit asks for
+      one. A `src/app/icon.svg` in the schematic language is enough; Next generates the rest
+- [ ] **`/` is 478 KB, 3 KB above the top of the recorded 462–475 band.** Only +1 KB of that
+      came from 8.2, so the drift predates this session. Pin down where before this phase's
+      budget gate means anything
 - [ ] Cross-browser: Chrome, Firefox, Safari (incl. iOS Safari — the usual WebGL offender)
 - [ ] OpenGraph/Twitter cards render correctly when the link is pasted into LinkedIn/WhatsApp
 - [ ] Privacy: no analytics that needs a cookie banner, or use a cookieless one
@@ -303,10 +334,384 @@ steps, each with a way to check it worked.
 
 ---
 
+### Phase 8 — Design architecture
+*Goal: make the site read as one machine. The content routes currently do not speak the
+language `/explore` and `/lab` speak, and that gap — not a shortage of effects — is what
+reads as disorganised.*
+
+**Reference:** [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) — the study of Igloo Inc,
+IRIS K and Chrome Tattoo Paris, and every rule this phase implements. Read it first; this
+section is the schedule, that file is the reasoning.
+
+**Runs before Phase 6.** Phase 6 is the accessibility, Lighthouse and cross-browser gate, and
+gating a design that has not been built yet is worthless. Phase 8 is numbered last and
+sequenced second-to-last on purpose — renumbering would break every Decision Log reference.
+
+**The governing metaphor is the instrument schematic / flight console.** Every new surface must
+be explainable as part of the console. If it cannot be, it does not ship.
+
+**The constraint that shapes all of it:** content routes stay at 462–475 KB with no three.js in
+the initial graph. That rules out the GSAP + Lenis + Three stack all three reference sites use,
+and it does not matter, because View Transitions and CSS scroll-driven animations cover the
+effect at 0 KB. GSAP/Lenis remain permitted inside `/explore` and `/lab` only.
+
+---
+
+#### 8.1 — Tokens — ✅ Done (2026-08-24)
+
+*Unblocks everything below, so nothing downstream hand-rolls a duration.*
+
+- [x] Motion tokens in `@theme` — `--t-fast: 180ms`, `--t-page: 420ms`,
+      `--ease-console: cubic-bezier(.16,1,.3,1)`, wired to `--default-transition-duration`
+      and `--default-transition-timing-function` so **every existing `transition-*` class
+      picks them up with no component edits**. Verified in the emitted CSS: `.transition-colors`
+      resolves to `var(--tw-duration,var(--default-transition-duration))`
+- [x] ~~One type scale in `@theme`~~ — **not built, and deliberately.** Tailwind's default
+      scale already *is* one scale; authoring a second would be the exact disorganisation this
+      phase exists to remove. 8.1 adds only what was missing: `--measure: 68ch`, defined and
+      not yet applied
+- [x] Real `prefers-reduced-motion` branch — the tokens collapse to 1 ms and
+      `animation-timeline: none` detaches scroll-driven animations so they render at their
+      **end** state. The blanket `!important` rule is kept underneath as a safety net, not as
+      the design
+- [x] `next build` passes; emitted CSS grew **150 bytes** and no utility changed shape
+
+**Done.** The one visible change: the default transition duration moves 150 ms → 180 ms
+site-wide, which is the point — one vocabulary, and every hover on the site now shares it.
+
+**Authoring rule this establishes, for 8.4:** a scroll reveal must be written
+**visible-by-default with the animation subtracting the start state.** An element that is
+invisible without its animation will vanish entirely under reduced motion.
+
+---
+
+#### 8.2 — `ConsoleCard` + the two dossiers — ✅ Done (2026-08-24)
+
+*The single highest organisational payoff on this list, and it is pure CSS.*
+
+Anatomy: mono uppercase label · dotted leader · sans value; 1 px `--border`; 2 px corners; no
+shadow, no gradient, no glass. Decorative chrome (version strings, corner ticks) is
+`aria-hidden`.
+
+- [x] `src/components/ConsoleCard.tsx` — `ConsoleCard` + `ConsoleField`. A field whose value is
+      `null` renders **nothing**, so callers pass unset data straight through
+- [x] `src/lib/operator.ts` — one source for both cards, for the same reason `skills.ts` exists.
+      `/` renders `SUMMARY`; `/about` renders `IDENTITY + SUMMARY + EXTENDED`. Nothing is stated
+      twice with two different values
+- [x] `/` summary card above the fold. It **replaced** the standalone accent location line,
+      which said in prose what the BASE row now says in the schema
+- [x] `/about` full dossier, same primitive, extended not restated
+- [x] Both themes verified by screenshot — light reads as ink-on-paper, dark as instrument
+- [x] Mobile verified at 390 px: below `sm` the row stacks label-over-value and the leader is
+      hidden. A leader only works when the value fits on the label's line
+- [ ] ~~Reuse `StatusBadge` for the STATUS row~~ — **not done, and it should not be.** That
+      component is typed to `ProjectStatus` (`in-progress` / `complete` / `archived`), which is
+      a project's build state, not a person's availability. Forcing an availability string
+      through it would have widened a well-typed component to mean two unrelated things
+- [ ] ~~Retrofit `/explore` zone panels and `/lab` callouts~~ — **moved to 9.1**, where it was
+      independently written down. It belongs there: it is scene work, and 9.1 is sequenced after
+      the Android pass for a reason
+- [x] `site.education` and `site.availability` filled from the CV (2026-08-24), so the card
+      now renders all five rows
+- [x] **Portrait** — `src/components/Portrait.tsx`, an optional slot on `ConsoleCard`. Head-and-
+      shoulders crop of the source photo, pre-built to the two sizes the site uses (8 KB / 21 KB
+      WebP) and served by a plain `<img>` with `srcset` and explicit `width`/`height`
+- [x] Portrait added to the OpenGraph card as well — inlined as a data URI read from disk at
+      build, since satori cannot fetch a relative URL and does not decode WebP
+- [x] Both cards widened to `max-w-2xl`: at `max-w-xl` the portrait squeezed the field column
+      and ROLE started wrapping
+
+**Real data only.** The Chrome reference can invent AGE and FAVORITE-MEAL because it is a
+persona; an engineering portfolio's currency is that every field is checkable. A dry true
+field beats an invented quirky one. Junk-glyph noise: at most one instance per page — the
+cards currently carry **none**, and neither needs it.
+
+**Done.** `/` answers *who is this* above the fold in static HTML — measured at **+1 KB**, the
+same +1 KB every route picked up from the shared chunk. No canvas, no client component, no
+layout shift.
+
+---
+
+#### 8.3 — Transitions — ⏸️ PARKED (2026-08-24)
+
+*One vocabulary, defined once, reused site-wide. Three different transitions read as a demo reel.*
+
+**Parked on the first day of work, because the premise was wrong.** The plan said this was a
+0 KB item on the strength of the View Transitions API. It is not, in this stack, today:
+
+- `react@19.2.8` — the version this repo runs, and current stable — **does not export
+  `unstable_ViewTransition`**. Verified by importing it. Next's `experimental.viewTransition`
+  flag drives React's component, so the flag alone buys nothing; it needs a React canary.
+- CSS `@view-transition { navigation: auto }` only fires on **cross-document** navigation.
+  The App Router intercepts `<Link>` and navigates client-side, so the rule never runs.
+
+Three ways forward, none of them free:
+
+1. **Wait** for React to ship `ViewTransition` stable, then revisit. ← chosen 2026-08-24
+2. Hand-roll it: a client `TransitionLink` wrapping navigation in
+   `document.startViewTransition`. ~1–2 KB, gets real cross-fades *and* the shared-element
+   morph today, at the cost of a client component on content routes and some fragility
+   around knowing when an App Router navigation has actually finished.
+3. Cross-document navigation — plain `<a>` plus the CSS rule. Genuinely 0 KB and spec-native,
+   but throws away client-side routing and prefetch: every navigation becomes a full load.
+
+**Recheck trigger:** any React upgrade. Test with
+`node -e "console.log('unstable_ViewTransition' in require('react'))"` before reopening this.
+
+---
+
+#### 8.4 — Scroll disclosure — ✅ Done (2026-08-24)
+
+*Scroll is progressive disclosure, never a hijack.*
+
+- [x] `.rise` — pure CSS `animation-timeline: view()`, authored visible-by-default so the
+      animation only ever *subtracts* the start state. On `ProjectCard`s and section headings
+- [x] `.scroll-rail` — a reading-progress bar scrubbed by `animation-timeline: scroll(root)`,
+      on case studies only. `aria-hidden`, and the only animated thing on that page
+- [x] Native scroll preserved everywhere. No smooth-scroll library, no hijack, no preloader
+- [x] **0 KB of JS on every route** — verified before and after. CSS grew 1,656 bytes
+- [ ] ~~`IntersectionObserver` fallback~~ — **deliberately not built.** A browser without
+      `animation-timeline` runs no animation and shows the content, which is the correct
+      fallback and costs nothing. Shipping JS to a content route so a decoration works
+      everywhere would trade this phase's whole premise for a fade
+
+**Verified in a browser, both motion modes:**
+
+| Check | Normal | `prefers-reduced-motion: reduce` |
+|---|---|---|
+| Card below the fold, opacity | 0 → 1 as it enters | **1 throughout** — never hidden |
+| Rail, `scaleX` top → bottom of page | 0 → 1 | not rendered (opacity 0) |
+| `.rise` elements on a case study | 0 | 0 |
+
+The middle column is the one that matters: it is the failure mode 8.1 predicted, where a
+reveal authored the other way round leaves reduced-motion users with an invisible page.
+
+**Done when:** ~~`/` reads as a journey on a trackpad, a phone and a keyboard alike.~~ It does,
+and it costs nothing to.
+
+---
+
+#### 8.5 — Particle fields (Tier A)
+
+*Telemetry about which page you are on, not decoration.*
+
+Tier A is self-written canvas2D/SVG under ~4 KB, `fixed` behind content, `pointer-events: none`,
+`aria-hidden`. Count scales with viewport area and caps hard (≤120 desktop, ≤50 mobile).
+Tier B — three.js `Points` — stays inside the existing scenes.
+
+- [ ] One component, a `mood` prop, per the mapping table in `DESIGN-LANGUAGE.md` §5.2
+- [ ] `/` standby dust · `/projects` lattice with hover ripple · `/contact` rising streaks that
+      speed on form focus and burst once on successful submit
+- [ ] `/about` near-still · **`/projects/[slug]` gets none** — case studies are for reading
+- [ ] Pauses on `document.hidden`; does not start before the page is interactive; stops
+      entirely under `prefers-reduced-motion`
+- [ ] Body-text contrast measured *with the field on*, in both themes
+
+**Done when:** the field is removable in one line and its absence is the only thing that changes.
+
+---
+
+#### 8.6 — The home portal
+
+*Decided 2026-08-24 — `DESIGN-LANGUAGE.md` §6.5.*
+
+`/` ends at a console-boot panel: schematic frame, a still of the world, an explicit
+`▸ TAKE CONTROL`. **The canvas mounts on activation, never on scroll-into-view.**
+
+- [ ] Static panel first — it must be complete and honest with no 3D behind it at all
+- [ ] Scene behind a `next/dynamic({ ssr: false })` chunk, imported by the click handler
+- [ ] Decide in-place mount vs navigate to `/explore` — implementation choice, not a design
+      one. In-place is preferred for continuity and must reuse `useImmersive`, not fork it
+- [ ] Measure `/` **before** activation (must be ~465 KB, no three.js) **and** confirm
+      activation is what pulls the chunk
+
+Auto-mount on scroll was proposed and rejected: ~1.9 MB pushed onto a mid-range Android that
+did not ask for it, the homepage budget rule broken outright, and the deliberate-entry
+etiquette inverted. The visitor opens the hangar door; the page does not open it for them.
+
+**Done when:** the homepage is unchanged in weight and the world is one click away.
+
+---
+
+#### 8.7 — Audio
+
+*IRIS K's etiquette, not its volume. `/explore` and `/lab` only — content routes stay silent.*
+
+- [ ] `AUDIO ▸ ARMED / MUTED` toggle in the console chrome — one control, always visible,
+      keyboard-reachable, `aria-pressed`
+- [ ] Never autoplays. `AudioContext` created **inside** the unmute gesture handler; audio
+      files load after that gesture, never before
+- [ ] Web Audio API directly — no library. One master `GainNode`, 300–600 ms ramps, never a
+      hard cut
+- [ ] Choice persisted in `localStorage` and honoured across routes, so it is answered once
+- [ ] Ducks and pauses on `visibilitychange` — required, not polish
+- [ ] Sound reinforces motion: craft speed in `/explore`, a soft tick on hotspot focus in
+      `/lab`. Not a bed playing regardless of what the visitor does
+- [ ] Loop chosen with the payload rules in mind — ~60–90 s seamless, 96–128 kbps mono
+      (≈0.7–1.4 MB), lazy, never in the initial payload
+- [ ] **Licence recorded in the repo next to the file.** CC0 or CC-BY-with-attribution or
+      purchased only — this is a hard gate
+
+**Done when:** a visitor who never touches the toggle hears nothing and loads nothing.
+
+---
+
+#### 8.8 — Consolidation
+
+- [ ] Delete the ad-hoc styles each of the above replaces — the phase is not done while both
+      the old and new way exist
+- [ ] Re-run the §8 guardrails in `DESIGN-LANGUAGE.md` in full
+- [ ] Record the new per-route numbers in §6 of this file
+- [ ] Re-read `DESIGN-LANGUAGE.md` and correct anything the build proved wrong. A design doc
+      that survives implementation unedited was not specific enough
+
+**Guardrails, re-checked before each sub-phase ships:**
+per-route JS measured in headless Chromium with one fresh context per route (`/lab` must still
+reproduce 1,402 KB or the harness is lying) · content routes under ~475 KB and three.js-free in
+the initial graph · nothing on the render path fetches from a network, fonts and decoders
+included · `prefers-reduced-motion` verified by hand · keyboard path intact through every new
+control, audio toggle included · both themes checked · WebGL-disabled and JS-disabled still
+show full content.
+
+**Not doing, and why:** shader-drawn text — it costs the SEO, the MDX pipeline and the
+accessibility story that are the whole point of the content layer. Scroll-jacking. A preloader
+on a content route. Audio anywhere outside the 3D routes. Igloo can make all three of those
+choices because it has no long-form text and no recruiter reading it on a train.
+
+**Phase done when:** a stranger landing on `/` knows who you are in five seconds, scrolls
+through work that reveals itself as one continuous surface, and arrives at a door they choose
+to open — with the homepage no heavier than it is today.
+
+---
+
+### Phase 9 — Diegetic world
+*Goal: the world stops borrowing the website's furniture. Zone information is delivered by
+something that exists inside the scene, and getting there is guided rather than magic.*
+
+**Reference:** [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) §9.
+
+**Runs after Phase 8.2** (which produces `ConsoleCard`) **and after the mid-range Android pass
+still outstanding from Phase 2.** That ordering is not negotiable: `/explore/lab` sits at
+4.57 MB against a 5 MB budget with little room, and `/explore` at 1,467 KB JS + 460 KB of
+models. Adding kiosks, a particle system and a DOM-in-3D layer to a scene that has never been
+measured on its target device means debugging a frame rate with three new suspects in it.
+
+---
+
+#### 9.1 — The panel stops looking like a website
+
+*Cheapest fix, largest share of the "feels out of place" problem, no new geometry.*
+
+- [ ] Restyle the zone panel as an instrument readout on the `ConsoleCard` primitive — docked
+      to the console frame, not a card floating in space
+- [ ] Same treatment for `/lab` hotspot callouts, so the two scenes agree
+- [ ] Keep the custom `calculatePosition` clamp — it exists because drei's default put the top
+      of every panel off-frame at exactly the moment you arrived to read it
+
+**Done when:** nothing in the world is wearing site chrome, and no geometry was added.
+
+---
+
+#### 9.2 — Waypoint ribbon
+
+- [ ] A catmull-rom of additive points from the craft to the selected zone, in the accent.
+      Tier B particles — one buffer geometry, animated by a time uniform, not per-particle JS
+- [ ] The existing jump buttons fly the craft **along the ribbon**; auto-flight is interrupted
+      the instant the visitor touches a control
+- [ ] `prefers-reduced-motion` → instant reposition. **This is where teleport belongs** — as
+      the accessible branch, not as the default
+- [ ] The ribbon is drawn before the flight starts, so the button's effect is legible rather
+      than magic
+
+**Not doing: teleport as the default.** Spatial memory is the entire payoff of flying rather
+than clicking; a cut means you never learn where anything sits relative to anything else, and
+it breaks the single-continuous-space principle the whole design leans on.
+
+**Done when:** you can always see where you are being taken, and you can always take over.
+
+---
+
+#### 9.3 — Kiosks, and the arena question
+
+*Size follows content. The arena is not enlarged on a hunch — one kiosk decides it.*
+
+- [ ] **One** kiosk/screen model, instanced at every zone. Not nine models. Pipeline entry +
+      `LoadedModel`, in the schematic language, per [[asset-pipeline]]
+- [ ] Place it at a single zone first and fly the world. **That measurement decides whether the
+      arena grows** — an enlarged empty world is emptier, and today's fog (60–190 against a
+      120-unit world whose diagonal is ~170) means anything past the current bounds is grey.
+      At 17 m/s the world already crosses in ~7 s, which is right for nine destinations
+- [ ] If it does need room, prefer **vertical** distribution — the flight volume is 1.2–34 and
+      almost unused — over widening the plate
+- [ ] Docking swaps the control legend, extending the `/explore/lab` terminal pattern rather
+      than inventing a second one. Every station keeps its plain button under the canvas
+
+**Done when:** a zone is a place you arrive at, and the arena's size was decided by flying it.
+
+---
+
+#### 9.4 — Screens that are still text
+
+*The one thing this phase must not break.*
+
+- [ ] Zone body copy renders as **DOM on the screen's face** — drei `<Html transform occlude>`
+      — not as a canvas texture or an SDF atlas. It looks like a hologram and it is still real,
+      selectable, indexable, screen-reader-reachable text
+- [ ] The screen billboards to face the visitor on docking; reading a paragraph on an angled
+      plane at world scale on a phone does not work
+- [ ] Verify by curling the route and grepping for the copy, exactly as the `<details>` block
+      was verified on 2026-08-22
+- [ ] Measure: DOM-in-3D at nine zones is the risk in this phase. Mount only the docked one
+
+**Not doing: text baked into the scene.** Igloo draws its type in shaders and pays for it in
+SEO and accessibility; it can, having no long-form content. Ours is derived from the same MDX
+the project pages read, and the rule from 2026-08-22 stands — the world cannot say something
+the site does not, and a visitor with WebGL off gets every word. Phase 6 gates on "real text,
+not baked into canvas".
+
+**Done when:** the panel looks like a hologram and `curl | grep` still finds every word.
+
+---
+
+**Phase done when:** flying to a project feels like arriving somewhere, and turning WebGL off
+still gives you the whole portfolio.
+
+---
+
 ## 4. Decision log
 
 Append here whenever a non-obvious call gets made. Format: date — decision — why.
 
+- **2026-08-24** — **Zone information stays real text, delivered by diegetic furniture.** The floating HTML panel does read as the website intruding on the world, and the proposed fix — baking the copy onto a 3D screen or hologram — would have cost the indexing, the screen-reader path and the plain readability of a paragraph on an angled plane at world scale on a phone. Phase 9 splits the two halves: the *frame* becomes diegetic (a kiosk model, an instrument readout on `ConsoleCard`), the *text* stays DOM via drei `<Html transform occlude>`, mapped into 3D space and occluded by geometry but still selectable and still in the server HTML. Looks like a hologram, loses nothing. Upholds the 2026-08-22 rule that the world cannot say something the site does not.
+- **2026-08-24** — **Guided flight along a waypoint ribbon, not teleport.** A cut destroys spatial memory, which is the entire reason to fly a world rather than click a list, and it breaks the single-continuous-space principle. The ribbon also fixes a real navigation problem — in a fogged world you cannot see where anything is, so the jump buttons currently read as magic. Teleport is kept, but as the `prefers-reduced-motion` branch, where an instant reposition is the correct behaviour rather than a shortcut.
+- **2026-08-24** — **The arena is not enlarged on a hunch.** Fog is 60–190 against a 120-unit world whose diagonal is ~170, so the far corner is only just visible today; widening the plate would add travel through grey, and an empty world enlarged is emptier. At 17 m/s it already crosses in ~7 s, which is the right order for nine destinations. Size follows content: build one kiosk, place it at one zone, fly it, and let that decide. If room is needed, the flight volume of 1.2–34 is almost unused — go up before going out.
+- **2026-08-24** — **8.3 parked: View Transitions are not free in this stack.** `react@19.2.8` — current stable, and what this repo runs — does not export `unstable_ViewTransition`, which is what Next's `experimental.viewTransition` flag drives; the flag needs a React canary. The CSS `@view-transition` rule only fires on cross-document navigation, which the App Router does not do. So the phase's "0 KB" claim was wrong on the facts. Rather than take a React canary — the same trade refused for r3f over a console warning — 8.3 waits for a stable `ViewTransition`. Recheck on any React upgrade.
+- **2026-08-24** — **The scroll reveal ships with no JavaScript fallback, on purpose.** 8.4 called for an `IntersectionObserver` fallback for browsers without `animation-timeline`. Building it would have put a client component on every content route so that a *decoration* could work everywhere — trading the phase's entire premise for a fade. A browser without support shows the content immediately, which is the right answer anyway. The reveal is an enhancement, and enhancements are allowed to be absent.
+- **2026-08-24** — **`.rise` goes on cards, headings and chrome; never on prose.** A view-timeline reveal is a genuine scrub — the element moves as you scroll through its entry range — so applying it to a paragraph is precisely the "never move the reader's content under them" rule the design doc sets. Case studies therefore get **no** reveals at all: their only animated element is the progress rail, which is `aria-hidden` chrome.
+- **2026-08-24** — **The rail is hidden rather than frozen under reduced motion.** Its base state is `opacity: 0`, and the enhancement block turns it on. Left to the blanket reduced-motion rule, the time-based fallback would have run it to completion and left a permanent full-width accent bar across the top of every case study — a decoration that looks like a border and means nothing.
+- **2026-08-24** — **The site publishes the professional address only.** Both `sansikawaduge@` and `sansikasuhan5@` are real; the first is professional and the one printed on the CV, the second personal. `site.email` is the professional one, which fixes the mismatch between the site and the document a recruiter is already holding. The personal address is not on the site at all — one public contact point.
+- **2026-08-24** — **The portrait is a plain `<img>` with a hand-built `srcset`, not `next/image`.** `next/image` routes every request through Vercel's optimiser: a quota, a network hop, and a service on the render path of a site whose architecture is "nothing on the render path can break". The two files are pre-cropped and pre-encoded at exactly the sizes the site renders (88 px and 128 px, so 256 and 512 for 2×), 8 KB and 21 KB, so there is nothing left for a runtime optimiser to do. `width`/`height` are explicit — a portrait that pops in and shoves the fields down is a layout shift on the one element above the fold.
+- **2026-08-24** — **The source photo was cropped to head-and-shoulders, not merely scaled.** It is a half-body shot; at 88 px the face would have been a smudge. The crop also removes most of a bright purple circuit-board backdrop that fights the site's palette — which is a real consideration but the secondary one. The original is untouched on Drive; the crop rectangle is recorded in the build note below in case it needs redoing.
+- **2026-08-24** — **The measuring harness was wrong twice, and the honesty check caught it both times.** It counted CSS chunks under `/_next/static/chunks/` as JS (uniform +40 KB on every route), and a 3.5 s settle was too short for three.js to arrive (`/lab` came out at 456 KB once). Filtering on `.js` alone with a 9 s settle reproduces the 2026-08-23 figures **exactly** — `/lab` 1,402 KB, `/lab/ascilam` 1,395 KB — which is what makes the rest of the numbers usable. The earlier note about "two incompatible harnesses" is superseded: there is one harness, it was mine that was broken.
+- **2026-08-24** — **The EDUCATION line is copied from the CV, minus the parts the CV does not claim.** It reads `BSc Eng, Computer Science & Engineering · Univ. of Moratuwa` — no `(Hons)`, because the CV does not say Hons, and no expected graduation year, because the CV says `Aug 2022 – Present` and inferring 2026 or 2027 from a start date is a guess about someone's life. Add the year to `site.education` when it is certain. Availability is `Open to graduate roles and internships`, which is Suhan's own stated intent, and carries a comment saying to delete it the day it stops being true.
+- **2026-08-24** — **A wrapping value used to leave the leader as a stub under the label.** `self-end` put the dotted rule at the bottom of the wrapped block, which read as a broken line rather than a leader — visible the moment the EDUCATION row landed and wrapped to two lines on desktop. It is baseline-aligned with a `translateY` instead, so it sits on the first line and simply runs short.
+- **2026-08-24** — **The console card's unknown fields ship as `null`, not as plausible text.** The card wanted EDUCATION and STATUS and the repo holds neither — it knows "undergraduate at the University of Moratuwa" and nothing about a department, a graduation year, or whether Suhan is currently looking. Rather than write a convincing degree title, both are `site.education` and `site.availability`, `null`, and `ConsoleField` renders nothing for a null value. Exactly the `site.cv` / `socials.linkedin` convention from 2026-08-21, and the whole reason the field-card idea is safe to borrow from a page that lists a fictional operator's favourite meal.
+- **2026-08-24** — **`StatusBadge` was not reused for the STATUS row, deliberately.** 8.2 said to. `StatusBadge` is typed to `ProjectStatus` — `in-progress` / `complete` / `archived` — which describes a *project's* build state. An availability line is not that, and widening the type to carry both would have made one component mean two unrelated things for the sake of not writing a `<span>`.
+- **2026-08-24** — **The dotted leader is a `repeating-linear-gradient`, not `border-dotted`.** CSS dotted borders render as a near-solid hairline at 1 px in both themes — visible in the first screenshot pass, where the leader read as a plain rule. The gradient gives explicit control of dot and gap. Below `sm` the leader is hidden entirely and the row stacks: at 390 px the role wraps to two lines and a leader becomes a stub pointing at nothing.
+- **2026-08-24** — **My measuring harness is not the 2026-08-23 harness, and their numbers must not be mixed.** Mine reads ~40 KB higher on *every* route including ones this session never touched (`/lab` 1,442 KB against the recorded 1,402 KB), which by §6's own honesty check means it is not reproducing that baseline — most likely because it counts the chunks Next prefetches for in-viewport links. It is still valid for **deltas measured within itself**, which is how 8.2's +1 KB was obtained: same harness, same build, one tree with the change and one without. Absolute budget claims must come from a harness that reproduces 1,402 KB.
+- **2026-08-24** — **`data-scroll-behavior="smooth"` added to `<html>`.** Next 16 warns because it cannot suppress our `scroll-behavior: smooth` during a route transition without it — so a navigation would *animate* the scroll to the top of the new page instead of arriving there. This becomes load-bearing in 8.3, where view transitions and a smooth-scrolling document would otherwise fight each other.
+- **2026-08-24** — **The `THREE.Clock` deprecation warning is upstream and cannot be fixed here.** `Clock` is deprecated as of three r183 (we run 0.185.1) and `@react-three/fiber` 9.7.0 — the current stable, verified against npm — still does `clock: new THREE.Clock()` inside its store. Only the 10.x canaries move off it, and a canary r3f is not a trade this project makes for a console warning. What *was* fixed is our own coupling: `World.tsx` accumulated `delta` into a ref instead of reading `state.clock.elapsedTime`, so nothing of ours depends on an API that is scheduled to disappear. Re-check when r3f 10 goes stable.
+- **2026-08-24** — **Two "findings" during that check were the harness, not the site**, and both are the same mistake §6 already warns about. A shared `page` across two `goto`s attributed `/explore`'s model requests to `/`, which looked exactly like the homepage pulling 460 KB of GLB it does not need; and a model 404 (caused by tarring the source without `public/models`) threw during render, React fell back to client rendering, and `data-scroll-behavior` vanished from `<html>` — which looked exactly like the fix not working. With a fresh context per route and the models present, `/` requests no models at all and the attribute is present on both routes. **Give every route its own context, and never diagnose from an incomplete copy of the tree.**
+- **2026-08-24** — **The motion token is `--ease-console`, not `--ease-out`.** Tailwind v4's `--ease-*` theme namespace *generates* utility classes, and `ease-out` already exists — defining `--ease-out` would have silently redefined every existing `ease-out` in the codebase from underneath. The plan's original name was wrong for this framework; the value is unchanged.
+- **2026-08-24** — **`--measure` lives in `:root`, not `@theme`.** Tailwind v4 drops theme variables that no utility references, so declaring it in `@theme` emitted nothing at all — caught by grepping the built CSS rather than by reading the source. Anything defined for later use, before a utility consumes it, has to go in the plain `:root` block with the colour tokens.
+- **2026-08-24** — **The blanket `prefers-reduced-motion` rule is kept as a floor, not replaced.** The real branch is the token collapse plus `animation-timeline: none`, which renders scroll-driven animations at their *end* state instead of at speed zero. The `!important` sledgehammer stays underneath it for anything not yet routed through the tokens. This also fixes the authoring rule for 8.4: a reveal must be visible-by-default with the animation subtracting the start state, or it disappears for reduced-motion users.
+- **2026-08-24** — **No new type scale.** Tailwind's default scale already is a single coherent scale; adding a second in `@theme` would have been the disorganisation Phase 8 exists to remove. Recorded because "define a type scale" was written into the phase and then deliberately not done.
+- **2026-08-24** — **The site's incoherence is a metaphor gap, not an effects shortage.** Three reference sites were studied (Igloo Inc, IRIS K, Chrome Tattoo Paris) and the finding was the same in all three: each is coherent because one metaphor governs every surface — a frozen landscape, a music museum, a terminal you are logged into. Ours already exists and is half-built — the instrument schematic / flight console of `/explore` and `/lab` — and the content routes do not speak it at all. Phase 8 exists to close that gap. Full study and rules in `docs/DESIGN-LANGUAGE.md`.
+- **2026-08-24** — **The motion stack is dependency-free on content routes.** All three references run Three + GSAP (+ Svelte, + Lenis); our content routes are budgeted at ~465 KB with no three.js. View Transitions (Next 16) and CSS scroll-driven animations (`animation-timeline: view()`) deliver route dissolves, shared-element morphs and scroll reveals at **0 KB**, off the main thread, with `IntersectionObserver` as the fallback. GSAP/Lenis stay permitted inside `/explore` and `/lab`, where the budget already accepts weight. No scroll hijacking on any route.
+- **2026-08-24** — **The home page opens with a summary card and ends at a *gated* portal.** `/` gets a five-field `ConsoleCard` above the fold, progressive disclosure on scroll, then a console-boot panel with an explicit `TAKE CONTROL`. The three.js scene is a `next/dynamic(ssr: false)` chunk that mounts **on activation, never on scroll-into-view**. Auto-mounting when the section scrolls into view was proposed and rejected: it pushes ~1.9 MB onto a mid-range Android that did not ask for it, breaks the homepage budget rule outright, and inverts the deliberate-entry etiquette adopted for audio. This is the only qualified exception to "no canvas on the homepage" — nothing 3D may be in `/`'s initial graph. Supersedes nothing in the 2026-08-22 `/explore`-not-`/` decision; it is that decision honoured with a better door.
+- **2026-08-24** — **Console card fields must be real.** Chrome Tattoo's profile card carries AGE, PERSONALITY and FAVORITE-MEAL, and it works because the operator is a persona. An engineering portfolio's entire currency is that every claim is checkable, so those fields are dropped rather than adapted — a dry true field beats an invented quirky one. Same reasoning limits junk-glyph noise to one instance per page, away from real content: it reads as texture on a tattoo shop and as a rendering bug on a site claiming rigour.
+- **2026-08-24** — **Audio is gated, scoped and never ambient.** Copying IRIS K's etiquette rather than its volume: never autoplays, `AudioContext` constructed inside the unmute gesture, one always-visible `ARMED / MUTED` control, choice persisted in `localStorage`, Web Audio API directly (no library), and scoped to `/explore` and `/lab` only — music under a case study competes with reading. Sound reinforces motion (craft speed, hotspot focus) rather than playing a bed, which is the one thing Igloo's sound design does that is worth copying wholesale.
+- **2026-08-24** — **Particles are two-tier and case studies get none.** Tier A is a self-written canvas2D/SVG field under ~4 KB on content routes; Tier B is three.js `Points` inside the existing scenes. Igloo's volumetric, velocity-coloured particles are unaffordable on a content route and off-metaphor besides — ours is instruments, not weather, so the field is telemetry about which page you are on. `/projects/[slug]` gets no field at all: a case study is for reading.
 - **2026-08-21** — Dropped always-on EC2 from the architecture. AWS replaced the 12-month EC2 free tier with $100 credits / 6-month Free Plan; an always-on t3.micro is ~$12–13/mo and would exhaust credits in ~8 months. Separately, 1 GB RAM cannot serve CV models. Both are independently blocking.
 - **2026-08-21** — ML/CV demos move to in-browser inference (ONNX Runtime Web / WebGPU) rather than a hosted Python API. Free, no cold start, no CORS, scales, and is a stronger demonstration.
 - **2026-08-21** — 3D asset processing moved to build-time CI. It's a deterministic transform of files we control; it never needed to be a runtime service.
@@ -339,6 +744,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-23** — The city plate is **squashed to 32% height and tinted dark**. At true scale across 120 units its towers stand ~10 units — straight through the flight volume, so you would fly inside collisionless buildings and markers at y = 4–9 would be swallowed. Flattened, it reads as a city seen from height, which is what a drone at altitude should see. The tint is a multiply into the unlit material: the source is near-white and this world is deliberately dark so the markers and the craft own every bright pixel. Multiply only removes light, so the author's gradient survives, just quieter.
 - **2026-08-23** — Environment candidates **measured before choosing, and three of four rejected.** `a_metaverse_bar` floors at ~400k triangles and ~7 MB no matter the budget requested — 3,366 primitives across 68 materials, and the simplifier works per-primitive and cannot merge across a material boundary, so a thousand tiny props are each already at their minimum. `sci_fi_hallway` is 402 MB and 7M triangles: structurally much better (12 materials, 657 primitives, would likely land ~2–3 MB) but it exceeds GitHub's 100 MB per-file hard limit, so it cannot enter the repo at all. `scifi_room_interior` builds fine at 170–262 KB but is an interior. The deeper point: three of the four are rooms, and `/explore` is an open 120-unit world flown at 17 m/s. `gradient_city` was the only flyable exterior, the cheapest by two orders of magnitude, one draw call, and already authored `KHR_materials_unlit` — the site's visual language, for free.
 - **2026-08-23** — `models/environments/` is **gitignored**, not adopted as a second raw-asset folder. It is a 467 MB staging area holding a file that cannot be committed under any arrangement short of LFS. Anything that ships is copied into `assets/raw/` first, and only if its source is small enough to live in git.
+- **2026-08-24** — The asset manifest **carries no build timestamp**, and the pipeline's determinism is load-bearing. Found on the first real push: `manifest.json` held `builtAt: new Date().toISOString()`, so every CI run produced a diff, the workflow's "assets unchanged" branch could never be reached, and every push touching `assets/raw/` would have committed a rebuild that changed nothing. Verified the rest by rebuilding twice from scratch and comparing hashes — the GLBs are byte-identical, so with the timestamp gone a push that changes no source now produces no commit. Git already records when a file was built. Anything added to that manifest has to be asked the same question: can it vary between runs?
 - **2026-08-23** — The lab is a **second scene on its own route** (`/explore/lab`), not a replacement for the open world. The two are different machines: 2.2 m/s in a 14 m room against 17 m/s in a 120 m world, with collision against without. Folding them into one component would have meant a file of conditionals; keeping both means the outdoor world survives and either can earn the front door later.
 - **2026-08-23** — Lab objects are addressed by **material name, not node name**. The source's nodes are `Object_2` … `Object_30`, which say nothing; its materials are descriptive (Polish, from the original author) — `Panel_sterowania` the control panel, `drzwi` the door, `szafka_body` the cabinet, `rura_gwna_baza` the tank. Every mesh has exactly one primitive with exactly one material, so material name is a reliable one-to-one handle, and the only one available.
 - **2026-08-23** — Hence the `interior` profile **must not merge meshes**. Merging is the pipeline's default and saves draw calls; here it would leave nothing to attach behaviour to. This is the one place a performance optimisation is deliberately switched off for a functional reason.
@@ -385,6 +791,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 
 - [x] ~~What's the concept for the 3D scene?~~ — Airframe Explorer, see Phase 2
 - [ ] Which domain name? (blocks Phase 6, and blocks a proper Resend sender address — until then the form notifies via `onboarding@resend.dev`, which can only mail your own signup address)
+- [ ] Does `TAKE CONTROL` on `/` mount the scene in place or navigate to `/explore`? Both are compliant; in-place is preferred for continuity and must reuse `useImmersive`. Decide when Phase 8.6 is built, not before
 - [x] ~~Which projects make the cut, and in what order?~~ — six written, ordered robotics → embedded → backend. Revisit if any feels weak.
 
 ---
@@ -410,6 +817,12 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go — 
 | 2026-08-23 | `lab.glb` raw → built, `interior` profile | 59,397 KB → **2,690 KB** (95.5%), 179,429 → 91,213 triangles; 110 maps 49,090 KB → 1,371 KB at 512 |
 | 2026-08-23 | KTX2 measured against WebP on the lab | WebP 2.53 MB wire / ~95 MB VRAM · KTX2 (UASTC+ETC1S) 5.92 MB wire / ~12 MB VRAM — WebP kept |
 | 2026-08-23 | `/explore/lab` | 1,465 KB JS + 3,100 KB models = 4.57 MB, inside the 5 MB payload budget with little room |
+| 2026-08-24 | Phase 8.2 `ConsoleCard`, per-route JS delta (same harness, before/after) | +1 KB on every route — the shared chunk |
+| 2026-08-24 | **Per-route JS after 8.2, corrected harness** | `/` **478** · `/about` 462 · `/projects` 462 · `/contact` 462 · `/lab` **1,402** · `/lab/ascilam` **1,395** · `/lab/sobel` 476 KB |
+| 2026-08-24 | Phase 8.4 scroll disclosure | **0 KB JS on every route** (identical before/after); CSS 40,610 → 42,266 B (+1,656) |
+| 2026-08-24 | Portrait assets | 256 px WebP **8,496 B** · 512 px WebP **21,206 B** · OG JPEG 280 px **16,696 B** — crop `left:150 top:120 580×580` of the 865×870 source |
+| 2026-08-24 | `/` model requests, fresh context, models present | **none** — the homepage pulls no GLB, confirmed after a harness error suggested otherwise |
+| 2026-08-24 | Phase 8.1 tokens, emitted CSS | 40,460 → 40,610 bytes (**+150**), no utility changed shape, JS untouched |
 | 2026-08-23 | Environment candidates rejected on measurement | `a_metaverse_bar` floors at 400k tris / 7.1 MB; `sci_fi_hallway` 402 MB source, over GitHub's 100 MB file limit; `scifi_room_interior` 170–262 KB but an interior |
 
 Measured by loading each route from `next start` in headless Chromium and summing JS

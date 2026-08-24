@@ -37,6 +37,18 @@ export default async function ProjectPage({ params }: Params) {
 
   return (
     <article>
+      {/*
+        Reading-progress rail — Phase 8.4. Chrome, not content: it is
+        `aria-hidden`, it scrubs with the document's scroll position, and it
+        is the ONLY animated thing on a case study. The prose is never
+        scrubbed, revealed or parallaxed — this is the page someone came to
+        read.
+      */}
+      <div
+        aria-hidden="true"
+        className="scroll-rail fixed inset-x-0 top-0 z-50 h-0.5"
+        style={{ backgroundColor: 'var(--accent)' }}
+      />
       <Link
         href="/projects"
         className="font-mono text-sm hover:underline"

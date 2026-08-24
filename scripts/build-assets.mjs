@@ -54,6 +54,18 @@
  * the fallback if the Android pass shows memory pressure — one edit to the
  * profile, no new toolchain.
  *
+ * ── The output is deterministic, and that is load-bearing ──────────────────
+ * CI commits the built files back to the branch, and only when they differ.
+ * Two independent runs of this script produce byte-identical GLBs (verified),
+ * so a push that does not change a source produces no commit.
+ *
+ * Nothing here may introduce run-to-run variation. The manifest deliberately
+ * carries no build timestamp for exactly this reason: a `builtAt` field made
+ * every single run differ, so the workflow's "assets unchanged" branch could
+ * never be reached and every push to `assets/raw/` produced a commit claiming
+ * a rebuild that had changed nothing. Git already records when a file was
+ * built. If you add a field here, ask first whether it can vary.
+ *
  * ── Why the output is aggressively simplified ──────────────────────────────
  * These are generated meshes in the hundreds of thousands of triangles. Two
  * independent reasons to cut them down hard:
@@ -352,11 +364,8 @@ for (const r of results) {
 }
 console.log('');
 
+// No timestamp — see the note on determinism at the top of this file.
 writeFileSync(
   join(ROOT, 'public/models/manifest.json'),
-  JSON.stringify(
-    { builtAt: new Date().toISOString(), assets: results },
-    null,
-    2,
-  ) + '\n',
+  JSON.stringify({ assets: results }, null, 2) + '\n',
 );

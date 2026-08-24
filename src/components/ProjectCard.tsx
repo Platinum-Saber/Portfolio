@@ -4,7 +4,9 @@ import { StatusBadge } from './StatusBadge';
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
-    <li>
+    // `rise` is Phase 8.4: a pure-CSS scroll-driven reveal, no-op where
+    // `animation-timeline` is unsupported or motion is reduced.
+    <li className="rise">
       <Link
         href={`/projects/${project.slug}`}
         className="group block rounded-lg border p-5 transition-colors"

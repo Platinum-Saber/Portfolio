@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { getFeaturedProjects } from '@/lib/projects';
 import { ProjectCard } from '@/components/ProjectCard';
+import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
+import { Portrait } from '@/components/Portrait';
+import { SUMMARY } from '@/lib/operator';
 import { site } from '@/lib/site';
 
 export default function HomePage() {
@@ -13,14 +16,33 @@ export default function HomePage() {
         This text must always render first and stand on its own with WebGL disabled.
       */}
       <section>
-        <p className="font-mono text-sm" style={{ color: 'var(--accent)' }}>
-          {site.location}
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           {site.fullName}
         </h1>
+
+        {/*
+          The summary card answers *who is this* above the fold — Phase 8.2.
+          It replaces the standalone location line, which said in prose what
+          the BASE row now says in the schema. No canvas, no JS, no layout
+          shift: it is static HTML, which is what makes the console language
+          affordable on a content route at all.
+        */}
+        <div className="mt-6 max-w-2xl">
+          <ConsoleCard
+            title="Operator"
+            meta="Summary"
+            portrait={<Portrait size={88} />}
+          >
+            {SUMMARY.map((field) => (
+              <ConsoleField key={field.label} label={field.label}>
+                {field.value}
+              </ConsoleField>
+            ))}
+          </ConsoleCard>
+        </div>
+
         <p
-          className="mt-4 text-lg leading-relaxed"
+          className="mt-8 text-lg leading-relaxed"
           style={{ color: 'var(--fg-muted)' }}
         >
           I build robots and the hardware they run on. Currently an
@@ -77,7 +99,7 @@ export default function HomePage() {
       </section>
 
       <section>
-        <div className="flex items-baseline justify-between">
+        <div className="rise flex items-baseline justify-between">
           <h2
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: 'var(--fg-muted)' }}

@@ -1,5 +1,4 @@
 {
-  "builtAt": "2026-08-23T16:40:36.134Z",
   "assets": [
     {
       "name": "public/models/lab.glb",
@@ -10,7 +9,7 @@
         "textureBytes": 50267987
       },
       "after": {
-        "bytes": 2754572,
+        "bytes": 2754568,
         "triangles": 91213,
         "textureBytes": 1403482
       }

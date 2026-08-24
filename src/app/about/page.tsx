@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
+import { Portrait } from '@/components/Portrait';
+import { EXTENDED, IDENTITY, SUMMARY } from '@/lib/operator';
 import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
 
@@ -12,8 +15,28 @@ export default function AboutPage() {
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">About</h1>
 
+      {/*
+        The full dossier — the same primitive and the same source as the
+        summary on `/`, extended rather than restated. Two cards carrying
+        overlapping-but-different values would be worse than one card and
+        a link, which is why both read from `lib/operator.ts`.
+      */}
+      <div className="mt-6 max-w-2xl">
+        <ConsoleCard
+          title="Operator"
+          meta="Full dossier"
+          portrait={<Portrait size={128} />}
+        >
+          {[...IDENTITY, ...SUMMARY, ...EXTENDED].map((field) => (
+            <ConsoleField key={field.label} label={field.label}>
+              {field.value}
+            </ConsoleField>
+          ))}
+        </ConsoleCard>
+      </div>
+
       <div
-        className="mt-6 space-y-5 leading-relaxed"
+        className="mt-10 space-y-5 leading-relaxed"
         style={{ color: 'var(--fg-muted)' }}
       >
         <p>

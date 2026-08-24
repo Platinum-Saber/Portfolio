@@ -179,17 +179,24 @@ function Marker({
   const color = zoneColor(zone.kind);
   const [x, y, z] = zone.position;
 
-  useFrame((state, delta) => {
+  // Accumulated from `delta` rather than read off `state.clock`: THREE.Clock is
+  // deprecated as of three r183, and r3f still constructs one internally. Nothing
+  // here needs its wall-clock semantics, so this is one less thing to fix when
+  // the upstream store moves to THREE.Timer.
+  const elapsed = useRef(0);
+
+  useFrame((_state, delta) => {
     if (!ring.current) return;
     // Under prefers-reduced-motion the markers hold still. They are decoration
     // — the drone's own movement is the visitor's doing and stays.
     if (reducedMotion) return;
+    elapsed.current += delta;
     ring.current.rotation.y += delta * (active ? 1.4 : 0.5);
     // Undiscovered markers bob, which is what makes them read as "come here"
     // from across the map. Once found they settle.
     ring.current.position.y = discovered
       ? 0
-      : Math.sin(state.clock.elapsedTime * 1.6) * 0.5;
+      : Math.sin(elapsed.current * 1.6) * 0.5;
   });
 
   return (

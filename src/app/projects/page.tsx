@@ -27,7 +27,7 @@ export default function ProjectsPage() {
       {domains.map((domain) => (
         <section key={domain} className="mt-12">
           <h2
-            className="text-sm font-semibold tracking-widest uppercase"
+            className="rise text-sm font-semibold tracking-widest uppercase"
             style={{ color: 'var(--fg-muted)' }}
           >
             {domain}

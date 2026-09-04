@@ -19,7 +19,8 @@ import type { FlightInput } from './flight';
  * cross it in under a second, which is not flying, it is teleporting into a
  * wall.
  */
-const MAX_SPEED = 2.2;
+/** Also the divisor the audio engine normalises craft speed against. */
+export const MAX_SPEED = 2.2;
 const MAX_CLIMB = 1.3;
 const YAW_RATE = 1.5;
 /** Lower than outdoors: indoors you want it to stop roughly where you let go. */

@@ -16,6 +16,9 @@ import {
   useImmersive,
 } from '../useImmersive';
 import type { JumpRequest, LabTelemetry } from './LabScene';
+import { AudioToggle } from '../../AudioToggle';
+import { engine, engineOff } from '@/lib/audio';
+import { MAX_SPEED } from '@/lib/explore/labFlight';
 
 const LabScene = dynamic(() => import('./LabScene').then((m) => m.LabScene), {
   ssr: false,
@@ -126,10 +129,18 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
     if (id !== 'projects') setSelectedProject(null);
   }, []);
 
-  const onTelemetry = useCallback(
-    (next: LabTelemetry) => setTelemetry(next),
-    [],
-  );
+  const onTelemetry = useCallback((next: LabTelemetry) => {
+    setTelemetry(next);
+    // Same call as the outdoor world, against this room's own much lower
+    // ceiling (2.2 m/s against 17) — so a slow indoor drift sounds like one,
+    // rather than like an idling version of the outdoor craft.
+    engine(next.speed / MAX_SPEED);
+  }, []);
+
+  useEffect(() => {
+    if (!flying) engineOff();
+  }, [flying]);
+  useEffect(() => engineOff, []);
 
   const onOpenProject = useCallback(
     (id: string) => router.push(`/projects/${id}`),
@@ -278,6 +289,11 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
               {nearLabel} · {telemetry.nearestDistance.toFixed(1)} m
             </p>
           )}
+          {/* Same corner as `/explore`, so the control is in one place across
+              both flight scenes rather than wherever each layout had a gap. */}
+          <div className="pointer-events-auto mt-2">
+            <AudioToggle />
+          </div>
         </div>
 
         {!flying && (

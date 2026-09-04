@@ -1,8 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { DRONE_COMPONENTS, STATUS_LABEL, getComponent } from '@/lib/drone';
+import { AudioToggle } from '../AudioToggle';
+import { tick } from '@/lib/audio';
 
 /**
  * The canvas and everything three.js loads only after this component mounts and
@@ -82,8 +84,25 @@ export function AirframeExplorer() {
     );
   }
 
+  // A soft tick when a component is selected — §4.5's "sound reinforces
+  // motion" for a scene whose only motion is attention moving between parts.
+  // Selection rather than DOM focus on purpose: tabbing across eight markers
+  // to reach the one you want would fire eight ticks, which is the Geiger
+  // counter the rate limiter in `lib/audio` exists to prevent rather than to
+  // excuse. Every path in — marker click, list button, Enter on a focused
+  // marker — goes through `setSelected`, so this covers the keyboard too.
+  useEffect(() => {
+    if (selected) tick();
+  }, [selected]);
+
   return (
     <div>
+      {/* `/lab` has no canvas overlay, so the audio control gets a chrome row
+          of its own above the scene. Still always visible, still one control. */}
+      <div className="mb-3 flex justify-end">
+        <AudioToggle variant="inline" />
+      </div>
+
       {support === 'checking' ? (
         <div
           className="aspect-[4/3] w-full rounded-lg border sm:aspect-[16/10]"

@@ -27,7 +27,8 @@ export type FlightInput = {
 
 export const NEUTRAL: FlightInput = { pitch: 0, roll: 0, lift: 0, yaw: 0 };
 
-const MAX_SPEED = 17;
+/** Also the divisor the audio engine normalises craft speed against. */
+export const MAX_SPEED = 17;
 const MAX_CLIMB = 9;
 const YAW_RATE = 1.7;
 /** Seconds to reach roughly 63% of a new target velocity. Higher is floatier. */

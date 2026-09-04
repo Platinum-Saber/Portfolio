@@ -3,8 +3,16 @@
 Personal portfolio site. Robotics and embedded systems work, with a 3D interactive layer
 planned on top of a static-first core.
 
-- **Architecture and rationale:** [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-- **Build plan and progress:** [`PLAN.md`](./PLAN.md) ← start here to see the current phase
+## Documentation
+
+Everything except this file lives in [`docs/`](./docs).
+
+| Document | What it is |
+|---|---|
+| [`docs/PLAN.md`](./docs/PLAN.md) | Build plan, phase status and the decision log ← **start here** |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Why the stack is what it is, and why EC2 was dropped |
+| [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) | The console metaphor and the rules every surface follows |
+| [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md) | Contact-form setup runbook |
 
 ## Stack
 

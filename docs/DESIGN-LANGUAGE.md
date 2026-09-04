@@ -141,22 +141,53 @@ Copy IRIS K's **etiquette**, not its volume.
 2. **Gate it with copy that belongs to the metaphor.** IRIS K's "Break the Silence" works because it
    is museum language. Ours should be console language — e.g. an `AUDIO ▸ ARMED / MUTED` toggle in
    the console chrome. One control, always visible, keyboard-reachable, `aria-pressed`.
+
+   A volume slider appears beside it **while armed only**, added 2026-09-04. "One control" is a rule
+   about the *gate*, not a budget for the whole feature: a volume control on a muted site adjusts
+   nothing, and showing it before the question is answered would put two things in the corner
+   reserved for the one that matters. Volume defaults to half the measured ceiling in §4.6, persists
+   separately from the armed/muted choice, and is a native range input so the keyboard path is the
+   browser's rather than ours.
 3. **Scope: `/explore` and `/lab` only.** Content routes stay silent. Music under a case study
    competes with reading.
 4. **Persist the choice** in `localStorage` and honour it across routes, so it is answered once.
 5. **Sound reinforces motion.** Igloo's audio is tied to particle movement. Our analogue: subtle
    engine/telemetry response tied to craft speed in `/explore`, a soft tick on hotspot focus in
    `/lab` — not a music bed playing regardless of what the visitor is doing.
+
+   There **is** now an ambient bed under that, added 2026-09-04, and it does not contradict the
+   rule. "Regardless of what the visitor is doing" is about a track that starts because a page
+   loaded; this one exists only for someone who explicitly armed it, and the engine over it is
+   still the part that reacts. Reactive-only was tried first and read as broken: with nothing
+   playing while hovering, an armed toggle and silence are indistinguishable from a bug.
 6. **Implementation, budget-safe:** Web Audio API directly (0 KB of library). One `AudioContext`,
    created inside the unmute gesture handler (never before — it will be suspended). A single
    `GainNode` master with a 300–600 ms ramp for fades (never a hard cut). Ducking and pausing on
-   `visibilitychange` are required, not polish. Load audio **after** first interaction, and pick the
-   file with the payload rules in mind: a ~60–90 s seamless loop at 96–128 kbps mono ≈ 0.7–1.4 MB —
-   which must be lazy, not part of the initial payload.
+   `visibilitychange` are required, not polish.
+
+   **Built 2026-09-03 with no audio file at all.** The original text here specified a ~60–90 s
+   seamless loop at 96–128 kbps mono (≈0.7–1.4 MB), lazily loaded. Every voice is synthesised
+   instead — two detuned saws through a speed-driven lowpass plus filtered noise, and a 140 ms sine
+   for the tick. Synthesis collapses three of this section's rules into a non-problem: nothing is
+   fetched, so rule 6's payload arithmetic has nothing to constrain; rule 8's licence gate is met by
+   having nothing to license; and rule 5 is satisfied by construction rather than by effort, because
+   the sound is computed *from* craft speed rather than mixed against it. A file was the assumption,
+   not the requirement.
+
+   **Synthesis has its own trap, and it is not payload — it is the speaker.** A sine partial has no
+   harmonics, so its fundamental is the entire signal; a laptop speaker reproduces almost nothing
+   below ~200 Hz. The first build put the ambient bed on A2/E3/A3 and the engine on a 46 Hz
+   fundamental behind a 170 Hz lowpass, and measured **-54.6 dBFS above 200 Hz** while hovering —
+   inaudible on the hardware most visitors have, at any volume. Measure the band the speaker can
+   actually produce, not the overall RMS: here the two differ by 20 dB, and only one of them
+   predicts whether anyone hears it. Current levels, tapped from the shipped graph: pad -23.8,
+   engine idle -21.8, cruise -20.1, full speed -15.9 dBFS above 200 Hz, with a limiter on the
+   master so the three voices cannot sum past clipping.
 7. **`prefers-reduced-motion` does not imply silence**, but if we ever add reactive visuals driven by
    audio, those follow the motion preference.
 8. **Licensing is a hard gate.** Only CC0 / CC-BY-with-attribution or purchased-licence audio, with
-   the licence recorded next to the file in the repo.
+   the licence recorded next to the file in the repo. Currently moot — see rule 6. If a file is ever
+   added, this gate applies to it unchanged.
 
 ---
 
@@ -187,16 +218,46 @@ on.
 
 | Route | Mood | Field | Motion | Colour |
 |---|---|---|---|---|
-| `/` | Invitation, standby | Sparse drifting dust, ~40 points | Slow upward drift, faint parallax on pointer | `--fg-muted` at 12% |
-| `/about` | Human, calm | Fewer, larger, softer | Near-still, gentle breathing scale | `--fg-muted` at 10% |
-| `/projects` | Index, order | Grid-snapped dots on a faint lattice | Ripple on hover of a card, nothing idle | `--border`, accent on the hovered row |
+| `/` | Invitation, standby | Sparse drifting dust, 22 marks per rail | Slow upward drift (24–44s) | `--fg-muted` at 75% |
+| `/about` | Human, calm | Fewer, larger, softer — 12 per rail, 5–12px radial-gradient motes | Bobs ±26px while breathing scale + opacity, 13–22s | `--fg-muted` at 70% |
+| `/projects` | Index, order | 4px ticks on a lattice of 44px SQUARE cells, 4 columns per rail, drawn by `::before`/`::after` | Ticks step down the lattice one cell at a time, `steps(24)`, 18–26s | Ticks `--accent` at 75%; lattice `--fg-muted` at 28% |
 | `/projects/[slug]` | Focus | **None.** | — | — |
-| `/contact` | Signal, transmission | Thin rising streaks | Upward, speeding subtly on form focus, one burst on successful submit | `--accent` at 20% |
+| `/contact` | Signal, transmission | Thin rising streaks, 22–68px, fading along their own length | Upward 8–16s, ×0.32 while a field has focus (`:has()`, no JS) | `--accent` at 60% |
 | `/lab`, `/lab/*` | Instrumented | Existing scene language; no extra field | — | — |
 | `/explore` | Flight | Speed-reactive motes in the flight volume | Velocity-coupled streak length | Accent, brightening with speed |
 
 Non-negotiables: **case-study pages get no particles**, contrast of body text is never affected
 (measure after, not before), and the field never animates during scroll on mobile.
+
+**Two rails, not a scatter.** Every mood draws into the free margin on each side and nowhere else,
+with an equal count per rail. The rail is *derived*, not guessed:
+
+```css
+--pf-rail: calc((100vw - 48rem) / 2 - 20px);   /* 48rem = the reading column */
+```
+
+Marks are positioned as a fraction of that — left-rail marks from `left`, right-rail marks from
+`right`, so the two sides mirror exactly. A **percentage** rail is the trap: 15% of the viewport is
+comfortably clear of the text at 1440px and sits on the paragraph at 1000px, because the margin
+shrinks as the viewport does while the rail grows into it. The field is enabled at **≥1200px**,
+where the margin is 216px; below that there is no rail worth having.
+
+**A grid has no partial cells.** The `/projects` lattice is a whole number of square cells (4 × 44px
+= 176px) anchored to the outer edge, with an explicit closing rule at the inner edge — a repeating
+gradient draws a line at the *start* of each cell, so without it the last column hangs open. The
+viewport is never a whole number of cells tall, so the lattice is masked to dissolve over its last
+two rows rather than being sliced. Sizing the cell as a percentage of the rail gives rectangles that
+change shape with the window, which is what this replaced.
+
+**Motion has to travel.** `/about` and `/projects` originally animated scale and opacity in place;
+measured frame-to-frame they were animating, and to the eye they were static — an in-place fade at
+these sizes is below the threshold of noticing. Every mood now moves through space: rise, bob, or
+step.
+
+**`--border` is not a usable field colour.** It was the documented colour for `/projects` and it
+measured invisible in both themes (~1.1:1 against the ground either way). Ticks are `--accent`;
+the lattice keeps the structural job at `--fg-muted` 28%. The general rule: a field colour has to
+survive the ground it sits on, and the two neutral tokens that do are `--fg-muted` and `--accent`.
 
 ---
 
@@ -260,7 +321,26 @@ opens the hangar door, the page does not open it for them.
 Whether activation mounts the scene in place on `/` or navigates to `/explore` is an implementation
 choice, not a design one; either is compliant as long as nothing 3D loads before the click. In-place
 mount is preferred for continuity (§2's single-space principle) and should reuse the existing
-fullscreen hook rather than a second code path — see [[explore-fullscreen]].
+fullscreen hook rather than a second code path — see [[explore-fullscreen]]. **Resolved by
+measurement in 8.6: navigate.** An in-place mount costs a client component plus the dynamic loader on
+*every* route, and buys continuity alone.
+
+**One door, opened once — amended 2026-09-03.** Navigating shipped a defect that the design doc had
+not anticipated, and it is a design defect rather than a coding one: `/explore` greets an arriving
+visitor with its own `Take control`, so pressing the portal's button led to a second button with the
+same two words. Two gates in a row do not read as two choices, they read as the first press having
+failed. The rule the choice of navigation carries with it:
+
+- **The gate belongs at the click that expresses the intent, not at every entrance.** The portal
+  links to `/explore?fly=1` and the world starts on arrival. `/explore` reached from the nav still
+  gates, because browsing to a page is not asking for ~1.9 MB. Nothing 3D is in `/`'s graph either
+  way, so the etiquette above is intact — the door is still opened by the visitor.
+- **Leaving returns them to where they were standing.** A visitor who chose `/explore` is *at*
+  `/explore` and stays there, flying inline. A visitor who came through the portal never chose that
+  page; to them it is the back of the room the door opened into, so leaving the world goes *back*,
+  restoring the scroll position they left from. §2's single-space principle cuts both ways: an exit
+  that strands you somewhere you never navigated to is the same broken continuity as an entrance
+  that asks twice.
 
 **Do not duplicate the dossier.** `/` gets the 5-field summary; `/about` gets the full operator card.
 Two cards with overlapping-but-different field sets is worse than one card and a link.

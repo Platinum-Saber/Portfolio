@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ContactForm } from '@/components/contact/ContactForm';
+import { ParticleField } from '@/components/ParticleField';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -24,6 +25,10 @@ const LINKS = [
 export default function ContactPage() {
   return (
     <div>
+      {/* Phase 8.5 — rising streaks, quickening while a field has focus. The
+          quickening is a `:has()` selector, not a listener: the form is
+          untouched and it works with JavaScript disabled. */}
+      <ParticleField mood="signal" />
       <h1 className="text-3xl font-semibold tracking-tight">Contact</h1>
       <p
         className="mt-3 max-w-xl leading-relaxed"

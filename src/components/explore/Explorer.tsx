@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { NEUTRAL, type FlightInput } from '@/lib/explore/flight';
 import type { Zone } from '@/lib/explore/zones';
 import { FlightSticks } from './FlightSticks';
@@ -14,6 +15,9 @@ import {
   useImmersive,
 } from './useImmersive';
 import type { JumpRequest, Telemetry } from './Scene';
+import { AudioToggle } from '../AudioToggle';
+import { engine, engineOff } from '@/lib/audio';
+import { MAX_SPEED } from '@/lib/explore/flight';
 
 const Scene = dynamic(() => import('./Scene').then((m) => m.Scene), {
   ssr: false,
@@ -100,6 +104,11 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   const [jump, setJump] = useState<JumpRequest | null>(null);
   const held = useRef(new Set<string>());
   const { frame, immersive, enter, exit } = useImmersive<HTMLDivElement>();
+  const router = useRouter();
+  // Whether this visit arrived already-flying from the home portal. A ref
+  // rather than state: nothing renders from it, and flipping it must not
+  // schedule a render in the middle of leaving.
+  const deepLinked = useRef(false);
   // Touch contributions are kept apart from keyboard ones so releasing a key
   // cannot cancel a stick that is still being held, and vice versa.
   const sticks = useRef({ left: { x: 0, y: 0 }, right: { x: 0, y: 0 } });
@@ -136,7 +145,22 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     });
   }, []);
 
-  const onTelemetry = useCallback((next: Telemetry) => setTelemetry(next), []);
+  const onTelemetry = useCallback((next: Telemetry) => {
+    setTelemetry(next);
+    // The audio module ignores this entirely until the visitor arms it, so
+    // this call costs a function invocation and nothing else in the default,
+    // silent case. Normalised here rather than inside the engine so the audio
+    // never has to know how fast this particular craft goes.
+    engine(next.speed / MAX_SPEED);
+  }, []);
+
+  // Flight stopping — leaving fullscreen, unmounting, navigating away — has to
+  // take the engine down with it. A tone that outlives the thing making it is
+  // the single worst bug this feature could ship.
+  useEffect(() => {
+    if (!flying) engineOff();
+  }, [flying]);
+  useEffect(() => engineOff, []);
 
   /**
    * Taking control also brings the world fully into view. Without this you can
@@ -149,6 +173,67 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     void enter();
     frame.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [enter, frame]);
+
+  /**
+   * Arriving with intent — `/explore?fly=1`.
+   *
+   * The home portal's button already says "Take control". Landing here on a
+   * second button with the same words, and having to press it again, reads as
+   * the first press having failed. The portal therefore deep-links with
+   * `?fly=1` and this skips the gate. `/explore` reached from the nav, or
+   * typed, has no such param and still gets the gate: nobody is handed ~1.9 MB
+   * for browsing to a page.
+   *
+   * `window.location` inside an effect rather than `useSearchParams()`: that
+   * hook opts the route out of static prerendering unless it is wrapped in a
+   * Suspense boundary, and every page on this site is prerendered.
+   *
+   * The fullscreen request rides the *navigation's* activation rather than a
+   * local click, and a browser may decline it. `useImmersive` already treats a
+   * refusal as the fixed-overlay case, so the visitor gets a full-viewport
+   * canvas either way — which is the part that matters.
+   */
+  useEffect(() => {
+    if (support !== 'ok') return;
+    if (new URLSearchParams(window.location.search).get('fly') !== '1') return;
+    deepLinked.current = true;
+    takeControl();
+  }, [support, takeControl]);
+
+  /**
+   * Leaving the world returns a deep-linked visitor to where they were.
+   *
+   * Someone who reached `/explore` themselves is *at* `/explore`, and dropping
+   * them onto the page they chose is correct — Escape leaves fullscreen and
+   * the canvas carries on inline. Someone who pressed `▸ Take control` at the
+   * bottom of `/` never chose this page: they were reading the home sequence,
+   * and to them `/explore` is the back of the room the door opened into.
+   * Leaving the world should put them back where they were standing.
+   *
+   * `router.back()` rather than `push('/')` because only a history traversal
+   * restores scroll — a push lands them at the top of the home page, a long
+   * way above the portal they left from. The one case it cannot serve is a
+   * `?fly=1` URL opened directly in a fresh tab, where there is nothing behind
+   * this entry; that falls back to the home page.
+   *
+   * Keyed on `immersive` going false rather than on a click, because the
+   * browser can leave without asking: Escape, F11 and the system chrome all
+   * exit fullscreen on their own. See `useImmersive`.
+   */
+  const wasImmersive = useRef(false);
+  useEffect(() => {
+    if (immersive) {
+      wasImmersive.current = true;
+      return;
+    }
+    if (!wasImmersive.current) return;
+    wasImmersive.current = false;
+    if (!deepLinked.current) return;
+    deepLinked.current = false;
+    setFlying(false);
+    if (window.history.length > 1) router.back();
+    else router.push('/');
+  }, [immersive, router]);
 
   useEffect(() => {
     if (!flying) {
@@ -258,7 +343,11 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           />
         )}
 
-        {/* Discovery counter. */}
+        {/* Discovery counter, and the audio control under it. Top-left is the
+            only corner occupied in every state — bottom-left carries telemetry
+            in fullscreen and top-right carries the jump list — and §4.2 asks
+            for one control that is ALWAYS visible, not one that appears with
+            the mode that happens to have room for it. */}
         <div className="pointer-events-none absolute top-3 left-3">
           <p className="font-mono text-[11px]" style={{ color: '#7d8794' }}>
             {found} of {total} found
@@ -271,6 +360,9 @@ export function Explorer({ zones }: { zones: Zone[] }) {
               {nearest.label} · {telemetry.nearestDistance.toFixed(0)} m
             </p>
           )}
+          <div className="pointer-events-auto mt-2">
+            <AudioToggle />
+          </div>
         </div>
 
         {/*
@@ -350,7 +442,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
             alt {telemetry.altitude.toFixed(1)} m · {telemetry.speed.toFixed(1)}{' '}
             m/s · hdg {telemetry.heading.toFixed(0).padStart(3, '0')}
             <br />
-            esc to leave fullscreen
+            {deepLinked.current ? 'esc to go back' : 'esc to leave fullscreen'}
           </p>
         )}
 

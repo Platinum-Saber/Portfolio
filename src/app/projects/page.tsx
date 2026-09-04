@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getAllProjects } from '@/lib/projects';
 import { ProjectCard } from '@/components/ProjectCard';
+import { ParticleField } from '@/components/ParticleField';
 
 export const metadata: Metadata = {
   title: 'Projects',
@@ -14,6 +15,10 @@ export default function ProjectsPage() {
 
   return (
     <div>
+      {/* Index — a lattice, not a drift. The case studies themselves get no
+          field at all; that exclusion is a non-negotiable in §5.2. */}
+      <ParticleField mood="index" />
+
       <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
       <p
         className="mt-3 max-w-2xl leading-relaxed"

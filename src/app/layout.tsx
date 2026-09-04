@@ -7,7 +7,7 @@ import './globals.css';
 /*
  * Deliberately using a system font stack rather than next/font + Inter.
  * It costs zero network requests and zero layout shift, which matters against
- * the performance budget in PLAN.md. To switch to a webfont later:
+ * the performance budget in docs/PLAN.md. To switch to a webfont later:
  *   import { Inter } from 'next/font/google';
  *   const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
  * then put `inter.variable` back on <html>.

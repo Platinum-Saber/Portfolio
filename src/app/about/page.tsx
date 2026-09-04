@@ -4,6 +4,7 @@ import { Portrait } from '@/components/Portrait';
 import { EXTENDED, IDENTITY, SUMMARY } from '@/lib/operator';
 import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
+import { ParticleField } from '@/components/ParticleField';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div>
+      {/* Calm — near-still motes, per the mood table. `/about` is the one
+          content route whose field does not travel. */}
+      <ParticleField mood="calm" />
+
       <h1 className="text-3xl font-semibold tracking-tight">About</h1>
 
       {/*

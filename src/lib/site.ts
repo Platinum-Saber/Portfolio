@@ -34,4 +34,8 @@ export const nav = [
   { href: '/projects', label: 'Projects' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
+  // The simulation is one of the site's two views, so it is reachable from
+  // every page rather than only from the end of the home sequence.
+  // `heavy: true` turns OFF Next's link prefetch for it — see Nav.tsx.
+  { href: '/explore', label: 'Explore', heavy: true },
 ] as const;

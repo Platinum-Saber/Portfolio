@@ -7,14 +7,8 @@
 
 @theme {
   --font-sans:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
   --color-ink: #0b0d10;
@@ -31,7 +25,6 @@
 
   --default-transition-duration: var(--t-fast);
   --default-transition-timing-function: var(--ease-console);
-
 }
 
 :root {
@@ -59,6 +52,13 @@
   --border: #232830;
   --accent: #3ddba0;
   --accent-soft: rgba(61, 219, 160, 0.12);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {
@@ -146,6 +146,434 @@
       animation: rail-fill linear both;
       animation-timeline: scroll(root block);
     }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The guided home sequence — Phase 8.9. See `components/Chapter.tsx`.
+
+   `.stage` is a tall scroll runway carrying a view timeline. `.stage-inner`
+   sticks to the viewport for the whole of it, and every `.chapter` is stacked
+   absolutely on that one pinned surface, fading in and out over its own
+   overlapping slice of the timeline. Nothing moves relative to the viewport
+   during a transition — only opacity — which is what makes it read as one
+   item replacing another rather than as a page scrolling past.
+
+   EVERYTHING is inside the support + motion + width query. Without it, no
+   stage, no pinning, no absolute positioning: the chapters are ordinary
+   blocks in ordinary flow. That is the mobile experience on purpose — a
+   chapter holding three project cards does not fit in a pinned phone screen.
+   --------------------------------------------------------------------------- */
+
+@keyframes chapter-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+    pointer-events: none;
+  }
+  18%,
+  82% {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28px);
+    pointer-events: none;
+  }
+}
+
+/* The first chapter is already on screen at scroll 0 — it must not fade in
+   from nothing while the visitor has not scrolled at all. */
+@keyframes chapter-open {
+  0%,
+  82% {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28px);
+    pointer-events: none;
+  }
+}
+
+/* The last chapter is the door. It arrives and stays — fading the destination
+   out as the visitor reaches it would be a joke at their expense. */
+@keyframes chapter-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+    pointer-events: none;
+  }
+  18%,
+  100% {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+.stage-inner > .chapter + .chapter {
+  margin-top: 6rem;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+    .stage {
+      position: relative;
+      /* Keep in step with RUNWAY_VH in Chapter.tsx. */
+      height: calc(var(--chapters) * 110vh);
+      view-timeline-name: --stage;
+      view-timeline-axis: block;
+    }
+
+    .stage-inner {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .stage-inner > .chapter + .chapter {
+      margin-top: 0;
+    }
+
+    .chapter {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      /* The nav is sticky and 4rem tall; without this a chapter taller than
+         about two thirds of the screen has its first line hidden under it. */
+      padding-block: 5.5rem 2.5rem;
+      animation: chapter-cycle linear both;
+      animation-timeline: --stage;
+      animation-range: var(--ch-from) var(--ch-to);
+    }
+
+    .chapter:first-child {
+      animation-name: chapter-open;
+    }
+
+    .chapter:last-child {
+      animation-name: chapter-arrive;
+    }
+
+    /* `pointer-events` is animated in the keyframes above rather than set
+       here: a faded-out chapter must not swallow clicks aimed at the one that
+       replaced it, but it must stay in the accessibility tree — which
+       `visibility: hidden` would not. */
+
+    /* Inside a pinned chapter a card is permanently in view, so its own
+       `.rise` timeline never runs. Neutralised so the two scroll animations
+       cannot fight over the same opacity. */
+    .chapter .rise {
+      animation: none;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Audio volume slider — Phase 8.7.
+
+   `appearance: none` removes the native thumb along with the native track, and
+   a range input with no thumb is a control nobody can find. Both vendor
+   pseudo-elements have to be written out; they cannot be combined into one
+   selector, because a browser that does not recognise one of them drops the
+   whole rule.
+
+   The track itself is a gradient set inline from the current value, so the
+   fill and the element are the same node and the input stays native — which is
+   what keeps arrow keys, Home/End and the screen-reader value for free.
+   --------------------------------------------------------------------------- */
+
+.pf-volume::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background-color: currentColor;
+  cursor: pointer;
+  /* A ring rather than a border, so the thumb reads on both the filled and
+     unfilled halves of the track without changing size between them. */
+  box-shadow: 0 0 0 2px rgba(9, 13, 16, 0.75);
+}
+
+.pf-volume::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background-color: currentColor;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(9, 13, 16, 0.75);
+}
+
+.pf-volume:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tier-A particle field — Phase 8.5. See `components/ParticleField.tsx`.
+
+   Same enhancement shape as `.scroll-rail` above: the container is
+   `display: none` by default and only turned on inside the
+   `prefers-reduced-motion: no-preference` block, so reduced motion gets no
+   field at all rather than a field frozen mid-rise.
+
+   Zero JavaScript. The quickening while a form field has focus is `:has()`,
+   not an event listener — which also means it works with JS disabled.
+   --------------------------------------------------------------------------- */
+
+@keyframes pf-rise {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-108vh);
+    opacity: 0;
+  }
+}
+
+/* `calm` — a mote that drifts and breathes at the same time.
+   It bobs rather than travels: the mood is stillness, but *pure* stillness is
+   indistinguishable from a static dot, which is exactly the bug this replaced.
+   Scale and opacity move with the drift, which is what reads as depth. */
+@keyframes pf-breathe {
+  0% {
+    transform: translateY(26px) scale(0.7);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-26px) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(26px) scale(0.7);
+    opacity: 0.25;
+  }
+}
+
+/* `index` — a tick descending the lattice one cell at a time. `steps()` is the
+   whole idea: a machine reading down an index snaps between rows, it does not
+   glide. Distinguishable from `pf-rise` at a glance for that reason alone, and
+   it is what makes `/projects` legibly *moving* rather than merely lit. */
+@keyframes pf-index {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    /* 24 cells — past the bottom of any viewport the field is enabled at, and
+       an exact multiple of the cell so every step lands on a rule. */
+    transform: translateY(calc(var(--pf-cell) * 24));
+    opacity: 0;
+  }
+}
+
+.pfield {
+  display: none;
+}
+
+/* Narrow viewports have no margin to put atmosphere in — the reading column
+   is the whole screen. Rather than draw behind the text, the field is simply
+   absent. It is a decoration, and decorations may be absent.
+
+   1200px, not 900px: `<main>` is `max-w-3xl` (48rem = 768px) centred, so the
+   free margin is (100vw - 768px) / 2 — 66px at 900px wide, which is not a
+   rail, it is a sliver under the text. At 1200px it is 216px, which is the
+   narrowest width where a rail is honestly a rail. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1200px) {
+  .pfield {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    overflow: hidden;
+    pointer-events: none;
+
+    /* The free margin beside the reading column, less a 20px gap. Marks are
+       positioned as a fraction of THIS rather than of the viewport, so the
+       field cannot grow into the text as the window narrows — which is
+       exactly what a percentage rail did. */
+    --pf-rail: calc((100vw - 48rem) / 2 - 20px);
+
+    /* Square lattice cell for `index`. Named here so the mood and the marks
+       cannot disagree about it. */
+    --pf-cell: 44px;
+  }
+
+  .pfield > span {
+    position: absolute;
+    bottom: -12vh;
+    display: block;
+    background-color: currentColor;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-duration: calc(var(--pf-dur, 24s) * var(--pf-speed, 1));
+    will-change: transform;
+  }
+
+  /* -------------------------------------------------------------------------
+     Mood mapping — `docs/DESIGN-LANGUAGE.md` §5.2. Four routes, four fields.
+     The point is that a glance at the margin tells you which page you are on,
+     so each mood differs in colour AND shape AND motion, not just in one of
+     the three. Opacities were raised ~2x on 2026-09-03: the original values
+     (0.28–0.3 on a 2px mark) were below the threshold of noticing on a bright
+     display, which is the same as not shipping the field at all.
+     ------------------------------------------------------------------------- */
+
+  /* `/` — standby dust. The machine is powered and idle. */
+  .pfield--standby {
+    color: var(--fg-muted);
+    opacity: 0.75;
+  }
+  .pfield--standby > span {
+    width: 3.5px;
+    height: 3.5px;
+    border-radius: 50%;
+    animation-name: pf-rise;
+  }
+
+  /* `/about` — human, calm. Larger, softer motes that bob and breathe rather
+     than rise. They stay in their own patch of the rail — the mood is
+     stillness — but they do move: a mote that only changed opacity was
+     indistinguishable from a static dot, which is the bug this replaced. */
+  .pfield--calm {
+    color: var(--fg-muted);
+    opacity: 0.7;
+  }
+  .pfield--calm > span {
+    border-radius: 50%;
+    /* A soft edge rather than a hard dot — at 5–12px a crisp circle reads as
+       a UI element that failed to load. The gradient makes it atmosphere. */
+    background: radial-gradient(
+      circle,
+      currentColor 0%,
+      color-mix(in srgb, currentColor 45%, transparent) 55%,
+      transparent 78%
+    );
+    animation-name: pf-breathe;
+    animation-timing-function: ease-in-out;
+  }
+
+  /* `/projects` — index, order. Ticks stepping down a lattice, snapped to its
+     columns. Not a drift: the mood is a catalogue being read, so the motion is
+     discrete and on-grid where `/` and `/contact` are smooth and free. */
+  .pfield--index {
+    color: var(--accent);
+    opacity: 0.75;
+  }
+  .pfield--index > span {
+    width: 4px;
+    height: 4px;
+    animation-name: pf-index;
+    /* One step per cell of travel — the tick lands in a cell, never between
+       two.
+       This is the one place a timing function carries meaning rather than
+       feel, so it does not use `--ease-console`. */
+    animation-timing-function: steps(24, end);
+  }
+
+  /* The lattice the ticks sit on: two rails of SQUARE cells, drawn on the
+     container's own pseudo-elements so they cost no extra elements.
+
+     Four columns of exactly `--pf-cell`, anchored to the OUTER edge — so the
+     rail is 176px wide at every viewport and every cell in it is whole. The
+     previous version sized the rail as a percentage and spaced the rules at
+     `100% / 6` horizontally and `11%` vertically, which produced rectangles
+     that changed shape with the window and a sliced column at the inner edge.
+     A partial cell reads as a clipping bug, not as a grid.
+
+     The closing rule at the inner edge is a separate layer: a repeating
+     gradient draws a line at the START of each cell, so without it the last
+     column would be missing its far side and hang open. */
+  .pfield--index::before,
+  .pfield--index::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: calc(var(--pf-cell) * 4);
+    --pf-rule: color-mix(in srgb, var(--fg-muted) 28%, transparent);
+    background-image:
+      linear-gradient(to right, transparent calc(100% - 1px), var(--pf-rule) 0),
+      repeating-linear-gradient(
+        to right,
+        var(--pf-rule) 0 1px,
+        transparent 1px var(--pf-cell)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--pf-rule) 0 1px,
+        transparent 1px var(--pf-cell)
+      );
+    /* The viewport is not a whole number of cells tall, so the last row is
+       always cut somewhere. Rather than leave a hard partial row at the
+       bottom edge, the lattice dissolves over the final two cells — the grid
+       fades out instead of being sliced. */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 calc(100% - var(--pf-cell) * 2),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 calc(100% - var(--pf-cell) * 2),
+      transparent 100%
+    );
+  }
+  .pfield--index::before {
+    left: 0;
+  }
+  .pfield--index::after {
+    right: 0;
+    /* Mirrored, so the closing rule lands on the inner edge of this rail too
+       and the two sides are reflections rather than copies. */
+    transform: scaleX(-1);
+  }
+
+  /* `/contact` — signal, transmission. Thin rising streaks in the accent. */
+  .pfield--signal {
+    color: var(--accent);
+    opacity: 0.6;
+  }
+  .pfield--signal > span {
+    width: 2px;
+    animation-name: pf-rise;
+    /* The streak fades along its own length, so it reads as motion trailing
+       a head rather than as a bar sliding up the screen. */
+    background: linear-gradient(
+      to top,
+      transparent,
+      currentColor 55%,
+      currentColor
+    );
+  }
+
+  /* Something is being transmitted: the field quickens while the visitor is
+     typing. No listener, no state — the selector is the whole mechanism. */
+  body:has(input:focus, textarea:focus) .pfield--signal {
+    --pf-speed: 0.32;
   }
 }
 

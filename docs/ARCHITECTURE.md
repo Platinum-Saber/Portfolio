@@ -3,6 +3,7 @@
 **Date:** 2026-08-21
 **Proposed stack:** React + three.js on Vercel · Python backend on AWS EC2 · Supabase (Postgres)
 **Stated constraints:** free tier only · global recruiter audience · backend needed for ML/CV demos and a 3D asset pipeline
+**Build plan and current phase:** [`PLAN.md`](./PLAN.md) · **Visual rules:** [`DESIGN-LANGUAGE.md`](./DESIGN-LANGUAGE.md)
 
 ---
 

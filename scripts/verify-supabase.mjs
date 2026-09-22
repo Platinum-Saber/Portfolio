@@ -276,7 +276,7 @@ Clear them all in the SQL Editor with:
 
   delete from public.contacts where source = '${PROBE_SOURCE}';
 
-If no email arrived for the inserted row, the Resend webhook is not wired up
+If no Discord message arrived for the inserted row, the webhook is not wired up
 yet — see section 3 of docs/PHASE-5-SUPABASE.md.`);
 
 process.exit(failures === 0 ? 0 : 1);

@@ -22,7 +22,7 @@
 | 2 | 3D layer | Three interactive scenes + the explorable world | 🟡 Device test passed; scout CAD outstanding |
 | 3 | Asset pipeline | Optimised GLB built in CI | ✅ Done |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | ✅ Done |
-| 5 | Supabase | Contact form, RLS, degrades gracefully | 🟡 Code done, needs your accounts |
+| 5 | Supabase | Contact form, RLS, degrades gracefully | 🟢 Form live, notifications live. Preview/Dev env vars, the bad-key test and probe cleanup remain |
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — *gates Phase 8* |
 | 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
 | 8 | Design architecture | One visual language across every route | 🟡 In progress — 8.1, 8.2, 8.4, 8.5, 8.6, 8.7, 8.9 done · 8.3 parked · 8.8 left |
@@ -271,14 +271,17 @@ steps, each with a way to check it worked.
       to PostgREST, no `@supabase/supabase-js`
 - [x] Spam mitigation — honeypot, minimum fill time, in-memory sliding window on a hashed
       IP. Limits documented honestly in the runbook
-- [x] Email notification — Resend, via a Supabase Edge Function fired by a database
-      webhook, so notification is downstream of storage and cannot fail the submission
+- [x] Notification — **Discord**, via a Supabase Edge Function fired by a database
+      webhook, so notification is downstream of storage and cannot fail the submission.
+      Was Resend; swapped 2026-09-04 because it needed a domain we do not own yet.
+      **Deployed, wired and confirmed working 2026-09-04**
 - [x] **Failure path:** every non-success path ends in a `mailto:` link prefilled with what
       the visitor typed. Verified against a stubbed PostgREST returning 401, 403 and a hung
       connection, plus a wholly unconfigured deployment — all four produce the same calm
       panel, the hang inside a 6 s timeout
-- [x] GitHub Actions cron every other day — hits the PostgREST root, not the table, since
-      `anon` has no select privilege
+- [x] GitHub Actions cron every other day — calls `public.healthcheck()`, not the
+      PostgREST root and not the table: `anon` has no select privilege, and the root
+      answers 401 to the anon key on this project anyway
 - [x] `SUPABASE_URL` and `SUPABASE_ANON_KEY` set in `.env.local` (2026-08-22) — confirmed
       to parse cleanly through `@next/env` despite CRLF line endings, and the JWT payload
       confirms `role: anon`, not `service_role`
@@ -289,14 +292,25 @@ steps, each with a way to check it worked.
       `created_at` (401); the insert path returns 201; CHECK constraints reject a
       5-character message (400). Note this project maps permission-denied to **401**, not
       403 — do not read those as auth failures
-- [ ] Apply `0002_healthcheck.sql`, then re-run `npm run verify:supabase` — it should be
-      all PASS
+- [x] Apply `0002_healthcheck.sql` (2026-09-04) — confirmed by the keep-alive workflow
+      getting a 200 out of `healthcheck()`, which is only possible if the function exists
+      and `anon` holds execute on it
+- [x] Re-run `npm run verify:supabase` (2026-09-04) — **all eight checks PASS**, including
+      `healthcheck()` at 200 in 957 ms. The database side of Phase 5 is finished
 - [ ] Clear the probe rows: `delete from public.contacts where source = 'verify-probe';`
       plus the four rows from the first two runs (see the runbook)
-- [ ] **Commit and push the Phase 5 files.** As of the `e30c5ff` deploy none of them were
-      tracked, which is why `/api/contact` is absent from that build's route list
-- [ ] Remaining runbook steps — the two Vercel env vars, the notify function deploy, the
-      two GitHub secrets
+- [x] **Commit and push the Phase 5 files** — all six are tracked as of `1b7ae3c`
+      (route, verify script, both migrations, the Edge Function, the workflow)
+- [x] Two GitHub Actions secrets (2026-09-04) — `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
+      Runs #1–#7 were red purely for want of these; Actions secrets are a store of their
+      own, and neither `.env.local` nor Vercel's environment variables reach a runner
+- [x] **The two Vercel env vars, Production (2026-09-04)** — end-to-end proven: a message
+      sent through the deployed form landed in `contacts`. The form is live
+- [ ] Add the same two variables to **Preview and Development** — needed before the
+      bad-key test, which otherwise fails for want of any configuration at all
+- [x] Discord webhook created, notify function deployed with its two secrets, database
+      webhook wired at timeout 5000 (2026-09-04) — a submission now reaches the channel
+      within seconds of hitting the table
 - [ ] Repeat the bad-key test once on a real preview deployment
 
 > Neither this container nor the desktop sandbox can reach `*.supabase.co`. Everything
@@ -304,6 +318,9 @@ steps, each with a way to check it worked.
 > pasting the output. A session cannot check this itself — do not let one claim otherwise.
 
 **Done when:** the form works, *and* the site is still perfect with Supabase fully down.
+First half met 2026-09-04 — stored and notified, end to end. Second half is verified against a
+stubbed PostgREST and an unconfigured deployment but **not yet on a real preview**, which is the
+one remaining item that actually proves the claim.
 
 ---
 
@@ -826,6 +843,11 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-09-03** — **The `/projects` lattice is square cells, and a grid may not have partial ones.** The first version spaced its rules at `100% / 6` across a percentage-width rail and `11%` down the viewport: rectangles whose aspect changed with the window, plus a sliced column at the inner edge that read as a clipping bug. It is now 4 columns of a 44px square cell anchored to the outer edge, with an explicit closing rule at the inner edge (a repeating gradient draws the line at the *start* of each cell, so the last column would otherwise hang open) and a mask that dissolves the last two rows, since no viewport is a whole number of cells tall. The tick animation moves in `steps(24)` of exactly one cell for the same reason — on-grid motion or none.
 - **2026-09-03** — **In-place animation is not animation.** `/about` and `/projects` shipped with `pf-breathe` and `pf-pulse` animating only scale and opacity. Frame-differencing two screenshots 1.8s apart proved they were running; on screen both read as static, because an opacity fade on a 4px mark is below the threshold of noticing. Both moods now travel — `/about` bobs ±26px while it breathes, `/projects` steps down its lattice — and the frame-difference measurement is now part of how this field gets checked, since "it animates" and "it looks animated" turned out to be different claims.
 - **2026-09-03** — **The particle field was invisible, and the fix was measurement, not taste.** Two moods shipped at 14–16 marks total, 1–2px, 0.28–0.3 opacity — below the threshold of noticing on any screen, which is the same as not having shipped it. Screenshotted both themes at 1440px before and after: counts are now per-rail (equal on each side, rather than a coin flip per mark that routinely left one margin empty), marks are 3.5–12px, opacities 0.6–0.75, and the rails widened 11% → 15%. All four content routes now have their own mood per DESIGN-LANGUAGE §5.2 — `/` rising dust, `/about` breathing motes, `/projects` a pulsing lattice, `/contact` accent streaks — so the margin tells you which page you are on. `/projects/[slug]` still gets none. Still a server component, still 0 KB of JavaScript, still nothing inside the reading column.
+- **2026-09-04** — **Supabase moved Database Webhooks out of the Database section and under Integrations.** Half an hour was spent looking for a tab that no longer exists, and this runbook was one of the guides confidently pointing at the old place. The underlying object never changed — it is still a trigger calling `supabase_functions.http_request()` through `pg_net` — so the durable route is the SQL, now recorded in the runbook's §3c. That trigger is deliberately NOT a migration file: it carries the shared secret in its header argument, and `supabase/migrations/` is tracked. It is the one piece of this setup that lives only in the dashboard, on purpose.
+- **2026-09-04** — **Contact notification goes to Discord, not email.** Resend is the better design for a site that owns a domain; this one does not yet, so the sender would have been stuck on `onboarding@resend.dev` — deliverable only to my own signup address — until Phase 6 resolves that. A Discord incoming webhook is a URL you POST JSON to: no bot user, no gateway connection, no token to rotate, no sender to verify, one secret instead of three. **The cost is `reply_to`:** the email version made answering one click from the notification, and Discord does not linkify `mailto:`, so the address is selectable text and answering means pasting it into a mail client. Named here because it is the one thing the email path did better, and because the trade is reversible — the shape is unchanged (same trigger, same function, notification still strictly downstream of the write), so reinstating Resend is one function body and a secret swap. Also note the embed escapes markdown rather than HTML now, and sets `allowed_mentions: {parse: []}` — the message is a stranger's text rendered in a channel I read quickly and trust.
+- **2026-09-04** — **Vercel resolves environment variables at deployment creation, not at request time**, and an earlier line in the runbook said the opposite. Both Supabase variables were saved and the deployed form went on returning `unavailable`, because the running deployment had been built before they existed and keeps whatever the environment held then. A redeploy fixed it and the first real submission reached the table. Second trap in the same shape: a hashed deployment URL (`portfolio-lake-delta-<hash>.vercel.app`) is pinned to one build, so it will show the `mailto:` panel forever no matter how often you redeploy — a redeploy creates a *new* deployment at a *new* URL and moves the alias. Test the alias.
+- **2026-09-04** — **The contact route's silence is diagnostic.** The unconfigured branch returns 503 with no log line, while both Supabase-side failures log `[contact] insert failed:` or `[contact] insert threw:`. That was not designed as a debugging aid but works as one: in Vercel's logs, silence on `/api/contact` means the variables never reached the function, and a log line means they did and the database refused. Worth keeping the asymmetry if that code is ever refactored.
+- **2026-09-04** — **The keep-alive workflow's seven red runs were a missing secret, not a bug.** Every failed run carried the annotation it was designed to carry — *SUPABASE_URL / SUPABASE_ANON_KEY repository secrets are not set* — and exited in 3 seconds without touching the network. The trap is that the values existed in two other places by then (`.env.local`, and Vercel's environment), and neither is visible to a GitHub runner: **Actions secrets are a third, separate store.** Worth keeping because the same shape recurs for every CI credential. Also the argument for the up-front guard clause: without it the run would have failed on a curl against `https:///rest/v1/rpc/healthcheck` and blamed the database. Run #9 green, 2026-09-04.
 - **2026-09-03** — **`--border` was rejected as a particle colour after measuring it.** The mood table specified it for `/projects`; against `--bg` it is ~1.1:1 in *both* themes, so the ticks simply were not there. Ticks moved to `--accent` (which also stops `/projects` being a second grey field next to `/about`), and the lattice they sit on is `color-mix(--fg-muted 28%)` rather than a token, so it reads the same weight on light and dark ground instead of inheriting a token tuned for 1px borders.
 - **2026-09-03** — **The app icon is three static files in `src/app/`, not a generated `icon.svg`.** Phase 6 originally called for an SVG in the schematic language; the crossed-swords mark in `public/icons/` was already the chosen identity, so the work was sizing rather than drawing. Three files because they answer three different questions: `favicon.ico` carries 16/32/48 for browsers that still ask for the ICO, `icon.png` is the 192 px transparent one modern browsers prefer, and `apple-icon.png` is flattened onto `#0b0d10` with 16 px of padding because iOS ignores alpha and would otherwise composite the mark onto plain black and bleed it to the corners. The 256 px ICO layer was dropped (it alone was ~120 KB of a 160 KB file) and `icon.png` is palette-quantised to 128 colours — flat art, visually identical, ~7x smaller. Next generates every `<link>` tag from the filenames, so `layout.tsx` needs no `icons` metadata.
 - **2026-08-24** — **The motion stack is dependency-free on content routes.** All three references run Three + GSAP (+ Svelte, + Lenis); our content routes are budgeted at ~465 KB with no three.js. View Transitions (Next 16) and CSS scroll-driven animations (`animation-timeline: view()`) deliver route dissolves, shared-element morphs and scroll reveals at **0 KB**, off the main thread, with `IntersectionObserver` as the fallback. GSAP/Lenis stay permitted inside `/explore` and `/lab`, where the budget already accepts weight. No scroll hijacking on any route.
@@ -849,7 +871,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 - **2026-08-22** — Anon's INSERT grant is **column-level** (`name, email, message, source`). A table-level grant would let whoever holds the public key supply their own `id` and `created_at`. A CHECK constraint cannot substitute — Postgres only accepts IMMUTABLE functions in CHECK, and `now()` is STABLE.
 - **2026-08-22** — The spam timing check **fails open**. Found in testing: `Number(null)` is `0`, which is finite and below the floor, so a submission arriving without a measurement was being silently binned. Quietly losing a real message is far worse than accepting one more bot, which still has the honeypot and the rate limiter to get past. The route now judges only an actual number.
 - **2026-08-22** — The contact form has no error state at all. Rate limited, database paused, key rotated, network dropped, Supabase never configured — every path renders the same calm paragraph and a `mailto:` link carrying what the visitor already typed. The static contact details stay on the page underneath, in the HTML, JavaScript or not.
-- **2026-08-22** — Email notification runs on a **database webhook**, not from the site. Notification is therefore downstream of the write: if Resend is down or the free tier is spent, the row is still saved and the visitor still sees success. A notification failure must never look like a submission failure.
+- **2026-08-22** — Notification runs on a **database webhook**, not from the site. Notification is therefore downstream of the write: if the notification service is down or misconfigured, the row is still saved and the visitor still sees success. A notification failure must never look like a submission failure. (The service was Resend when this was written and is Discord as of 2026-09-04; the property is what matters, not the vendor.)
 - **2026-08-22** — The keep-alive cron calls a `public.healthcheck()` RPC, after the first version — pinging the PostgREST root — turned out to answer **401** to the anon key on this project, which would have failed every scheduled run. A 401 is also useless as a health signal: it is indistinguishable from a wrong key or a dropped grant. And PostgREST serves that root from a cached schema, so it may never touch Postgres, which is the one thing a pause-prevention ping must do. The RPC returns `now()` and nothing else, executes in the database, and a 200 means 200. Requires `0002_healthcheck.sql`.
 - **2026-08-22** — Added `vercel.json` pinning `"framework": "nextjs"`. The `e30c5ff` deploy failed with `No Output Directory named "public" found` — not a build failure at all (`next build` completed and generated all 17 pages), but Vercel treating the project as Framework Preset *Other*, which runs the build and then hunts for a folder of static files to serve. Pinning it in the repo makes the setting version-controlled rather than a dashboard checkbox nobody remembers ticking.
 - **2026-08-22** — The ASCILAM visualisation shows **2D scans accumulating into an occupancy grid**, not a point cloud. The scouts carry RPLiDAR A1 / STL-19P — 2D sensors — and the coordinator fuses occupancy grids. A 3D point cloud would have looked better to a general viewer and implied hardware that does not exist. The log-odds grid at 5 cm is what the real system actually produces.
@@ -911,7 +933,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 ## 5. Open questions
 
 - [x] ~~What's the concept for the 3D scene?~~ — Airframe Explorer, see Phase 2
-- [ ] Which domain name? (blocks Phase 6, and blocks a proper Resend sender address — until then the form notifies via `onboarding@resend.dev`, which can only mail your own signup address)
+- [ ] Which domain name? (blocks Phase 6. No longer blocks notification: that went to Discord on 2026-09-04 precisely to stop waiting on it. Settling the domain makes the email path viable again if `reply_to` turns out to be missed — see the runbook's §3d)
 - [x] ~~Which projects make the cut, and in what order?~~ — six written, ordered robotics → embedded → backend. Revisit if any feels weak.
 
 ---

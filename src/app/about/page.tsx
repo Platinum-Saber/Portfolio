@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
 import { Portrait } from '@/components/Portrait';
+import Link from 'next/link';
+import { EXPERIENCE } from '@/lib/experience';
 import { EXTENDED, IDENTITY, SUMMARY } from '@/lib/operator';
 import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
@@ -59,11 +61,13 @@ export default function AboutPage() {
           haven&apos;t looked underneath at least once.
         </p>
         <p>
-          Alongside that I&apos;ve worked on production market data
-          infrastructure — low-latency VWAP computation in Redis Lua, Kafka
-          pipelines, Spring Boot services. It&apos;s a different discipline from
-          robotics, and a useful one: it taught me to profile before optimising
-          and to distrust my instincts about where time actually goes.
+          Alongside that I spent six months as an intern software engineer at
+          GTN Technologies, on the backend team behind a global trading
+          platform — Java and Spring Boot services, Kafka messaging and Redis,
+          all in service of keeping live market data accurate. It&apos;s a
+          different discipline from robotics, and a useful one: it taught me to
+          measure before optimising and to distrust my instincts about where
+          time actually goes.
         </p>
         <p>
           My coursework spans embedded systems, robotics, machine learning, HCI
@@ -71,6 +75,87 @@ export default function AboutPage() {
           graphics, computer vision and CTF-style security problems.
         </p>
       </div>
+
+      <section className="mt-12">
+        <h2
+          className="text-sm font-semibold tracking-widest uppercase"
+          style={{ color: 'var(--fg-muted)' }}
+        >
+          Experience
+        </h2>
+        <ol className="mt-5 space-y-10">
+          {EXPERIENCE.map((job) => (
+            <li key={`${job.company}-${job.period}`}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h3 className="font-medium">
+                  {job.role} ·{' '}
+                  <span style={{ color: 'var(--accent)' }}>{job.company}</span>
+                </h3>
+                <span
+                  className="font-mono text-xs"
+                  style={{ color: 'var(--fg-muted)' }}
+                >
+                  {job.period}
+                </span>
+              </div>
+              <p
+                className="mt-1 font-mono text-xs"
+                style={{ color: 'var(--fg-muted)' }}
+              >
+                {job.team} · {job.location}
+              </p>
+              <p
+                className="mt-3 leading-relaxed"
+                style={{ color: 'var(--fg-muted)' }}
+              >
+                {job.summary}
+              </p>
+              <ul className="mt-4 space-y-3">
+                {job.work.map((item) => (
+                  <li
+                    key={item.title}
+                    className="border-l pl-4"
+                    style={{ borderColor: 'var(--border)' }}
+                  >
+                    <p className="text-sm font-medium">{item.title}</p>
+                    <p
+                      className="mt-1 text-sm leading-relaxed"
+                      style={{ color: 'var(--fg-muted)' }}
+                    >
+                      {item.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <ul className="mt-4 flex flex-wrap gap-1.5">
+                {job.stack.map((tech) => (
+                  <li
+                    key={tech}
+                    className="rounded px-2 py-1 font-mono text-[11px]"
+                    style={{
+                      backgroundColor: 'var(--bg-subtle)',
+                      color: 'var(--fg-muted)',
+                    }}
+                  >
+                    {tech}
+                  </li>
+                ))}
+              </ul>
+              {job.caseStudy && (
+                <p className="mt-4 text-sm">
+                  <Link
+                    href={job.caseStudy}
+                    className="hover:underline"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    More on this work →
+                  </Link>
+                </p>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <section className="mt-12">
         <h2

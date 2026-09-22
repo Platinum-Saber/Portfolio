@@ -69,7 +69,13 @@ left from earlier phases is the scout CAD swap-in (Phase 2) and the Supabase acc
 and `sansikasuhan5@` the personal one. The site now uses the professional address everywhere
 (`site.email`, one change, six call sites), matching the CV.
 
-**One content gap the CV exposed (2026-08-24), and it is not code:**
+**Closed 2026-09-22 — the GTN internship is on the site.** `/about` has an Experience section
+fed by `src/lib/experience.ts`, the dossier carries an EXPERIENCE row, and
+`content/projects/market-data-backend.mdx` was rewritten as the internship case study (slug kept
+so the `/explore` zone and links survive). Written for a non-finance reader, from the CS3993
+report, with company-internal system names, topic names and architecture specifics deliberately
+left out. The original gap, for the record:
+
 1. **The GTN Technologies internship is invisible on the site.** Nov 2025 – May 2026, Market
    Backend team — a named industry role with shipped work (Horus, the VWAP service). `/about`
    describes it as "production market data infrastructure" without the employer, the dates or

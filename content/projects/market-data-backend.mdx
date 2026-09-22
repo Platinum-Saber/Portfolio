@@ -1,52 +1,95 @@
 ---
-title: Financial Market Data Backend
-summary: Low-latency VWAP computation in Redis Lua and Kafka-based market data pipelines for a production trading platform.
+title: Real-Time Market Data Systems
+summary: Internship at GTN Technologies — backend services and tools that keep live stock-market data accurate for a global trading platform.
 order: 6
-year: '2025—2026'
+year: 'Nov 2025 — May 2026'
 status: complete
-domain: Backend / Distributed Systems
+domain: Industry / Backend
 stack:
   [
     'Java',
     'Spring Boot',
-    'Redis',
-    'Lua',
     'Apache Kafka',
-    'Apache Solr',
-    'AWS MSK',
+    'Redis / Lua',
+    'PostgreSQL',
+    'WebSocket',
+    'React',
+    'Docker',
   ]
 ---
 
 ## Context
 
-Professional work on market data infrastructure — the systems that ingest, compute over and
-serve financial data under latency constraints that make the naive approach unusable.
+Six-month internship as an **Intern Software Engineer** on the Market Backend team at
+**GTN Technologies**, Colombo. The team builds the servers behind a trading and investment
+platform used by brokerages and fintech apps across several continents: prices arrive from
+stock exchanges around the world, and those servers check them, process them and deliver
+them to the apps people trade from.
 
-## VWAP in Redis Lua
+In that setting a wrong or late number is not a cosmetic bug — it is what an investor sees
+when they decide to buy or sell. Most of my work was about making sure the data is right,
+and being able to prove it.
 
-Volume-weighted average price has to be computed over a live stream, and the round trip
-between application and datastore is the expensive part. Moving the computation **into**
-Redis as a Lua script removes it.
+This page describes the kind of work, not the company's systems. Internal names and
+architecture details stay with the company.
 
-The interesting work was iterative optimisation of the data representation. The first
-version stored trade records as **JSON** and parsed them inside the script — correct, and
-wasteful: every VWAP call paid for deserialising structure it barely used. The final version
-**embeds the fields directly into the sorted-set member format**, so the script reads what it
-needs straight out of the key with no parsing step at all.
+## A testing tool for live price feeds
 
-That is the shape of most real optimisation work: the algorithm was never the bottleneck,
-the serialisation boundary was.
+Trading apps receive prices over a long-lived WebSocket connection rather than by
+refreshing a page. I built a full-stack tool — **Spring Boot** backend, **React** frontend —
+that lets QA engineers and developers run structured checks against that connection:
+logging in, subscribing to instruments, and confirming every message type arrives in the
+right shape.
 
-## Streaming and search
+- Test runs are **queued per user**, so several people can use it at once without
+  interfering with each other
+- Scenarios are described in **YAML profiles** instead of being hard-coded
+- Results are archived to **AWS S3**, so past runs can be reviewed later
+- Market-hours aware — it knows whether an exchange is open before judging its data
 
-- **Kafka** pipelines on **AWS MSK Serverless** — request/response topics (`VWAP_SUB` /
-  `VWAP_RESP`) for distributing computed values to subscribers
-- **Spring Boot** services with `@ConfigurationProperties` YAML binding for configuration
-- **Apache Solr** query construction against a news collection
-- Planning for a **Redis → Valkey** migration
+## One set of data-quality rules, shared
+
+Several internal monitoring dashboards each needed to answer the same questions: *is this
+exchange open right now, and has this price gone stale?* I extracted that logic into a
+reusable **Java / Spring Boot library** — exchange calendars, market hours, staleness
+detection — and integrated it into two of those dashboards.
+
+Before switching one over, I ran the old and new versions side by side on live market data
+and compared their verdicts. Along the way the dashboards gained a live market-status view,
+**JWT**-secured login with **Spring Security**, online editing of validation rules, and a
+history of past checks. That work also meant upgrading Java and Spring Boot versions and
+clearing dependency security warnings.
+
+## Live trading statistics at scale
+
+The largest project was a service that maintains a **running average trade price** for
+thousands of stocks at once — weighted by how many shares changed hands, and updated the
+moment each trade happens (in trading this is called VWAP). It needs to be fast and exactly
+right, because other systems quote it directly.
+
+- Prototyped the calculation inside **Redis** using **Lua** scripts, which run atomically
+  and so avoid race conditions between concurrent trades
+- **Benchmarked** competing designs against the most-traded symbols and let the numbers
+  choose the architecture
+- Connected the service to the existing data platform through **Apache Kafka** producers
+  and consumers, with **JUnit** tests around both the calculation and the messaging
+- Built a comparison harness and a small testing UI that checked the new service's output,
+  symbol by symbol, against the system it was replacing — and traced the few mismatches to
+  their cause
+- Handed over with an architecture document, an interface spec, an operations runbook and a
+  deployment verification script
+
+## Smaller pieces
+
+- Hardened a **Bash** deployment check that catches broken or duplicate packages before they
+  reach a server
+- Analysed message timing logs with **Python**, **pandas** and **matplotlib** in Jupyter
+- Local environments in **Docker**; everything shipped through **GitLab** merge requests,
+  code review and peer testing on QA servers
 
 ## What I took from it
 
-Production systems taught me something coursework can't: that the cost model matters more
-than the algorithm. Parsing JSON a few million times is not a line of code anyone flags in
-review, and it dominated the profile.
+Industrial software has to be correct, observable and maintainable at a level coursework
+rarely asks for. The habit I kept is measuring before deciding: the benchmark, not intuition,
+picked the design — and a side-by-side comparison, not a passing test suite, is what made
+anyone trust the new service.

@@ -33,6 +33,9 @@ export const SUMMARY: OperatorField[] = [
 
 export const EXTENDED: OperatorField[] = [
   { label: 'Focus', value: 'Robotics · embedded systems · perception' },
-  { label: 'Also', value: 'Low-latency market data infrastructure' },
+  {
+    label: 'Experience',
+    value: 'Intern Software Engineer · GTN Technologies · Nov 2025 – May 2026',
+  },
   { label: 'Elsewhere', value: 'Computer graphics · computer vision · CTFs' },
 ];

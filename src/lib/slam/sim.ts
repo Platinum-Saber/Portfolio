@@ -15,8 +15,8 @@
  *   - and the fused map is only clean because something solved for the
  *     transform between those two mistaken frames.
  *
- * The real system earns that last step with an EKF over wheel odometry and IMU
- * on each scout, then `multirobot_map_merge` on the coordinator. Here the
+ * The real system streams scans and odometry over micro-ROS to a Raspberry Pi
+ * coordinator, whose map-merger node builds one probabilistic grid. Here the
  * corrected map is built from the true poses — an honest stand-in for a solved
  * alignment, not a claim to have re-implemented the solver in a browser. The
  * page says so in as many words.
@@ -178,7 +178,7 @@ export class Scout {
       );
       const didHit = range < MAX_RANGE;
 
-      // A real A1 is not this good; a little range noise keeps the walls from
+      // A real LD19 is not this good; a little range noise keeps the walls from
       // looking suspiciously like the polygons they are.
       const measured = didHit
         ? range * (1 + (this.random() * 2 - 1) * 0.004)

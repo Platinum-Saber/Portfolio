@@ -1,13 +1,23 @@
 ---
 title: Real-Time Sobel Edge Detection on FPGA
-summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 — OV7670 capture, streaming Sobel convolution, VGA output, with no frame buffer in the critical path.
+summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 — OV7670 capture, a streaming Sobel core producing one pixel per clock, and live 640×480 VGA output, verified bit-exact against a NumPy model.
 order: 3
 year: '2026'
-status: in-progress
+status: complete
+repo: https://github.com/Platinum-Saber/FPGA-sobel-edge-detection
 demo: /lab/sobel
 domain: Embedded / Digital Design
 featured: true
-stack: ['Verilog', 'Vivado', 'Basys 3', 'Artix-7 FPGA', 'OV7670', 'VGA']
+stack:
+  [
+    'Verilog',
+    'Vivado',
+    'Basys 3 / Artix-7',
+    'OV7670',
+    'VGA',
+    'Python / NumPy',
+    'Icarus Verilog',
+  ]
 ---
 
 ## The problem
@@ -18,33 +28,110 @@ a 3×3 neighbourhood. The whole design problem is buffering exactly enough of th
 compute the present, and doing it fast enough to keep up with the camera without ever
 falling behind the display.
 
-Built for **CS4362 (Hardware Description Languages)** as a group project.
+A two-person group project for **CS4363 (Hardware Description Languages)** at the University
+of Moratuwa, built with T.I.U. Gunasekara. Tested on the board with a live OV7670 feed as
+well as the built-in test pattern.
 
-## Approach
+## What it does
 
-A streaming pipeline from an **OV7670** camera module through to **VGA** output on a
-**Basys 3** (Xilinx Artix-7), written in **Verilog** and simulated in **Vivado**.
+An **OV7670** camera on the Basys 3's PMOD headers feeds a pipeline written entirely in
+**Verilog** on a **Xilinx Artix-7** (`xc7a35t`), with live **VGA** output at 640×480, 60 Hz.
 
-The core of it is a **line buffer**: hold two previous rows on-chip so that a 3×3 window is
-always available as pixels stream past, letting the Sobel kernels convolve continuously
-without ever storing a full frame. Horizontal and vertical gradient kernels run in
-parallel, then the magnitude is combined and thresholded.
+```
+OV7670 → SCCB config → capture
+       → RGB565 → grey
+       → 2 line buffers → 3×3 window
+       → Sobel core → threshold
+       → frame buffer → VGA
+```
 
-Clock domain management matters here — the camera, the processing pipeline and the VGA
-timing generator do not naturally agree on a clock, and reconciling them is most of the
-real engineering.
+- The camera is configured over **SCCB** (an I²C-like bus) by a master written from scratch,
+  which reads the line back during acknowledge bits and lights an LED if the camera never
+  answers
+- Colour is converted to grey with **BT.601** weights
+- The camera runs at 320×240 and each pixel is drawn as a 2×2 block to fill the screen
+- Switches choose between the raw feed, a binary edge map and the raw gradient magnitude;
+  two buttons move the threshold live, and the LEDs show its value
 
-## Why Verilog over VHDL
+## The convolution never waits for a frame
 
-A deliberate choice for this project. Verilog's terser syntax for the structural, repetitive
-description of a datapath like this one kept the design readable — though the counterpart
-project below is in VHDL, and having built non-trivial designs in both, I'd rather choose
-per-project than defend either as universally better.
+The core of the design is a pair of **Block RAM line buffers** holding the previous two
+image rows. As each new pixel arrives, the buffers and a set of shift registers present a
+complete 3×3 window, and the Sobel core produces a new output **every clock** once the
+pipeline is full — three stages, three clocks of latency.
 
-## Where it stands
+The ×2 kernel weights are wired shifts, so the core is nothing but adders: **53 LUTs, 94
+flip-flops and zero DSP slices**. Magnitude is `|Gx| + |Gy|` rather than a true square
+root — it over-estimates diagonal edges by up to ~41 %, but costs three adders instead of a
+multiplier and a square root, and the threshold absorbs the difference.
 
-In progress. Simulation in Vivado is the current focus; the Basys 3, monitor and VGA cable
-are on hand, with an OV7670 module sourced for the capture side.
+The single easiest thing to get wrong is the line buffer's latency. Its output is
+registered, so a buffer of length N delays by N + 1 clocks; the window therefore uses
+`IMG_W − 1`. Off by one, and the edge map looks _almost_ right — which is exactly why a
+testbench checks every one of the nine taps instead of eyeballing a picture.
+
+## Three clocks that don't agree
+
+The board's 100 MHz oscillator drives an MMCM for a 25 MHz pixel clock; the camera returns
+its own 12.5 MHz pixel clock. Those never line up, so the only crossings are two dual-clock
+frame-buffer BRAMs — structurally safe, write port on one clock and read port on the other
+— plus two-flop synchronisers for reset and the threshold. The constraints declare the clock
+trees asynchronous so the tools don't try to time paths between them.
+
+Getting the camera clock onto the chip at all took some digging: the only pin available for
+it is the wrong half of a clock-capable pair, so Vivado refuses to place the design without
+an explicit routing exception — and that exception has to live in an implementation-only
+constraints file, because the net it names does not exist until synthesis creates it.
+
+## Runs without a camera
+
+A built-in **test-pattern generator** feeds the pipeline at exactly the point the camera
+would, so a freshly programmed board shows live video with nothing plugged in. The card has
+one of everything the operator has to handle: a gentle gradient that should stay _below_
+threshold, a large rectangle, a bouncing circle that proves the picture is live, a
+checkerboard and a diagonal bar. An optional build bakes a photograph into Block RAM instead.
+
+## Verification
+
+The design is verified bottom-up, so a failure points at one module rather than "the
+picture looks wrong". **Nine testbenches**, all passing:
+
+- **Kernel arithmetic** against hand-computed windows — flat field, ideal edges, impulse,
+  threshold from both sides
+- **Windowing** on an image whose every pixel value is its own index, so each tap has a
+  closed-form expectation
+- **Whole image** streamed through the pipeline and compared with a **bit-exact NumPy
+  golden model** — **76,800 / 76,800 pixels match** at 320×240
+- **Camera protocol and capture** against a behavioural OV7670 model, with the SCCB write
+  reconstructed from the bus itself
+- **VGA timing** counted over a whole frame — 307,200 active pixels at 59.52 Hz
+- **Full system** in both camera and camera-free modes, including a check that every 2×2
+  screen block is uniform, which proves the upscaling is aligned
+
+The whole suite also runs under open-source tools — Icarus Verilog plus Python — in one
+command, with no Vivado licence needed.
+
+## Results
+
+Post-implementation, camera-free build:
+
+- **Logic:** 658 of 20,800 LUTs (3.2 %) and 599 of 41,600 registers (1.4 %)
+- **Block RAM:** 28.5 of 50 tiles (57 %) · **DSP slices:** 3 of 90
+- **Timing:** met with **+26.9 ns** of worst-case slack at 25 MHz — roughly 76 MHz Fmax
+- **Power:** 0.2 W on-chip
+
+Almost all of that Block RAM is the two frame buffers, which exist only to cross clock
+domains. **The convolution's entire working memory is two small RAM tiles.** Even the Fmax
+figure understates the pipeline: every one of the ten worst timing paths sits in the test
+card's circle-drawing logic, not in the image processing.
+
+## Starting point
+
+The idea and the OV7670 register approach come from Angelo Jacobo's ULX3S Sobel design, but
+this is a re-implementation for a different architecture rather than a port — Xilinx
+instead of Lattice, on-board VGA instead of HDMI, on-chip RAM instead of external SDRAM, a
+single streaming pipeline instead of a split-kernel state machine, and a full testbench
+suite where the reference had hardware testing only.
 
 ## The same operator, on a GPU
 

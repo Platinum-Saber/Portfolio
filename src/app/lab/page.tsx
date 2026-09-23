@@ -162,6 +162,13 @@ export default function LabPage() {
         >
           Collaborative SLAM arena →
         </Link>
+        <Link
+          href="/lab/keeper"
+          className="hover:underline"
+          style={{ color: 'var(--accent)' }}
+        >
+          Goalkeeper interception →
+        </Link>
       </nav>
     </div>
   );

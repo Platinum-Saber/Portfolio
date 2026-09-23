@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import { Grid, OrbitControls } from '@react-three/drei';
 import { DRONE_COMPONENTS } from '@/lib/drone';
 import { Airframe } from './Airframe';
@@ -83,6 +84,7 @@ export function Scene({
       }}
     >
       <Canvas
+        events={safeCanvasEvents}
         frameloop={animating ? 'always' : 'demand'}
         dpr={[1, 1.75]}
         camera={{ position: start, fov: 38 }}

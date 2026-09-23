@@ -38,8 +38,8 @@ export function ScoutModel({
   const lidar = useRef<Group>(null);
 
   useFrame((_, delta) => {
-    // An RPLiDAR A1 turns at about 5.5 Hz. Matching it is free and means the
-    // one number a roboticist might idly check is right.
+    // Matches the simulated scan rate (5.5 Hz) so the puck and the rays it
+    // casts agree. The real scouts' LD19 runs faster.
     if (lidar.current) lidar.current.rotation.y += delta * 5.5 * Math.PI * 2;
   });
 

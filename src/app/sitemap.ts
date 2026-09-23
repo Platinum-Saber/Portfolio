@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/lab',
     '/lab/sobel',
     '/lab/ascilam',
+    '/lab/keeper',
     '/explore',
   ].map((route) => ({
     url: `${site.url}${route}`,

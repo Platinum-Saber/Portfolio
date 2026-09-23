@@ -109,9 +109,12 @@ export default function AscilamLabPage() {
         >
           That is wheel slip, and it is not a quirk of the simulation. It is the
           fastest way to ruin an odometry estimate on real hardware, and it is
-          most of the reason the scouts run an EKF over wheel encoders{' '}
-          <em>and</em> an IMU rather than trusting the encoders alone: the IMU
-          knows the robot did not turn, and disagrees.
+          the limit the real system ran into: merging two scouts&apos; maps came
+          out less accurate than one scout mapping alone, because each
+          scout&apos;s idea of where it stood drifted from where it actually
+          was. The real scouts blend a gyro into their heading, which catches
+          a bad turn — but a wheel slipping in a straight line looks exactly
+          like driving forward to both sensors.
         </p>
 
         <h2
@@ -129,10 +132,12 @@ export default function AscilamLabPage() {
           pose, which the simulation happens to know because it invented it. It
           is a stand-in for a solved alignment, not a scan matcher — I have not
           re-implemented graph SLAM in a browser and would not claim to. On the
-          real system that correction is earned: an EKF over wheel odometry and
-          IMU on each scout, then <code>multirobot_map_merge</code> on the
-          Raspberry Pi coordinator. What this page can show faithfully is the
-          shape of the problem and what success looks like.
+          real system the scouts stream raw scans and odometry over micro-ROS to
+          a Raspberry Pi coordinator, which files every scan into one
+          probabilistic occupancy grid using each scout&apos;s own odometry from
+          a known starting pose — so the drift shown here is exactly what
+          limited it. What this page can show faithfully is the shape of
+          the problem and what success looks like.
         </p>
 
         <p
@@ -142,8 +147,9 @@ export default function AscilamLabPage() {
           Everything else is close to the hardware. The occupancy grid is
           log-odds at 5 cm resolution, so evidence accumulates rather than
           overwriting — a cell seen empty twenty times and occupied once stays
-          empty. The LiDAR turns at 5.5 Hz with a 6 m useful range, roughly an
-          RPLiDAR A1. Unobserved cells are drawn transparent rather than as
+          empty. The simulated LiDAR turns at 5.5 Hz with a 6 m useful range —
+          slower and shorter-sighted than the LD19 on the real scouts, which
+          keeps the arena small enough to watch fill in. Unobserved cells are drawn transparent rather than as
           floor, because &ldquo;I looked and it is clear&rdquo; and &ldquo;I
           have never looked&rdquo; are different claims and conflating them
           would hide the coverage gaps this is meant to expose.

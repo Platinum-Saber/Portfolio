@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import { OrbitControls } from '@react-three/drei';
 import {
   BufferAttribute,
@@ -306,6 +307,7 @@ export function Scene(props: {
 }) {
   return (
     <Canvas
+      events={safeCanvasEvents}
       dpr={[1, 1.75]}
       camera={{ position: [0, 11, 11], fov: 42 }}
       gl={{ antialias: true, powerPreference: 'low-power' }}

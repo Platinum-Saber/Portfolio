@@ -640,3 +640,28 @@
 .prose-site :where(code):not(:where(pre code))::after {
   content: none;
 }
+
+/* ------------------------------------------------------------------ *
+ * Media inside a case study (MDX <figure>).
+ *
+ * The rules live here rather than on the elements because MDX strips
+ * inline `style` attributes from raw HTML in content files — the markup
+ * in content/projects/*.mdx carries width/height (so the box is reserved
+ * and nothing shifts when the bytes land) and everything visual is here.
+ *
+ * A portrait phone video is capped so it does not tower over the column;
+ * a landscape photo takes the column width.
+ * ------------------------------------------------------------------ */
+.prose-site :where(figure) video,
+.prose-site :where(figure) img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+}
+
+.prose-site :where(figure) video {
+  max-width: 20rem;
+  display: block;
+  background-color: var(--bg-subtle);
+}

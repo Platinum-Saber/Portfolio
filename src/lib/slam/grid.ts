@@ -9,7 +9,7 @@
  * occupancy grids exist instead of just remembering where the hits landed.
  */
 
-/** Metres per cell. 5 cm is roughly what an RPLiDAR A1 justifies at these ranges. */
+/** Metres per cell. 5 cm is about what a low-cost 2D LiDAR justifies at these ranges. */
 export const CELL_SIZE = 0.05;
 
 const L_FREE = -0.35;

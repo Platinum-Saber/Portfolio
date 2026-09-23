@@ -1,56 +1,102 @@
 ---
 title: 'ASCILAM: Collaborative Multi-Robot SLAM'
-summary: Two LiDAR-equipped scout robots map terrain independently and stream to a Raspberry Pi coordinator that fuses their maps into a single global view in real time.
+summary: Two low-cost LiDAR scout robots explore a space together, streaming scans and odometry over micro-ROS to a Raspberry Pi coordinator that builds one live, dynamic occupancy map.
 order: 2
 year: '2025'
-status: in-progress
+status: complete
 demo: /lab/ascilam
 domain: Robotics
 featured: true
-repo: https://github.com/Platinum-Saber/ASCILAM
+repo: https://github.com/Platinum-Saber/ASCILAM/tree/custom_robot
 stack:
-  ['ROS 2 Foxy', 'C++', 'Python', 'RPLiDAR', 'Raspberry Pi 4', 'ESP32', 'RViz2']
+  [
+    'ROS 2 Foxy',
+    'micro-ROS',
+    'ESP32',
+    'Arduino',
+    'LD19 LiDAR',
+    'MPU6050 IMU',
+    'Raspberry Pi 4',
+    'C++',
+    'Python',
+    'RViz2',
+  ]
 ---
 
 ## The problem
 
-One robot mapping a space is a solved problem. Several robots mapping the _same_ space and
-agreeing on what they found is not — you inherit drift in every scout's local estimate, and
-merging two maps means solving for the unknown transform between two coordinate frames that
-have each been quietly lying to themselves since startup.
+One robot mapping a space is a solved problem, but it is slow and leaves gaps in anything
+large. Several robots mapping the _same_ space and agreeing on what they found is not
+solved — every scout's position estimate drifts on its own, and a shared map is only as good
+as the worst of them.
 
-**ASCILAM** — Autonomous Simultaneous Collaborative Integrated Localization And Mapping — is
-my attempt at that problem on real hardware.
+Most multi-robot SLAM work also assumes things a cheap robot doesn't have: precise
+localisation, a high-bandwidth link and enough on-board compute to run SLAM itself.
+**ASCILAM** asks how far you get without them — collaborative mapping on hobby-grade
+hardware, in real time.
+
+The work is written up as a paper, _C-SLAM: Collaborative Simultaneous Localization and
+Mapping_, with S. J. Sooriyaarachchi at the University of Moratuwa.
 
 ## Architecture
 
-The system splits into scouts and a coordinator.
+A hybrid design: the scouts are deliberately thin, and the thinking happens in one place.
 
-**Scouts (×2).** Modified M-Bots, each carrying a 2D LiDAR (RPLiDAR A1 / STL-19P), wheel
-encoders and an IMU. Each runs SLAM locally — GMapping or Cartographer — so a scout keeps
-producing a usable local map even if the link drops.
+**Scouts (×2).** The first version, described in the paper, was a modified M-Bot with its
+Bluetooth module swapped for a custom ESP32 shield. The final version replaces the M-Bot base
+with a **custom robot** built around two microcontrollers, each doing one job:
 
-**Coordinator.** A Raspberry Pi 4 running Ubuntu 20.04 and **ROS 2 Foxy**, which receives
-scout maps and fuses them into one global occupancy grid, visualised in RViz2.
+- An **Arduino** drives the motors through an L298N H-bridge, counts wheel-encoder pulses on
+  interrupts and reads an **MPU6050 IMU**. It computes the robot's odometry itself, blending
+  encoder heading with the gyro through a **complementary filter** (80 % encoder, 20 % gyro),
+  and reports it over UART.
+- An **ESP32** parses the **LD19 LiDAR**'s serial protocol into ROS `LaserScan` messages,
+  forwards the Arduino's odometry as ROS `Odometry`, and relays velocity commands back down.
+  It runs **micro-ROS**, so a microcontroller is a first-class ROS 2 node — its messages travel
+  over **DDS-XRCE**, the DDS profile built for extremely resource-constrained devices,
+  carried on UDP over Wi-Fi.
 
-**Communication.** Scouts stream over **UDP on Wi-Fi** via ESP32 modules. UDP was
-deliberate: for a stream of map updates, a dropped packet is cheaper than a stalled
-pipeline waiting for a retransmit.
+**Coordinator.** A **Raspberry Pi 4** running Ubuntu MATE 20.04 and **ROS 2 Foxy** hosts
+everything else: one micro-ROS agent per scout, the mapping node that builds the global
+occupancy grid, the exploration coordinator, a controller per scout, and the Wi-Fi access
+point the scouts join.
 
-**Fusion.** Map merging through `multirobot_map_merge` and custom ROS nodes, with
-`robot_localization` running an EKF over wheel odometry and IMU on each scout to keep the
-local estimate honest before it's ever sent.
+Keeping SLAM off the scouts is what makes them cheap: a microcontroller cannot run a SLAM
+stack, but it can stream a LiDAR scan and its own odometry.
 
-## Design decisions worth defending
+## How the map gets built
 
-**SLAM on the scouts, not the coordinator.** Centralising SLAM would have simplified the
-fusion problem, but it makes every scout useless the moment Wi-Fi degrades, and it puts the
-full computational load on the weakest node. Distributing it keeps the system degrading
-gracefully.
+**One shared grid.** Each scout's scans are projected into a single global map at 5 cm
+resolution using that scout's odometry, from known starting poses. Every cell holds a
+probability, updated with **Bayes' rule** on each observation rather than overwritten.
 
-**EKF before transmission.** Fusing odometry and IMU locally means the coordinator receives
-a map that is already internally consistent, which makes the registration problem between
-scouts substantially better conditioned.
+**Dynamic mapping.** Confidence in old observations **decays over time**, and a cell is only
+declared free after several observations. A wall that is seen again and again stays; a
+person who walked through the room fades out of the map.
+
+**Frontier exploration.** The coordinator finds _frontiers_ — the boundary between explored
+free space and the unknown — clusters nearby frontier cells into targets, and sends each
+scout to the nearest one that keeps it at least **1.5 m** from the other scout's goal. A
+separate safety loop checks the scouts' separation five times a second and stops both if
+they get too close.
+
+## Results
+
+Tested indoors in corridors and rooms with obstacles.
+
+- **Moving objects.** A single scout mapping a room with moving objects in it left dense
+  clusters of black where they had passed. The probabilistic grid with two scouts clears them —
+  evidence that a cell is empty eventually outweighs one moment of it being occupied.
+- **Coverage.** Two scouts explored faster than one. Collaboration paid off in efficiency.
+- **Accuracy.** The merged map was _less_ accurate than a single scout's, with some walls
+  visibly misaligned. The cause is localisation: scans are placed using each scout's own
+  odometry, which drifts from the truth, and merging two maps inherits both errors. The
+  gyro blend corrects heading, but nothing corrects position once a wheel slips.
+
+That last result is the honest shape of the problem, and it points at the next step: better
+per-scout localisation, or aligning the scouts' maps against each other rather than trusting where
+each one thinks it is. The approach suits warehouse automation, security patrols, search
+and rescue and building management — anywhere a few cheap robots beat one expensive one.
 
 ## Watch it fail, then work
 
@@ -61,15 +107,9 @@ control of a scout and map wherever you drive it.
 
 The **unaligned** view is the one worth clicking. Both maps are faithful records of what
 their sensor saw; they disagree only about where the sensor was standing. Two ghosts of the
-same corridor, a few degrees apart. That is the problem stated in one picture, and it makes
-the fused view mean something.
+same corridor, a few degrees apart — the misaligned walls from the results above, in one
+picture.
 
 To be clear about what the simulation does and does not do: the fused map is built from
-known-true poses, standing in for a solved alignment. It demonstrates the shape of the
-problem, not a browser reimplementation of the EKF and `multirobot_map_merge` that earn the
-result on the real hardware.
-
-## Where it stands
-
-In progress. Planned extensions: autonomous navigation on the scouts, RGB-D sensing for
-richer maps than a 2D grid, and a web monitoring interface.
+known-true poses, standing in for a solved alignment. It shows the shape of the problem, not
+a browser reimplementation of the real system's map merger.

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import { Html } from '@react-three/drei';
 import { Vector3, type Group } from 'three';
 import { NEUTRAL, type FlightInput } from '@/lib/explore/flight';
@@ -375,6 +376,7 @@ export function LabScene(props: {
 
   return (
     <Canvas
+      events={safeCanvasEvents}
       dpr={[1, 1.75]}
       camera={{ position: [5, 1.8, 1.2], fov: 62, near: 0.05, far: 60 }}
       gl={{ antialias: true, powerPreference: 'low-power' }}

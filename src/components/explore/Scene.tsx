@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import { Grid, Html } from '@react-three/drei';
 import { Vector3, type Group } from 'three';
 import { clampedPosition } from './panelPosition';
@@ -244,6 +245,7 @@ export function Scene(props: {
 
   return (
     <Canvas
+      events={safeCanvasEvents}
       dpr={[1, 1.75]}
       camera={{ position: [0, 11, 36], fov: 55, far: 400 }}
       gl={{ antialias: true, powerPreference: 'low-power' }}

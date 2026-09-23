@@ -1,0 +1,135 @@
+---
+title: 'RoboKeeper: A Goalkeeper Robot'
+summary: A depth camera spots an incoming ball, an Extended Kalman Filter predicts where it will cross the goal line, and a servo swings the keeper there — built for the IESL Techno 2025 exhibition.
+order: 4
+year: '2025'
+status: complete
+domain: Robotics / Computer Vision
+demo: /lab/keeper
+repo: https://github.com/CSE-ICE-22/GoalKeeper
+stack:
+  [
+    'ROS 2 Jazzy',
+    'Python',
+    'Orbbec Astra Pro',
+    'OpenCV',
+    'YOLOv8',
+    'Extended Kalman Filter',
+    'ESP32',
+    'Servo control',
+  ]
+---
+
+## The problem
+
+Someone kicks a ball at a goal. A robot keeper has a fraction of a second to decide where
+to be — and it cannot wait to see where the ball arrives, because by then it is too late to
+move. It has to watch the first part of the flight and **predict the rest**.
+
+A team project for the **IESL Techno 2025** exhibition, built at the University of Moratuwa
+with L. G. L. Kavinda and A. Disanayake.
+
+## How it works
+
+A keeper figure is mounted on the shaft of a servo, so it swings about a horizontal axis
+to cover the goal. Everything else is a pipeline of **ROS 2 Jazzy** nodes:
+
+```
+Astra Pro  colour + depth
+  → detector   ball in 3D
+  → EKF        goal crossing
+  → servo      ESP32, USB serial
+  → keeper swings
+```
+
+**Seeing the ball.** An **Orbbec Astra Pro** RGB-D camera faces the kicker. Each colour
+frame is paired with its depth frame, so a ball found in the image also has a distance —
+together, a position in three dimensions. The first detector used **HSV colour
+thresholding** and contours to find the red ball; the final one uses a custom-trained
+**YOLOv8** model, which does not depend on the ball's colour surviving the room's lighting.
+
+**Two gates, not a stream.** Rather than tracking the ball continuously, the detector
+waits for it to pass two distances from the camera: it remembers the ball's position at the
+far gate, and when the ball reaches the near gate it publishes the pair as one trajectory.
+Two well-chosen points are enough for the filter to work with, and far cheaper than
+following every frame.
+
+**Predicting the rest.** An **Extended Kalman Filter** with a six-value state — position
+and velocity in three axes — takes those measurements, with **gravity built into its motion
+model**, so it predicts an arc rather than a straight line. It then steps the filter
+forward until the ball reaches the plane of the goal, converts the predicted crossing point
+into a keeper angle, and publishes it.
+
+**Moving the keeper.** A servo-driver node sends that angle over USB serial to an **ESP32**,
+which drives the servo. Every prediction is also logged to CSV and plotted, for tuning the
+filter.
+
+## At Techno 2025
+
+<figure>
+  <video
+    controls
+    muted
+    playsInline
+    preload="none"
+    poster="/images/robokeeper-demo-poster.webp"
+    width="404"
+    height="720"
+  >
+    <source src="/video/robokeeper-demo.mp4" type="video/mp4" />
+    Your browser cannot play this video.
+  </video>
+  <figcaption>The keeper saving shots on the stand at IESL Techno 2025. Silent — the hall was loud.</figcaption>
+</figure>
+
+<figure>
+  <img
+    src="/images/robokeeper-team-1200.webp"
+    srcSet="/images/robokeeper-team-700.webp 700w, /images/robokeeper-team-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="676"
+    alt="The team beside the goalkeeper robot at the IESL Techno 2025 stand"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>The stand at Techno 2025.</figcaption>
+</figure>
+
+## My part
+
+I brought the camera up. The **Astra Pro** is an older model that the current Orbbec ROS 2
+driver only half supports, and getting it working on ROS 2 Jazzy and Ubuntu 24.04 took
+some digging: the right driver branch, running it as a USB 2.0 device, a depth format
+(`Y11`) the defaults don't expect, frame sync switched off because the model doesn't support
+it, and a fix for camera-info messages that publish `NaN`s. I wrote that up as the team's
+setup guide and packaged it as a one-command bring-up launch.
+
+On top of that I wrote the first **red-ball detector**: HSV thresholding on the colour
+image, synchronised with the depth image to publish the ball's 3D position and distance,
+with a debug view showing what it saw. It was the baseline the later YOLO detector
+replaced.
+
+## Take the shot yourself
+
+I built [an interactive simulation of the interception problem](/lab/keeper) — a ball, two
+camera sightings, and a servo with milliseconds to move. Aim it, then switch the keeper
+between the **Kalman filter** and a **straight line through the two points** and take the
+same shot again.
+
+The straight line is the one worth trying. It is not a strawman: two points really do define
+a line, and the line really does pass through both sightings. It just ignores that the ball
+is falling, so it predicts a crossing above the real one and the keeper reaches over the
+top of the shot. The slower the shot, the further it falls in the last two metres, and the
+worse the miss.
+
+The other two sliders are the constraints the real robot lived under. Camera noise goes
+almost straight through to the prediction, because two sightings give the filter nothing to
+average. And moving the near gate toward the goal shrinks the reaction time until the servo
+cannot finish its swing — a right answer that arrives too late is still a goal.
+
+## What I took from it
+
+A prediction problem hides inside most "just react to it" robotics problems. The keeper
+never catches up with the ball; it gets there first. And the unglamorous part — making a
+camera produce trustworthy depth at all — is what everything else stood on.

@@ -8,9 +8,10 @@ export const SKILL_GROUPS = [
     group: 'Robotics',
     items: [
       'ROS 2',
-      'SLAM (Cartographer, GMapping)',
-      'EKF sensor fusion',
-      'RPLiDAR',
+      'micro-ROS',
+      'Occupancy-grid mapping',
+      'Kalman filtering / state estimation',
+      '2D LiDAR',
       'RGB-D perception',
       'Webots',
     ],

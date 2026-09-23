@@ -54,6 +54,7 @@ const PROJECT_SITES: Record<string, [number, number, number]> = {
   'nano-processor-vhdl': [44, 4, 20],
   'market-data-backend': [-44, 9, 20],
   'kobuki-webots-robotics': [0, 5, 44],
+  'robokeeper-goalkeeper-robot': [-24, 7, -44],
 };
 
 const FALLBACK_SITE: [number, number, number] = [18, 14, 34];
@@ -70,6 +71,7 @@ const PROJECT_LABELS: Record<string, string> = {
   'nano-processor-vhdl': 'Nano processor',
   'market-data-backend': 'Market data',
   'kobuki-webots-robotics': 'Kobuki',
+  'robokeeper-goalkeeper-robot': 'RoboKeeper',
 };
 
 export function buildZones(

@@ -1,0 +1,100 @@
+---
+title: 'Nutri-Mithu: Portion Control for Rice and Curry'
+summary: A nutrition tracker built for Sri Lankan meals — a food database, an app that turns biodata into portion sizes, and a lunch box with volume guides instead of measuring cups. Brainstorm 2025 finalist.
+order: 5
+year: '2025'
+status: complete
+domain: Mobile / Health tech
+repo: https://github.com/Platinum-Saber/Nutri-Mithu
+writeup: https://lnkd.in/p/gaimaV5J
+stack:
+  [
+    'Flutter / Dart',
+    'FastAPI',
+    'Firebase',
+    'SQLite',
+    'ESP32',
+    'HX711 load cell',
+    'BLE',
+    'NVIDIA NIM',
+  ]
+---
+
+## The problem
+
+A doctor tells a patient to eat a cup of rice and half a cup of curry. The patient goes home
+to a plate of rice and curry and no measuring cups, and even with them, measuring every curry
+at every meal is not something anyone keeps up. Meanwhile the apps that track calories are
+built around foods that are not on the plate: there is no reliable table for a Sri Lankan
+rice and curry meal.
+
+So the advice is sound and unusable, which is a design problem rather than a medical one.
+
+## What we built
+
+An **interdisciplinary team** — two engineering undergraduates and two medical students,
+with a doctor mentoring — which is the only reason the numbers can be trusted. Months went
+into compiling a **Sri Lankan food calorie database** and checking the calculations against
+standard nutrition guidelines before any of it reached an app.
+
+<figure>
+  <img
+    src="/images/nutri-app.webp"
+    width="480"
+    height="206"
+    alt="Three screens from the Nutri-Mithu app: meal planning, the calorie diary, and the nutrition chatbot"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>Plan a meal, keep the diary, ask the assistant.</figcaption>
+</figure>
+
+**The app.** A **Flutter** app where you pick what is actually on your plate — rice, carrot,
+beans, fish — and it returns **portion sizes computed for you** from your own biodata,
+rather than generic ones. Accounts run through **Firebase Auth**, the diary is local
+**SQLite** so the history works offline, and a **FastAPI** service in front of a hosted
+**medical** language model answers nutrition questions in the terms they are asked in.
+
+**The meal box.** The part that makes the advice survive contact with a kitchen. It looks
+like an ordinary lunch box; inside are **removable dividers with volume guides**. You serve
+up to the marked line, pull the dividers out, and eat a normal plate of food. No cups, no
+weighing, no ritual — the measurement happens while you serve, which is the only moment it
+costs nothing.
+
+<figure>
+  <img
+    src="/images/nutri-box.webp"
+    width="480"
+    height="270"
+    alt="The Nutri-Mithu meal box, a white lunch box with removable internal dividers"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>The box, dividers in. Serve to the line, then take them out.</figcaption>
+</figure>
+
+**The scale, earlier.** Before the box, the same idea was tried in hardware: an **ESP32**
+reading a load cell through an **HX711**, showing weight on an OLED and streaming it to the
+app over **Bluetooth Low Energy**. It works, and the firmware is in the repo. It also asks
+someone to own a gadget, charge it and use it at every meal — and a passive box made of
+plastic dividers does the same job with nothing to fail. Replacing our own electronics with
+a moulded tray was the best decision the project made.
+
+## The result
+
+Finalist at **Brainstorm 2025**, run by the IEEE EMBS Student Branch Chapter at the
+University of Moratuwa, with a **special recognition for innovation**. Built with Nilakna
+Warusawithana, Thiyumi Samarakoon and Hirushi Ranmini, mentored by Dr. Nilanka
+Wickramasinghe. My part was the **Flutter app and the Python backend**.
+
+<figure>
+  <img
+    src="/images/nutri-team.webp"
+    width="480"
+    height="270"
+    alt="The Nutri-Mithu team at the Brainstorm 2025 competition"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>At Brainstorm 2025.</figcaption>
+</figure>

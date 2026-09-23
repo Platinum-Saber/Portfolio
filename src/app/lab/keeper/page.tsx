@@ -105,16 +105,10 @@ export default function KeeperLabPage() {
           the filter is what makes two points enough.
         </P>
 
-        <H>What this is honestly not</H>
         <P>
-          The ball flies on plain ballistics: no drag, no spin, no bounce. Both
-          would put the true path slightly off the arc the filter assumes, which
-          is a second source of error on top of the camera&rsquo;s. The camera
-          is a pair of planes rather than a lens, so nothing here models
-          detection failures, motion blur or the ball being missed entirely —
-          all of which the real robot had to survive in an exhibition hall. The
-          servo, at least, is honest: it has a top speed, and it will lose to a
-          prediction that arrives late.
+          This is a simple simulation of what happens, not a digital twin of the
+          robot: the ball flies on plain ballistics, and the camera is a pair of
+          planes rather than a detector.
         </P>
       </section>
     </div>

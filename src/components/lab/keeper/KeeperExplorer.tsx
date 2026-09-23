@@ -356,7 +356,7 @@ export function KeeperExplorer() {
           value={controls.aimY}
           display={`${controls.aimY.toFixed(2)} m`}
           min={0.1}
-          max={1.9}
+          max={1.5}
           step={0.05}
           onChange={(v) => set('aimY', v)}
         />

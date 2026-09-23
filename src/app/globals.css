@@ -654,13 +654,18 @@
  * ------------------------------------------------------------------ */
 .prose-site :where(figure) video,
 .prose-site :where(figure) img {
-  width: 100%;
+  /* max-width, NOT width: the markup carries each file's real pixel size, and
+     upscaling a 480px screenshot to a 700px column just makes it soft. A
+     larger file still fills the column. */
+  max-width: 100%;
   height: auto;
+  margin-inline: auto;
   border: 1px solid var(--border);
   border-radius: 0.25rem;
 }
 
 .prose-site :where(figure) video {
+  width: 100%;
   max-width: 20rem;
   display: block;
   background-color: var(--bg-subtle);

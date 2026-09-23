@@ -24,7 +24,7 @@
 | 4 | In-browser demo | One live CV/graphics demo, client-side | ✅ Done |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | 🟢 Form live, notifications live. Preview/Dev env vars, the bad-key test and probe cleanup remain |
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — *gates Phase 8* |
-| 7 | *Optional* — AWS artifact | IaC repo + write-up, spun up on demand | ⬜ Not started |
+| 7 | ~~*Optional* — AWS artifact~~ | — | ❌ Dropped (2026-09-23) |
 | 8 | Design architecture | One visual language across every route | 🟡 In progress — 8.1, 8.2, 8.4, 8.5, 8.6, 8.7, 8.9 done · 8.3 parked · 8.8 left |
 | 9 | Diegetic world | Zone info delivered inside the scene, not over it | ⬜ Not started — **unblocked 2026-08-24** |
 
@@ -348,7 +348,10 @@ one remaining item that actually proves the claim.
 
 ---
 
-### Phase 7 — *Optional* — AWS artifact
+### Phase 7 — ~~*Optional* — AWS artifact~~ — ❌ DROPPED (2026-09-23)
+
+**Scrapped. Will not be built.** Kept below for the record only.
+
 *Goal: demonstrate backend/infra skill without paying idle rent. Do this when you're actively interviewing.*
 
 - [ ] Separate repo: Python service (FastAPI) + Dockerfile
@@ -799,6 +802,7 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date — decision — why.
 
+- **2026-09-23** — **Phase 7 (optional AWS artifact) is dropped.** Decided by Suhan: it will not be done. It was always optional and off the render path, so nothing else depends on it.
 - **2026-09-23** — **The keeper simulation shows the estimator, not the vision.** `/lab/keeper` is the RoboKeeper counterpart to `/lab/ascilam`, and the same rule applies: show the thing that is hard to explain in prose, and say plainly what is faked. The hard part here is **prediction from two noisy points**, so the page models the ball ballistically, takes exactly two gate sightings with Gaussian error (depth 1.5× the image axes, as a structured-light camera behaves), and runs both estimators the project compared — the six-state EKF with gravity in the motion model, and the straight line through the two points. The **detection** half is deliberately not modelled: no YOLO in a browser, no missed frames, no motion blur. A visitor cannot learn from a fake detector, and pretending otherwise would be the one thing the ASCILAM page refuses to do.
 - **2026-09-23** — **The servo has a top speed, which is why the near gate is a slider.** Without a slew limit the page would have exactly one lesson (gravity), and a keeper that teleports to the right answer makes the gate placement look free. `ARM_SLEW` is 360°/s, an MG996R-class figure, and the arm returns to neutral at each kick — otherwise a keeper left near the previous prediction gets accidental saves and the reaction-time readout flatters itself. The outcome now distinguishes `missed-prediction` from `too-slow`, which is the distinction the sliders exist to make visible.
 

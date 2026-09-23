@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import {
+  BALL_RADIUS,
   GOAL_HALF_WIDTH,
   GOAL_HEIGHT,
   LAUNCH_Z,
@@ -123,21 +124,29 @@ function Gate({ z, label }: { z: number; label: string }) {
   );
 }
 
-/** The depth camera, beside the goal, looking down the pitch. */
+/**
+ * The depth camera: centred on the goal, behind it and above the crossbar,
+ * looking down the pitch — where it sat on the real stand. Mounted high and
+ * central it sees the whole mouth and the approach, and nothing the keeper
+ * does can block its view of the ball.
+ */
+const CAMERA_POS: [number, number, number] = [0, GOAL_HEIGHT + 0.3, -0.35];
+
 function CameraRig() {
   const geometry = useMemo(() => {
-    const ox = GOAL_HALF_WIDTH + 0.45;
-    const oy = 1.2;
-    const spread = 1.6;
+    const [ox, oy, oz] = CAMERA_POS;
+    const spread = 1.9;
+    const drop = -1.9;
+    const rise = 0.35;
     const far = LAUNCH_Z;
     const p: number[] = [];
     for (const [dx, dy] of [
-      [-spread, -0.9],
-      [spread, -0.9],
-      [-spread, 1.1],
-      [spread, 1.1],
+      [-spread, drop],
+      [spread, drop],
+      [-spread, rise],
+      [spread, rise],
     ]) {
-      p.push(ox, oy, 0.1, ox + dx, oy + dy, far);
+      p.push(ox, oy, oz, ox + dx, oy + dy, far);
     }
     const buffer = new BufferGeometry();
     buffer.setAttribute(
@@ -149,9 +158,14 @@ function CameraRig() {
 
   return (
     <group>
-      <mesh position={[GOAL_HALF_WIDTH + 0.45, 1.2, 0.1]}>
-        <boxGeometry args={[0.22, 0.09, 0.09]} />
+      {/* The housing, and the post carrying it above the bar. */}
+      <mesh position={CAMERA_POS}>
+        <boxGeometry args={[0.24, 0.09, 0.09]} />
         <meshBasicMaterial color="#8b94a1" />
+      </mesh>
+      <mesh position={[0, GOAL_HEIGHT + 0.15, -0.35]}>
+        <boxGeometry args={[0.04, 0.3, 0.04]} />
+        <meshBasicMaterial color="#5f6570" />
       </mesh>
       <lineSegments geometry={geometry}>
         <lineBasicMaterial color="#3f8fae" transparent opacity={0.16} />
@@ -337,7 +351,7 @@ function Simulation({
       </group>
 
       <mesh ref={ball} visible={false}>
-        <sphereGeometry args={[0.11, 20, 14]} />
+        <sphereGeometry args={[BALL_RADIUS, 20, 14]} />
         <meshBasicMaterial color="#cfd6df" />
       </mesh>
 

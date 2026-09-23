@@ -34,10 +34,20 @@ export const LAUNCH_Y = 0.12;
 
 /** Goal mouth, metres. Roughly the exhibition stand's. */
 export const GOAL_HALF_WIDTH = 1.2;
-export const GOAL_HEIGHT = 1.9;
+export const GOAL_HEIGHT = 1.25;
 
-/** The keeper is an arm pivoting about the goal's centre, like the real servo. */
-export const ARM_LENGTH = 1.25;
+/** Football radius, metres — a size 4 ball. */
+export const BALL_RADIUS = 0.105;
+
+/**
+ * The keeper is an arm pivoting about the goal's centre, like the real servo,
+ * and its length is not a free choice: swung to either top corner it has to
+ * just reach the mouth's diagonal, less the ball's radius — a ball whose
+ * centre is that far out is still touching the arm, so anything longer is arm
+ * outside the goal and anything shorter leaves the corners unreachable.
+ */
+export const ARM_LENGTH =
+  Math.hypot(GOAL_HALF_WIDTH, GOAL_HEIGHT) - BALL_RADIUS;
 /** How close the arm has to be to the ball to count as a save. */
 export const SAVE_RADIUS = 0.26;
 /** Servo travel from vertical, radians. */

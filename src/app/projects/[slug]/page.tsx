@@ -7,6 +7,11 @@ import { TransitionLink } from '@/components/TransitionLink';
 
 type Params = { params: Promise<{ slug: string }> };
 
+// Only the slugs that exist at build time. An unknown slug is a 404 from the
+// prebuilt output, never a render on request — on Cloudflare the Worker has
+// no filesystem to read content/projects from (docs/DEPLOY-CLOUDFLARE.md).
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return getProjectSlugs().map((slug) => ({ slug }));
 }

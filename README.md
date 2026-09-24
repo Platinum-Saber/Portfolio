@@ -13,6 +13,7 @@ Everything except this file lives in [`docs/`](./docs).
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Why the stack is what it is, and why EC2 was dropped |
 | [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) | The console metaphor and the rules every surface follows |
 | [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md) | Contact-form setup runbook |
+| [`docs/DEPLOY-CLOUDFLARE.md`](./docs/DEPLOY-CLOUDFLARE.md) | Hosting on Cloudflare Workers — config, dashboard settings, secrets |
 
 ## Stack
 

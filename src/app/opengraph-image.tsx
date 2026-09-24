@@ -8,16 +8,28 @@ import { site } from '@/lib/site';
  * cannot fetch a relative URL — there is no origin while the card is being
  * rendered — and it does not decode WebP, hence a small dedicated JPEG rather
  * than reusing the two files the site itself serves.
+ *
+ * Read INSIDE the handler, not at module scope. On Cloudflare the Worker has
+ * no filesystem, and this module is evaluated as part of the shared server
+ * bundle on every route — a top-level readFileSync threw ENOENT there and took
+ * every page down with it (2026-09-24). The card itself is prerendered at build
+ * time, when the file exists; `force-static` keeps it that way.
  */
-const PORTRAIT = `data:image/jpeg;base64,${fs
-  .readFileSync(path.join(process.cwd(), 'public', 'images', 'portrait-og.jpg'))
-  .toString('base64')}`;
+const portrait = () =>
+  `data:image/jpeg;base64,${fs
+    .readFileSync(
+      path.join(process.cwd(), 'public', 'images', 'portrait-og.jpg'),
+    )
+    .toString('base64')}`;
+
+export const dynamic = 'force-static';
 
 export const alt = site.title;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default function OpengraphImage() {
+  const PORTRAIT = portrait();
   return new ImageResponse(
     <div
       style={{

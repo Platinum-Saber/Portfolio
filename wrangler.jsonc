@@ -1,0 +1,30 @@
+/**
+ * Cloudflare Workers config — the site's host since 2026-09-24 (was Vercel).
+ * Runbook: docs/DEPLOY-CLOUDFLARE.md. Built by @opennextjs/cloudflare.
+ *
+ * Committed on purpose. Without this file Workers Builds auto-generates a
+ * default config on every build and throws it away — and the default has no
+ * incremental cache, which makes the Worker re-render every prebuilt page on
+ * request, where it has no filesystem to read content from. Every page 500'd.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-21",
+  // nodejs_compat: the Next server runtime needs Node APIs.
+  // global_fetch_strictly_public: the Worker cannot fetch into Cloudflare's
+  // own network by accident — the contact route only ever calls Supabase.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // OpenNext calls the Worker through itself for some internal requests.
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "portfolio" }],
+  // No IMAGES binding: the site never uses next/image (see Portrait.tsx), so
+  // there is no optimiser to feed, and no Images quota to spend.
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true }
+}

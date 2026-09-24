@@ -20,3 +20,8 @@ supabase/.temp
 # gets copied into assets/raw/ first, and only if the source is small enough to
 # live in git. See docs/PLAN.md Phase 3.
 models/environments/
+
+# Cloudflare / OpenNext build output and local secrets
+.open-next/
+.wrangler/
+.dev.vars

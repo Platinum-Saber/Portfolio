@@ -952,6 +952,13 @@ body::before {
     --glass-shadow-lift: var(--glass-shadow-sm-lift);
   }
 
+  /* In the nav's horizontal scroll row the lift keeps its movement but not
+     its deep shadow, which the row (overflow clips both axes) would cut off
+     flat. See the note in Nav.tsx. */
+  .nav-row .glass-btn {
+    --glass-shadow-lift: var(--glass-shadow-sm);
+  }
+
   /* A tag. Squarer than a button — it is a label on an instrument, not a
      control — flatter, and it never moves. */
   .glass-chip {

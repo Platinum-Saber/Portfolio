@@ -17,5 +17,15 @@ import staticAssetsIncrementalCache from '@opennextjs/cloudflare/overrides/incre
  */
 export default defineCloudflareConfig({
   incrementalCache: staticAssetsIncrementalCache,
-  enableCacheInterception: true,
+  // MUST stay false. Cache interception answers from the cache before Next
+  // runs — and it ignores Next 16's per-segment prefetch requests
+  // (`Next-Router-Segment-Prefetch: /_tree`), returning the whole page's RSC
+  // payload to each. The router cannot use it and re-requests at once, so
+  // every open tab re-prefetched each in-view link ~15×/s — 520,780 requests
+  // from 248 page views on 2026-09-24, 5× the Workers Free daily limit.
+  // Off, the Next handler serves those requests itself, still from the
+  // prebuilt static-assets cache: nothing renders, no filesystem needed.
+  // Measured locally (wrangler dev): an idle tab went from ~3,500 Worker
+  // requests/min to 29 one-off prefetches. docs/DEPLOY-CLOUDFLARE.md.
+  enableCacheInterception: false,
 });

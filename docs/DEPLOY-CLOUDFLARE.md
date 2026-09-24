@@ -75,6 +75,23 @@ deploys a new version with the new secret).
 
 Locally: put the same two lines in `.dev.vars` (git-ignored) for `npm run preview`.
 
+## The prefetch storm (2026-09-24) — why cache interception is off
+
+Workers Free allows 100,000 requests/day. On the first day the dashboard showed **654,500**:
+520,780 on the custom domain from **248 page views**. Cause: `enableCacheInterception: true`
+answered Next 16's per-segment prefetches (`Next-Router-Segment-Prefetch: /_tree`) with the
+full page payload; the router rejected it and re-requested immediately. Every open tab
+re-prefetched every in-view link ~15×/s, forever — the top paths were exactly the nav and
+card links (`/projects` 97k, `/about` 88k, …).
+
+Reproduced and fixed locally, no live traffic needed: in `wrangler dev`, an idle tab on `/`
+made 3,485 Worker requests in 60 s with interception on, and 29 (one prefetch per link,
+then silence) with it off; `next start` makes the same 29.
+
+**Regression check for any adapter or Next upgrade:** build with `npm run preview`, open `/`,
+leave it idle for a minute, and count requests in the wrangler log. Tens is right; thousands
+is this bug.
+
 ## Checks after a deploy
 
 - `/`, `/projects`, a case study, `/explore` → 200 HTML, not `text/plain` 500

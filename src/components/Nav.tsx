@@ -36,7 +36,18 @@ export function Nav() {
           small screens and, below that, scrolls horizontally rather than
           spilling: every destination stays reachable at any width.
         */}
-        <div className="no-scrollbar flex min-w-0 items-center gap-0.5 overflow-x-auto sm:gap-1">
+        {/*
+          py-3 / -my-3: room inside the scroll box for the glass buttons to lift.
+          overflow-x:auto forces overflow-y to clip as well (CSS cannot scroll
+          one axis and leave the other visible), so the theme toggle's 2px
+          hover lift and its shadow were cut off at the top. The padding gives
+          them space; the equal negative margin keeps the bar's height as is.
+          The lift SHADOW is swapped for the small resting one in the nav
+          (.nav-row in globals.css): the full one reaches ~22px below the
+          button, and a scroll box that deep would hang over the page and
+          swallow clicks just under the header.
+        */}
+        <div className="nav-row no-scrollbar -my-3 flex min-w-0 items-center gap-0.5 overflow-x-auto py-3 sm:gap-1">
           {nav.slice(1).map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(`${item.href}/`);

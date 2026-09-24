@@ -48,5 +48,10 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "wrangler": "^4.137.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.4": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260921.1": true
   }
 }

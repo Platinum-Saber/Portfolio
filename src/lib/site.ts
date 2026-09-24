@@ -1,8 +1,11 @@
 export const site = {
   name: 'Suhan Waduge',
   fullName: 'Sansika Suhan Waduge',
-  // TODO(phase-6): replace with the custom domain once purchased.
-  url: 'https://portfolio-lake-delta-0qhmdtfj5a.vercel.app',
+  // The canonical origin: sitemap, robots.txt, canonical links and the
+  // absolute OpenGraph image URLs are all built from this. Bought 2026-09-24,
+  // on Cloudflare (docs/DEPLOY-CLOUDFLARE.md). It used to be a pinned Vercel
+  // deployment URL, which kept pointing previews at Vercel after the move.
+  url: 'https://sansikawaduge.dev',
   title: 'Suhan Waduge — Robotics & Embedded Systems',
   tagline: 'Robotics and embedded systems engineer',
   description:

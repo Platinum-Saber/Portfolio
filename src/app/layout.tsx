@@ -17,6 +17,10 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
+  // Every page names sansikawaduge.dev as its canonical address. './' resolves
+  // to each route's own path against metadataBase, so the *.workers.dev copy
+  // (and any preview URL) points search engines back at the real domain.
+  alternates: { canonical: './' },
   title: { default: site.title, template: `%s — ${site.name}` },
   description: site.description,
   authors: [{ name: site.fullName, url: site.url }],

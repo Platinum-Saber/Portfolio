@@ -332,7 +332,7 @@ one remaining item that actually proves the claim.
 ---
 
 ### Phase 6 — Polish & launch
-- [ ] Buy the domain, point it at Vercel, verify HTTPS
+- [x] **Domain bought 2026-09-24: `sansikawaduge.dev`**, on Cloudflare Registrar (at cost, same account as the Worker). `site.url` switched from the pinned Vercel URL. Attaching it and the www redirect: `DEPLOY-CLOUDFLARE.md` §Custom domain
 - [ ] Accessibility pass: keyboard nav, focus states, alt text, contrast, real text (not baked into canvas)
 - [ ] Lighthouse CI or bundle-size check gating PRs (stops the slow rot into a 40 MB page)
 - [x] **Favicon.** Done 2026-09-03. `src/app/favicon.ico` (16/32/48), `src/app/icon.png`
@@ -1087,7 +1087,7 @@ Append here whenever a non-obvious call gets made. Format: date — decision —
 ## 5. Open questions
 
 - [x] ~~What's the concept for the 3D scene?~~ — Airframe Explorer, see Phase 2
-- [ ] Which domain name? (blocks Phase 6. No longer blocks notification: that went to Discord on 2026-09-04 precisely to stop waiting on it. Settling the domain makes the email path viable again if `reply_to` turns out to be missed — see the runbook's §3d)
+- [x] ~~Which domain name?~~ — `sansikawaduge.dev` (2026-09-24). (Was: blocks Phase 6. No longer blocks notification: that went to Discord on 2026-09-04 precisely to stop waiting on it. Settling the domain makes the email path viable again if `reply_to` turns out to be missed — see the runbook's §3d)
 - [x] ~~Which projects make the cut, and in what order?~~ — six written, ordered robotics → embedded → backend. Revisit if any feels weak.
 
 ---

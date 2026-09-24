@@ -51,7 +51,15 @@ it will be because something began rendering on request, which is the real bug.
 again. (The first deploy happened to work only because Wrangler detected OpenNext and delegated —
 with nothing to populate.)
 
-## Secrets (Settings → Variables and Secrets)
+## Secrets (Settings → Variables and Secrets — the Worker's, NOT the build's)
+
+**Trap, hit on 2026-09-24:** Settings has *two* "Variables and secrets" panels. The one under
+**Build** (beside Branch control, Build watch paths and API token) is for the build container
+only — values there exist while `next build` runs and are gone when the Worker serves a request.
+Put the Supabase pair there and the form answers `503 unavailable` with the "could not reach its
+database" fallback, while the dashboard shows both secrets as set. They belong in the
+**top-level** Variables and Secrets panel on the Worker's Settings page (or
+`npx wrangler secret put SUPABASE_URL`, which writes to the same place).
 
 | Name | Type | Value |
 |---|---|---|
@@ -74,6 +82,20 @@ Locally: put the same two lines in `.dev.vars` (git-ignored) for `npm run previe
 - Submit the contact form once → a row in `contacts` and a Discord embed
 - Worker logs: Workers & Pages → portfolio → Logs (observability is on). `[contact] …` lines mean
   the same things they did on Vercel (see `PHASE-5-SUPABASE.md`)
+
+## Custom domain — `sansikawaduge.dev`
+
+1. Worker → Settings → Domains & Routes → Add → Custom domain → subdomain **empty** → Production.
+   Cloudflare creates the DNS record and the certificate itself (a few minutes).
+2. `www`: add `www` the same way, then Rules → Redirect Rules → template *Redirect from WWW to
+   root* (301, preserve path and query). One canonical origin, so links and search rankings
+   are not split between two.
+3. `.dev` is on the HSTS preload list: HTTPS only, in every browser, with no setting to change.
+4. `site.url` in `src/lib/site.ts` is the canonical origin for the sitemap, robots.txt and
+   OpenGraph URLs — already `https://sansikawaduge.dev`.
+5. The `*.workers.dev` URL keeps serving a copy of the site. Harmless for search — every page's
+   canonical link points at `sansikawaduge.dev` — and preview URLs for branches live on that
+   subdomain, so leave `workers_dev` on unless the duplicate becomes a problem.
 
 ## Leftovers from Vercel
 

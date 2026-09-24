@@ -10,7 +10,7 @@ import { callerKey, checkRateLimit } from '@/lib/contact/rateLimit';
  * roughly a hundred kilobytes to the function bundle to save four lines.
  *
  * The key it uses is the *anon* key, not the service role key. That is not a
- * shortcut — the anon key is exactly the right level of authority here, since
+ * shortcut - the anon key is exactly the right level of authority here, since
  * RLS restricts it to appending rows it can never read. A service role key
  * would give this endpoint the power to read every message ever sent, which it
  * has no reason to have. Do not "upgrade" it.
@@ -41,13 +41,13 @@ export async function POST(request: Request) {
   const body = (payload ?? {}) as Record<string, unknown>;
 
   // Honeypot. A field no human ever sees, so anything in it came from a bot
-  // filling every input it found. Answer 200 and drop it on the floor —
+  // filling every input it found. Answer 200 and drop it on the floor -
   // telling a spammer they were caught only teaches them to adapt.
   if (typeof body.website === 'string' && body.website.trim() !== '') {
     return json({ ok: true }, 200);
   }
 
-  // Timing. Client-supplied and therefore forgeable — an attacker who reads
+  // Timing. Client-supplied and therefore forgeable - an attacker who reads
   // this file can send any number they like. It costs nothing and stops the
   // large majority of drive-by bots, which submit in double figures of
   // milliseconds and do not read source. Same silent success.
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   // than letting one more bot through to the honeypot and the rate limiter.
   // `typeof`, not `Number(...)`: Number(null) is 0, which is finite and below
   // the floor, so coercing would silently bin every submission that arrived
-  // without a measurement — the precise fail-closed behaviour this is meant to
+  // without a measurement - the precise fail-closed behaviour this is meant to
   // avoid. Only an actual number is judged.
   if (
     typeof body.elapsedMs === 'number' &&
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     return json({ ok: false, reason: 'unavailable' }, 503);
   }
 
-  // A paused free project does not fail fast — it hangs. Without this the
+  // A paused free project does not fail fast - it hangs. Without this the
   // visitor watches a spinner until the platform's own timeout, which is the
   // one failure mode the whole design is meant to avoid.
   const abort = AbortSignal.timeout(6000);
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
         apikey: key,
         Authorization: `Bearer ${key}`,
         // Explicit rather than required. PostgREST already defaults to
-        // `return=minimal` for POST, so omitting this changes nothing today —
+        // `return=minimal` for POST, so omitting this changes nothing today -
         // verified against the live project, where the header-less insert
         // returns 201 just the same. It is here because anon has no select
         // privilege, so asking for the row back is a 401, and the day someone

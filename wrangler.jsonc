@@ -1,9 +1,9 @@
 /**
- * Cloudflare Workers config — the site's host since 2026-09-24 (was Vercel).
+ * Cloudflare Workers config - the site's host since 2026-09-24 (was Vercel).
  * Runbook: docs/DEPLOY-CLOUDFLARE.md. Built by @opennextjs/cloudflare.
  *
  * Committed on purpose. Without this file Workers Builds auto-generates a
- * default config on every build and throws it away — and the default has no
+ * default config on every build and throws it away - and the default has no
  * incremental cache, which makes the Worker re-render every prebuilt page on
  * request, where it has no filesystem to read content from. Every page 500'd.
  */
@@ -14,7 +14,7 @@
   "compatibility_date": "2026-09-21",
   // nodejs_compat: the Next server runtime needs Node APIs.
   // global_fetch_strictly_public: the Worker cannot fetch into Cloudflare's
-  // own network by accident — the contact route only ever calls Supabase.
+  // own network by accident - the contact route only ever calls Supabase.
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
@@ -33,7 +33,7 @@
   "routes": [{ "pattern": "sansikawaduge.dev", "custom_domain": true }],
   // Kept on: branch preview URLs live on the workers.dev subdomain, and every
   // page's canonical link already points search engines at sansikawaduge.dev.
-  // To switch it off, change it HERE — a dashboard toggle is overwritten by
+  // To switch it off, change it HERE - a dashboard toggle is overwritten by
   // the next deploy (it was, on 2026-09-24).
   "workers_dev": true,
   "preview_urls": true,

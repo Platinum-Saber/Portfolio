@@ -1,5 +1,5 @@
 /**
- * Phase 3 — the asset pipeline.
+ * Phase 3 - the asset pipeline.
  *
  * Takes the untouched files in `assets/raw/` and emits web-ready GLBs into
  * `public/models/`. Run it with `npm run assets:build`; CI runs the same
@@ -18,15 +18,15 @@
  * hang behaviour on them. Merging would save draw calls and destroy the whole
  * interaction.
  *
- * `pbr` keeps the material as authored — base colour, normal and
- * metallic-roughness — because the craft you fly is a machined metal object
+ * `pbr` keeps the material as authored - base colour, normal and
+ * metallic-roughness - because the craft you fly is a machined metal object
  * and reading as metal is most of what makes it convincing.
  *
  * That choice is what puts the lighting rig in `explore/Scene.tsx`. A metal
  * surface reflects its surroundings and emits nothing of its own, so a
  * metallic material with no environment map renders very nearly black no
  * matter how many lamps you point at it. The scene therefore generates an
- * environment from three's procedural `RoomEnvironment` — code, not a
+ * environment from three's procedural `RoomEnvironment` - code, not a
  * downloaded HDR, so this costs no bytes on the wire. Lights, PBR materials
  * and that environment are one decision: remove any of them and the craft
  * turns black or flat.
@@ -35,11 +35,11 @@
  * attribute is absent, which is fine for normal mapping at this scale and
  * saves a full vec4 per vertex.
  *
- * ── Texture format: WebP, not KTX2 — measured, not assumed ─────────────────
+ * ── Texture format: WebP, not KTX2 - measured, not assumed ─────────────────
  * KTX2/Basis is the textbook answer for GPU memory: a 512² map stays
  * compressed in VRAM instead of expanding to 1 MB of RGBA. It was tried
- * properly on the lab — UASTC for normal maps, ETC1S for everything else,
- * KTX-Software 4.3.2 — and it lost:
+ * properly on the lab - UASTC for normal maps, ETC1S for everything else,
+ * KTX-Software 4.3.2 - and it lost:
  *
  *   WebP @512, all maps   2.53 MB on the wire, ~95 MB VRAM
  *   KTX2 (UASTC + ETC1S)  5.92 MB on the wire, ~12 MB VRAM
@@ -51,7 +51,7 @@
  *
  * So the lever for VRAM here is fewer maps, not a different codec: dropping
  * normal and metallic-roughness takes the lab from ~95 MB to ~54 MB. That is
- * the fallback if the Android pass shows memory pressure — one edit to the
+ * the fallback if the Android pass shows memory pressure - one edit to the
  * profile, no new toolchain.
  *
  * ── The output is deterministic, and that is load-bearing ──────────────────
@@ -71,7 +71,7 @@
  * independent reasons to cut them down hard:
  *   1. Schematic meshes get an EdgesGeometry built on the CPU at load. On a
  *      raw mesh that is a multi-second main-thread stall on a phone.
- *   2. At full density the edge pass renders as a hairball — every crease in a
+ *   2. At full density the edge pass renders as a hairball - every crease in a
  *      generated mesh becomes a line, and the silhouette disappears into
  *      noise. Simplification is a legibility requirement, not only a
  *      performance one.
@@ -120,7 +120,7 @@ const ASSETS = [
      * 512 rather than 1024. The source ships 110 maps and VRAM, not bytes, is
      * the binding constraint indoors: 1024 costs ~380 MB of texture memory
      * against ~95 MB at 512, and no mid-range phone has the former to spare.
-     * KTX2 was measured as the alternative and rejected — see the header note.
+     * KTX2 was measured as the alternative and rejected - see the header note.
      */
     textureSize: 512,
   },
@@ -147,7 +147,7 @@ const ASSETS = [
      * exactly as the rest of the world does. Nothing to convert.
      */
     profile: 'pbr',
-    /** Already lean. The budget is its own count — simplify is a no-op. */
+    /** Already lean. The budget is its own count - simplify is a no-op. */
     targetTriangles: 2616,
     textureSize: 512,
   },
@@ -213,7 +213,7 @@ function dropAttributes(document, names) {
 
 /**
  * Schematic: delete appearance outright. Done before simplify so the
- * simplifier is not asked to preserve UV seams that nothing samples — seam
+ * simplifier is not asked to preserve UV seams that nothing samples - seam
  * preservation is exactly what stops a mesh reaching a low triangle budget.
  */
 function stripAppearance(document) {
@@ -235,7 +235,7 @@ function stripAppearance(document) {
 
 /**
  * PBR: keep the material intact and shed only the vertex attributes three does
- * not need. Nothing is removed from the appearance here — that is the point of
+ * not need. Nothing is removed from the appearance here - that is the point of
  * the profile.
  */
 function keepMaterials(document) {
@@ -271,7 +271,7 @@ async function build(io, asset) {
     ...(merge
       ? [flatten(), dedup(), joinMeshes({ keepNamed: false })]
       : [dedup()]),
-    // Generated meshes are unwelded — vertices are duplicated per triangle, so
+    // Generated meshes are unwelded - vertices are duplicated per triangle, so
     // the simplifier sees no shared edges and can collapse nothing at all.
     // This single call is the difference between 500k triangles out and 6k.
     weld({ tolerance: 0.0001 }),
@@ -285,7 +285,7 @@ async function build(io, asset) {
       lockBorder: textured,
     }),
     prune(),
-    // 14-bit positions are ~1 mm over a 2 m craft — far below anything visible
+    // 14-bit positions are ~1 mm over a 2 m craft - far below anything visible
     // and it halves the vertex buffer.
     // Normals need enough bits that a smooth shell does not band under a
     // specular highlight; positions and UVs can be coarser.
@@ -364,7 +364,7 @@ for (const r of results) {
 }
 console.log('');
 
-// No timestamp — see the note on determinism at the top of this file.
+// No timestamp - see the note on determinism at the top of this file.
 writeFileSync(
   join(ROOT, 'public/models/manifest.json'),
   JSON.stringify({ assets: results }, null, 2) + '\n',

@@ -1,5 +1,5 @@
 /**
- * Phase 5 verification — run this against the real project.
+ * Phase 5 verification - run this against the real project.
  *
  *   npm run verify:supabase
  *
@@ -20,7 +20,7 @@ import { readFileSync } from 'node:fs';
  * A twelve-line .env reader, rather than `@next/env`.
  *
  * That package is only present here because `next` depends on it and npm
- * happens to hoist it — importing it directly is an undeclared dependency that
+ * happens to hoist it - importing it directly is an undeclared dependency that
  * would vanish under pnpm, yarn PnP, or a different hoisting decision. This
  * script has one job and should not be the thing that breaks on a fresh clone.
  */
@@ -119,11 +119,11 @@ async function call(path, init = {}) {
   }
 }
 
-// 1 — awake and reachable.
+// 1 - awake and reachable.
 //
 // Via public.healthcheck(), not GET /rest/v1/. Measured on this project, the
 // root endpoint answers 401 to the anon key, which is indistinguishable from a
-// wrong key or a paused project — and PostgREST may serve it from a cached
+// wrong key or a paused project - and PostgREST may serve it from a cached
 // schema without touching Postgres at all.
 const started = Date.now();
 const health = await call('/rest/v1/rpc/healthcheck', {
@@ -151,7 +151,7 @@ if (health.status === 200) {
   );
 }
 
-// 2 — the table must NOT be readable by anon.
+// 2 - the table must NOT be readable by anon.
 const read = await call('/rest/v1/contacts?limit=1');
 if (
   read.status === 404 ||
@@ -172,7 +172,7 @@ if (
   report(PASS, `anon cannot read the table (${read.status})`);
 }
 
-// 3 — the real insert, exactly as the API route performs it.
+// 3 - the real insert, exactly as the API route performs it.
 const marker = `SETUP-CHECK-${new Date().toISOString().slice(0, 19)}`;
 const insert = await call('/rest/v1/contacts', {
   method: 'POST',
@@ -190,12 +190,12 @@ report(
   insert.status === 201 ? undefined : insert.body.slice(0, 200),
 );
 
-// 4 — asking PostgREST to hand the row back MUST fail, because anon has no
+// 4 - asking PostgREST to hand the row back MUST fail, because anon has no
 //     select privilege. This is the check that catches a SELECT policy
 //     creeping in later.
 //
-//     An earlier version of this file tested the opposite thing — an insert
-//     with no Prefer header at all — and expected it to fail. It does not.
+//     An earlier version of this file tested the opposite thing - an insert
+//     with no Prefer header at all - and expected it to fail. It does not.
 //     PostgREST already defaults to `return=minimal` for POST, so omitting the
 //     header changes nothing. That test wrote a junk row and taught nothing.
 const representation = await call('/rest/v1/contacts', {
@@ -212,11 +212,11 @@ report(
   representation.status >= 400 ? PASS : FAIL,
   `Asking for the inserted row back is refused (${representation.status})`,
   representation.status < 400
-    ? 'anon can read rows back. A SELECT policy exists that should not — every message you receive would be public.'
+    ? 'anon can read rows back. A SELECT policy exists that should not - every message you receive would be public.'
     : undefined,
 );
 
-// 5 — the column-level grant should stop anon backdating a row.
+// 5 - the column-level grant should stop anon backdating a row.
 const forged = await call('/rest/v1/contacts', {
   method: 'POST',
   headers: { Prefer: 'return=minimal' },
@@ -232,11 +232,11 @@ report(
   forged.status >= 400 ? PASS : FAIL,
   `Forging created_at is refused (${forged.status})`,
   forged.status < 400
-    ? 'The INSERT grant is table-level. Re-run the migration — it should grant only (name, email, message, source).'
+    ? 'The INSERT grant is table-level. Re-run the migration - it should grant only (name, email, message, source).'
     : undefined,
 );
 
-// 6 — anon must not be able to delete.
+// 6 - anon must not be able to delete.
 const removed = await call(
   `/rest/v1/contacts?name=eq.${encodeURIComponent(marker)}`,
   { method: 'DELETE' },
@@ -247,7 +247,7 @@ report(
   removed.status < 400 ? 'A DELETE policy exists that should not.' : undefined,
 );
 
-// 7 — the CHECK constraints should reject a too-short message.
+// 7 - the CHECK constraints should reject a too-short message.
 const short = await call('/rest/v1/contacts', {
   method: 'POST',
   headers: { Prefer: 'return=minimal' },
@@ -277,6 +277,6 @@ Clear them all in the SQL Editor with:
   delete from public.contacts where source = '${PROBE_SOURCE}';
 
 If no Discord message arrived for the inserted row, the webhook is not wired up
-yet — see section 3 of docs/PHASE-5-SUPABASE.md.`);
+yet - see section 3 of docs/PHASE-5-SUPABASE.md.`);
 
 process.exit(failures === 0 ? 0 : 1);

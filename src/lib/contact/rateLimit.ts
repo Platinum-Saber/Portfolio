@@ -4,9 +4,9 @@
  * This is an in-memory sliding window living inside one serverless instance.
  * Vercel runs several concurrently and recycles them freely, so a determined
  * attacker gets N times the quota and a cold start resets it entirely. It is
- * not a security control. It is a cheap stop on the ordinary case — a stuck
+ * not a security control. It is a cheap stop on the ordinary case - a stuck
  * retry loop, someone leaning on the submit button, a crawler that found the
- * endpoint — and it costs nothing, which is the whole constraint here.
+ * endpoint - and it costs nothing, which is the whole constraint here.
  *
  * The real backstop is that the endpoint can only append rows to one table it
  * cannot read. The upgrade path, if this ever matters, is in
@@ -61,7 +61,7 @@ export function resetRateLimits(): void {
 
 /**
  * Identifies a caller without ever holding their IP address. The hash is
- * per-process and unsalted-by-design — it exists to bucket requests for ten
+ * per-process and unsalted-by-design - it exists to bucket requests for ten
  * minutes, not to be stored, logged or correlated with anything.
  */
 export async function callerKey(request: Request): Promise<string> {

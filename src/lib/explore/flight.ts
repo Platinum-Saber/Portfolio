@@ -1,7 +1,7 @@
 /**
  * Flight model for the explorer drone.
  *
- * Not a physics simulation — no thrust, no mass, no aerodynamics. It is a
+ * Not a physics simulation - no thrust, no mass, no aerodynamics. It is a
  * velocity that chases a target velocity, which is the right amount of model
  * for a thing whose job is to carry a reader to a paragraph. What it does have
  * is inertia, because a drone that stops dead the instant you release a key
@@ -105,7 +105,7 @@ export class Drone {
 
   /**
    * Guided flight (9.2): put the craft where the guide says, and derive its
-   * velocity from the move. The velocity matters twice over — the body leans
+   * velocity from the move. The velocity matters twice over - the body leans
    * into it exactly as it does under manual control, and when the visitor
    * takes over, `step()` continues from it instead of from a standstill.
    */
@@ -137,13 +137,13 @@ export class Drone {
   }
 
   /** Drops the drone next to a marker. Since 9.2 this is the
-   *  `prefers-reduced-motion` branch only — everyone else is flown there. */
+   *  `prefers-reduced-motion` branch only - everyone else is flown there. */
   teleport(target: [number, number, number]): void {
     const [tx, ty, tz] = target;
     // Approach from the south so the marker is in front of the camera on
     // arrival, but land *inside* ZONE_RADIUS. The first version stood off by
     // nine metres, two metres outside the trigger, so every jump arrived
-    // looking at a marker that never opened — the accessible route to the
+    // looking at a marker that never opened - the accessible route to the
     // content quietly did not reach it.
     this.x = tx;
     this.y = ty;

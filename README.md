@@ -1,4 +1,4 @@
-# Portfolio — Suhan Waduge
+# Portfolio - Suhan Waduge
 
 Personal portfolio site. Robotics and embedded systems work, with a 3D interactive layer
 planned on top of a static-first core.
@@ -13,7 +13,7 @@ Everything except this file lives in [`docs/`](./docs).
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Why the stack is what it is, and why EC2 was dropped |
 | [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) | The console metaphor and the rules every surface follows |
 | [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md) | Contact-form setup runbook |
-| [`docs/DEPLOY-CLOUDFLARE.md`](./docs/DEPLOY-CLOUDFLARE.md) | Hosting on Cloudflare Workers — config, dashboard settings, secrets |
+| [`docs/DEPLOY-CLOUDFLARE.md`](./docs/DEPLOY-CLOUDFLARE.md) | Hosting on Cloudflare Workers - config, dashboard settings, secrets |
 
 ## Stack
 
@@ -24,7 +24,7 @@ Everything except this file lives in [`docs/`](./docs).
 | Content | MDX files in `content/projects/`, parsed with `gray-matter` |
 | Hosting | Vercel |
 | 3D *(phase 2)* | react-three-fiber + drei |
-| Database *(phase 5)* | Supabase — contact form only, never on the render path |
+| Database *(phase 5)* | Supabase - contact form only, never on the render path |
 
 ## Local development
 
@@ -44,7 +44,7 @@ Create `content/projects/<slug>.mdx`. The frontmatter is typed in
 ---
 title: Project Name
 summary: One or two sentences. Shown on cards and used as the meta description.
-order: 3          # lower sorts first — robotics and embedded lead
+order: 3          # lower sorts first - robotics and embedded lead
 year: '2026'
 status: in-progress   # in-progress | complete | archived
 domain: Robotics      # groups projects on /projects
@@ -57,7 +57,7 @@ writeup: https://...            # optional
 ```
 
 The body below the frontmatter is MDX. The route, sitemap entry and metadata are all
-generated from the file — nothing else to register.
+generated from the file - nothing else to register.
 
 ## Notable decisions
 
@@ -69,9 +69,9 @@ generated from the file — nothing else to register.
   before first paint; the toggle reads and writes that attribute. No flash, no hydration
   mismatch.
 - **Content is in the repo, never in the database.** Supabase free projects pause after
-  about a week of inactivity — exactly a portfolio's traffic pattern. Nothing a visitor
+  about a week of inactivity - exactly a portfolio's traffic pattern. Nothing a visitor
   reads may depend on it.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT - see [LICENSE](./LICENSE).

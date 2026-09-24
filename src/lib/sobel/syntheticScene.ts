@@ -4,7 +4,7 @@
  * It is drawn rather than downloaded, for the same reason the airframe on /lab
  * is procedural: a bundled sample clip would be the single heaviest asset on
  * the site, and this costs about two kilobytes of JavaScript. It also moves,
- * which a still image would not — the point of the demo is that the
+ * which a still image would not - the point of the demo is that the
  * convolution runs per frame in real time, and a frozen picture proves nothing.
  *
  * The content is a deliberate test target rather than a photo: a contrast
@@ -40,7 +40,7 @@ export class SyntheticScene {
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     // A smooth ramp. Sobel measures the *rate* of change, so a slow gradient
-    // is nearly invisible to it however bright it gets — worth being able to
+    // is nearly invisible to it however bright it gets - worth being able to
     // point at.
     const ramp = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
     ramp.addColorStop(0, '#101418');
@@ -69,7 +69,7 @@ export class SyntheticScene {
       ctx.stroke();
     }
 
-    // A rotating square and an orbiting disc — moving geometry with hard
+    // A rotating square and an orbiting disc - moving geometry with hard
     // borders, which is what makes the output legible as real-time.
     ctx.save();
     ctx.translate(540, 190);

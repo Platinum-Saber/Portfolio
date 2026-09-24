@@ -1,7 +1,7 @@
 import { site } from './site';
 
 /**
- * The operator dossier — Phase 8.2.
+ * The operator dossier - Phase 8.2.
  *
  * One source for the console card on `/` and the fuller one on `/about`, for
  * the same reason `skills.ts` exists: two copies would have disagreed the
@@ -12,7 +12,7 @@ import { site } from './site';
  * Every value here has to be true and checkable. The reference this card is
  * adapted from carries AGE and FAVORITE-MEAL and gets away with it because
  * its operator is a persona; a portfolio's entire currency is that a reader
- * can verify any line. Fields not yet known are `null` and do not render —
+ * can verify any line. Fields not yet known are `null` and do not render -
  * the same convention as `site.cv`.
  */
 export type OperatorField = { label: string; value: string | null };

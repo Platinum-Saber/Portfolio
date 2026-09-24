@@ -28,7 +28,7 @@ const FLOOR_RGB = [42, 58, 70] as const;
 
 /** Repaint at 12 Hz. The maps change slowly; uploading them at 60 would be waste. */
 const TEXTURE_INTERVAL = 1 / 12;
-/** Readouts go to React at 4 Hz — fast enough to feel live, slow enough not to thrash. */
+/** Readouts go to React at 4 Hz - fast enough to feel live, slow enough not to thrash. */
 const READOUT_INTERVAL = 1 / 4;
 
 /** The arena itself, as a wireframe cage. Static, so it is built once. */
@@ -81,7 +81,7 @@ function Simulation({
   generation: number;
 }) {
   // Rebuilt whenever `generation` changes, which is what the restart button
-  // increments — see the note on createSim for why that beats a reset method.
+  // increments - see the note on createSim for why that beats a reset method.
   // Safe in useMemo precisely because the simulation is seeded and pure: two
   // calls with the same generation produce byte-identical runs.
   //

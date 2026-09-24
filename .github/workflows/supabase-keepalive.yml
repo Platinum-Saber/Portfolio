@@ -5,7 +5,7 @@
 #
 # It calls public.healthcheck() rather than GET /rest/v1/. Measured on this
 # project, that root endpoint answers 401 to the anon key, so the original
-# version of this workflow would have failed on every run — and PostgREST
+# version of this workflow would have failed on every run - and PostgREST
 # serves it from a cached schema anyway, so it may never touch Postgres, which
 # is the one thing a pause-prevention ping has to do. The RPC is unambiguous:
 # it executes in the database and a 200 means 200.

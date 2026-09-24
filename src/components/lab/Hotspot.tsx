@@ -7,7 +7,7 @@ import type { DroneComponent } from '@/lib/drone';
 
 /**
  * A numbered marker pushed clear of the airframe, with a leader line back to
- * the component it points at — the instrument-panel convention, and the only
+ * the component it points at - the instrument-panel convention, and the only
  * way six labels on a 30 cm airframe stay separable from every angle.
  *
  * Deliberately no `distanceFactor`: markers keep a constant screen size, so
@@ -58,7 +58,7 @@ export function Hotspot({
           <button
             type="button"
             onClick={() => onSelect(component.id)}
-            aria-label={`${component.name} — ${component.short}`}
+            aria-label={`${component.name} - ${component.short}`}
             aria-pressed={active}
             className="grid size-7 cursor-pointer place-items-center rounded-full border font-mono text-[11px] transition-transform hover:scale-110"
             style={{

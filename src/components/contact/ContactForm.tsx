@@ -10,7 +10,7 @@ import { site } from '@/lib/site';
  * Every path that is not "sent" ends with a mailto: link carrying whatever the
  * visitor already typed, so the worst outcome is one extra click in their own
  * mail client. Supabase paused, key rotated, project deleted, network dropped,
- * rate limited — all of it collapses to the same calm sentence and the same
+ * rate limited - all of it collapses to the same calm sentence and the same
  * link. A contact form that can lose someone's message is worse than no form.
  */
 
@@ -22,10 +22,10 @@ type State =
 
 function mailtoHref(draft: { name: string; email: string; message: string }) {
   const subject = draft.name
-    ? `Portfolio enquiry — ${draft.name}`
+    ? `Portfolio enquiry - ${draft.name}`
     : 'Portfolio enquiry';
   const body = draft.message
-    ? `${draft.message}\n\n— ${draft.name || 'sent from the portfolio contact form'}${
+    ? `${draft.message}\n\n- ${draft.name || 'sent from the portfolio contact form'}${
         draft.email ? `\n${draft.email}` : ''
       }`
     : '';
@@ -77,7 +77,7 @@ export function ContactForm() {
         body: JSON.stringify({
           ...draft,
           website: honeypot,
-          // Omitted entirely rather than sent as null when unmeasured — the
+          // Omitted entirely rather than sent as null when unmeasured - the
           // route only judges an actual number, and this keeps the wire
           // format saying what it means.
           ...(openedAt.current === null
@@ -111,12 +111,12 @@ export function ContactForm() {
 
       setState({
         kind: 'fallback',
-        note: 'The form could not reach its database just now. Nothing is lost — the button below opens your mail app with everything you wrote already in it.',
+        note: 'The form could not reach its database just now. Nothing is lost - the button below opens your mail app with everything you wrote already in it.',
       });
     } catch {
       setState({
         kind: 'fallback',
-        note: 'The request did not get through — that is usually the network rather than you. The button below opens your mail app with everything you wrote already in it.',
+        note: 'The request did not get through - that is usually the network rather than you. The button below opens your mail app with everything you wrote already in it.',
       });
     }
   }
@@ -127,7 +127,7 @@ export function ContactForm() {
         className="glass p-6"
         role="status"
       >
-        <p className="font-medium">Sent — thank you.</p>
+        <p className="font-medium">Sent - thank you.</p>
         <p className="mt-2 text-sm" style={{ color: 'var(--fg-muted)' }}>
           I read everything that arrives here and will reply to{' '}
           <span className="font-mono text-xs">{draft.email}</span>.
@@ -271,7 +271,7 @@ export function ContactForm() {
         {/*
           The honeypot. Hidden from sight and from assistive technology, but a
           real focusable-free input that a form-filling bot will happily
-          complete. Not `display: none` alone — some bots skip those.
+          complete. Not `display: none` alone - some bots skip those.
         */}
         <div
           aria-hidden="true"
@@ -318,7 +318,7 @@ export function ContactForm() {
           >
             {site.email}
           </a>{' '}
-          reaches me directly — which is all the form does anyway.
+          reaches me directly - which is all the form does anyway.
         </p>
       </noscript>
     </div>

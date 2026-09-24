@@ -1,14 +1,14 @@
 import { makeSeededRandom } from '@/lib/random';
 
 /**
- * Tier-A particle field — Phase 8.5, mood mapping completed 2026-09-03.
+ * Tier-A particle field - Phase 8.5, mood mapping completed 2026-09-03.
  *
  * A SERVER component: a fixed container of absolutely-positioned spans, each
  * carrying a CSS animation. No canvas, no client component, no `use client`,
  * and therefore **0 KB of JavaScript on every route**.
  *
  * It started as a canvas. Measured A/B on the same build, one client component
- * on one content route cost +2 KB on *every* route — `/lab` and the case
+ * on one content route cost +2 KB on *every* route - `/lab` and the case
  * studies paying for a decoration they never render, because a client module
  * enters the shared graph. That is the wrong shape of cost for the least
  * important thing in the phase, so it was rebuilt in CSS.
@@ -26,31 +26,31 @@ import { makeSeededRandom } from '@/lib/random';
 /**
  * One mood per content route, per the table in `docs/DESIGN-LANGUAGE.md` §5.2.
  * The mood is telemetry about which page you are on, so no two of them may
- * look alike at a glance — colour AND pattern AND direction all differ.
+ * look alike at a glance - colour AND pattern AND direction all differ.
  *
- *   standby — `/`         rising dust, `--fg-muted`
- *   calm    — `/about`    motes bobbing in place, `--fg-muted`, larger, soft
- *   index   — `/projects` ticks stepping down a lattice, `--accent`
- *   signal  — `/contact`  thin rising streaks in `--accent`
+ *   standby - `/`         rising dust, `--fg-muted`
+ *   calm    - `/about`    motes bobbing in place, `--fg-muted`, larger, soft
+ *   index   - `/projects` ticks stepping down a lattice, `--accent`
+ *   signal  - `/contact`  thin rising streaks in `--accent`
  *
  * `/projects/[slug]` deliberately has no mood: a case study is for reading.
  */
 type Mood = 'standby' | 'calm' | 'index' | 'signal';
 
 /*
- * Counts are per-rail — the component emits COUNT[mood] marks on the left and
+ * Counts are per-rail - the component emits COUNT[mood] marks on the left and
  * the same number again on the right, so the two margins stay balanced no
  * matter what the RNG does. Previously a single loop picked a side per mark,
  * which at these counts routinely left one rail visibly emptier than the
  * other; at 14–16 total marks that read as a bug rather than as scatter.
  *
  * These roughly tripled on 2026-09-03. The old counts were tuned when the
- * field sat at 0.28 opacity and 2px — at that size it was invisible, so the
+ * field sat at 0.28 opacity and 2px - at that size it was invisible, so the
  * count was never really tested against a field you could actually see.
  */
 const COUNT: Record<Mood, number> = {
   standby: 22,
-  calm: 12, // fewer, larger, softer — the mood is a person, not a machine
+  calm: 12, // fewer, larger, softer - the mood is a person, not a machine
   index: 20,
   signal: 18,
 };
@@ -71,7 +71,7 @@ const COUNT: Record<Mood, number> = {
  * breakpoint to 1200px, below which the margin is too thin to be worth it.
  *
  * Left-rail marks are positioned with `left`, right-rail marks with `right`,
- * each measured from its own edge — so the two rails mirror exactly and
+ * each measured from its own edge - so the two rails mirror exactly and
  * neither depends on knowing the viewport width.
  */
 
@@ -80,7 +80,7 @@ const COUNT: Record<Mood, number> = {
  * number of them: 4 columns of 44px = 176px, which fits inside `--pf-rail`
  * even at the 1200px breakpoint (196px there). Sizing the lattice as a
  * percentage produced non-square cells and a sliced column at the inner edge,
- * which is the one thing a grid must never have — a partial cell reads as a
+ * which is the one thing a grid must never have - a partial cell reads as a
  * clipping bug, not as a grid.
  */
 const CELL = 44;
@@ -129,7 +129,7 @@ export function ParticleField({ mood }: { mood: Mood }) {
     };
 
     if (mood === 'signal') {
-      // Streak length varies per mark — that variance IS the pattern here.
+      // Streak length varies per mark - that variance IS the pattern here.
       style.height = `${(22 + speed * 46).toFixed(0)}px`;
     }
 

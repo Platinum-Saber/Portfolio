@@ -18,7 +18,7 @@ together: a depth sensor that returns usable geometry indoors, enough onboard co
 close the perception loop without a ground station, and an airframe stiff enough that the
 vibration doesn't destroy your state estimate.
 
-This is my final year project — building that platform end to end rather than buying it.
+This is my final year project - building that platform end to end rather than buying it.
 
 ## Approach
 
@@ -27,7 +27,7 @@ outward from the compute and sensing I already had.
 
 **Perception and compute.** An **Orbbec Gemini 336** depth camera paired with an
 **NVIDIA Jetson Orin Nano** for onboard inference. The Orin Nano is the pivot point of the
-design — it's enough to run depth processing and a navigation policy onboard, which means
+design - it's enough to run depth processing and a navigation policy onboard, which means
 the aircraft doesn't depend on a radio link to stay alive.
 
 **Airframe.** I originally planned a 3D-printed frame and abandoned it after working the
@@ -41,7 +41,7 @@ carbon frame and the Orin Nano impose.
 
 ## Explore the airframe
 
-I built an [interactive schematic of this aircraft](/lab) — orbit it, and select any
+I built an [interactive schematic of this aircraft](/lab) - orbit it, and select any
 component to see its specs, what it's wired to, and whether it actually exists yet. The
 geometry is generated procedurally in code rather than loaded from a mesh file, so it stays
 honest as the build changes.
@@ -54,6 +54,6 @@ current work is propulsion sizing and integration.
 ## What I took from it
 
 The frame decision was the useful lesson. The 3D-printed version was the obvious path, and
-the analysis said no — a good reminder that convenient manufacturing is not the same as
+the analysis said no - a good reminder that convenient manufacturing is not the same as
 appropriate manufacturing, and that on an airframe the mass budget arbitrates every
 argument.

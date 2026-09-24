@@ -73,7 +73,7 @@ const INITIAL: Controls = {
 
 const cm = (metres: number | null) =>
   metres === null || Number.isNaN(metres)
-    ? '—'
+    ? '-'
     : `${(metres * 100).toFixed(0)} cm`;
 
 /** A labelled range input. Ranges are the one control a keyboard user gets for free. */
@@ -183,7 +183,7 @@ export function KeeperExplorer() {
         </p>
         <p className="mt-2">
           The write-up below explains what the keeper has to work out, and why
-          two sightings and a straight line are not enough — which is the part
+          two sightings and a straight line are not enough - which is the part
           worth reading anyway.
         </p>
       </div>
@@ -198,11 +198,11 @@ export function KeeperExplorer() {
       ? 'Waiting for the ball to reach the far gate.'
       : readouts.sightings === 1
         ? 'One sighting. Nothing can be predicted from a single point.'
-        : 'Two sightings — prediction made, servo moving.'
+        : 'Two sightings - prediction made, servo moving.'
     : outcome.reason === 'saved'
       ? 'Saved.'
       : outcome.reason === 'off-target'
-        ? 'Wide of the goal — nothing to save.'
+        ? 'Wide of the goal - nothing to save.'
         : outcome.reason === 'too-slow'
           ? 'Goal. The prediction arrived too late for the servo to get there.'
           : 'Goal. The keeper went where it was told; the prediction was wrong.';
@@ -322,7 +322,7 @@ export function KeeperExplorer() {
           style={{ color: 'var(--fg-muted)' }}
           aria-live="polite"
         >
-          {active.blurb} Both predictions are drawn either way — green is the
+          {active.blurb} Both predictions are drawn either way - green is the
           filter, amber the straight line.
         </p>
       )}
@@ -330,7 +330,7 @@ export function KeeperExplorer() {
       {/* The shot, and the conditions the keeper has to work under. */}
       <div className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
         <Slider
-          label="Aim — across"
+          label="Aim - across"
           value={controls.aimX}
           display={`${controls.aimX > 0 ? '+' : ''}${controls.aimX.toFixed(2)} m`}
           min={-1.4}
@@ -339,7 +339,7 @@ export function KeeperExplorer() {
           onChange={(v) => set('aimX', v)}
         />
         <Slider
-          label="Aim — height"
+          label="Aim - height"
           value={controls.aimY}
           display={`${controls.aimY.toFixed(2)} m`}
           min={0.1}
@@ -410,7 +410,7 @@ export function KeeperExplorer() {
             label: 'Reaction time after the near gate',
             value:
               readouts.reactionTime === null
-                ? '—'
+                ? '-'
                 : `${(readouts.reactionTime * 1000).toFixed(0)} ms`,
           },
           {
@@ -420,11 +420,11 @@ export function KeeperExplorer() {
         ].map((row) => (
           <div
             key={row.label}
-            className="flex justify-between gap-4 border-b pb-1 text-sm"
+            className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-4 border-b pb-1 text-sm"
             style={{ borderColor: 'var(--border)' }}
           >
             <dt style={{ color: 'var(--fg-muted)' }}>{row.label}</dt>
-            <dd className="text-right font-mono text-xs">{row.value}</dd>
+            <dd className="font-mono text-xs">{row.value}</dd>
           </div>
         ))}
       </dl>

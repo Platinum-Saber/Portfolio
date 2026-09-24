@@ -1,4 +1,4 @@
--- Phase 5 — contact form storage.
+-- Phase 5 - contact form storage.
 --
 -- Threat model, stated plainly: the anon key is public by definition. It ships
 -- in this repo's deployment environment and anyone who wants it can read it out
@@ -29,7 +29,7 @@ create index if not exists contacts_created_at_idx
 alter table public.contacts enable row level security;
 
 -- Supabase grants broadly to anon on new public tables by default. Do not rely
--- on RLS alone to compensate — take the grants away and hand back exactly one.
+-- on RLS alone to compensate - take the grants away and hand back exactly one.
 revoke all on public.contacts from anon, authenticated;
 -- Column-level, deliberately: anon may supply the four content columns and
 -- nothing else, so `id` and `created_at` always come from their defaults and

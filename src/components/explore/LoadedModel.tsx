@@ -20,13 +20,13 @@ import {
  * Two ways to put a loaded GLB into this world, matching the two profiles the
  * build pipeline emits (see `scripts/build-assets.mjs`).
  *
- * `SchematicModel` redraws a mesh in the site's own language — unlit fill at
+ * `SchematicModel` redraws a mesh in the site's own language - unlit fill at
  * low opacity with its hard edges picked out, exactly as `Airframe.tsx` and
  * `World.tsx` draw their procedural geometry. Scenery uses it, so that the
  * world stays one drawing rather than a wireframe city with photographs
  * parked in it.
  *
- * `PbrModel` leaves the material exactly as authored — base colour, normal and
+ * `PbrModel` leaves the material exactly as authored - base colour, normal and
  * metallic-roughness. The craft you fly uses it: it is the one object a visitor
  * looks at directly, it is a machined metal thing, and reading as metal is most
  * of what sells it.
@@ -36,15 +36,15 @@ import {
  * in the scene and shows its colour exactly as given. That is what keeps the
  * world looking drawn rather than photographed.
  *
- * The craft is `MeshStandardMaterial` and needs the lighting rig in `Scene.tsx`
- * — specifically the generated environment map. A metal surface reflects its
+ * The craft is `MeshStandardMaterial` and needs the lighting rig in `Scene.tsx` -
+ * specifically the generated environment map. A metal surface reflects its
  * surroundings and emits nothing itself, so a metallic material with nothing to
  * reflect renders very nearly black however many lamps point at it. Lights, PBR
  * materials and that environment are one decision. Do not remove one of them.
  *
  * ── Draco is disabled on purpose ────────────────────────────────────────────
  * `useGLTF`'s second argument defaults to true, which points a DRACOLoader at
- * `https://www.gstatic.com/draco/...` — a third-party CDN fetch on the render
+ * `https://www.gstatic.com/draco/...` - a third-party CDN fetch on the render
  * path of a site whose whole architecture is "nothing on the render path can
  * break". Passing `false` turns it off. The assets use meshopt instead, whose
  * decoder drei bundles locally, so nothing is fetched from any origin but ours.
@@ -73,7 +73,7 @@ function normalise(root: Object3D, span: number, anchor: Anchor) {
   );
 }
 
-/** Disposes only what a converter created — never the cached source scene. */
+/** Disposes only what a converter created - never the cached source scene. */
 function useDisposeOnUnmount(object: Object3D) {
   useEffect(() => {
     return () => {
@@ -162,11 +162,11 @@ export function PbrModel({
   anchor?: Anchor;
   /**
    * Multiplied into every material's colour. Left off, the model renders as
-   * authored — which is the point of this component and the normal case.
+   * authored - which is the point of this component and the normal case.
    *
    * It exists for one job: a stock asset that is correct but too loud for the
    * place it is going. Multiplying is the right operation because it cannot
-   * invent detail — it only takes light away, so a tinted model still has the
+   * invent detail - it only takes light away, so a tinted model still has the
    * shading and texture the author gave it, just quieter.
    */
   tint?: string;
@@ -174,7 +174,7 @@ export function PbrModel({
   const { scene } = useGLTF(url, false);
 
   const object = useMemo(() => {
-    // Barely anything is converted here — the pipeline already emitted exactly
+    // Barely anything is converted here - the pipeline already emitted exactly
     // the material we want, and GLTFLoader has set up colour spaces correctly.
     // Size, origin and (optionally) how loud it is are ours to decide.
     const root = scene.clone(true);
@@ -213,5 +213,5 @@ export function PbrModel({
 const EMPTY = new Object3DImpl();
 
 // The craft is on screen before anything else and must never be the thing a
-// visitor waits for. Scenery is not preloaded — it can arrive late.
+// visitor waits for. Scenery is not preloaded - it can arrive late.
 useGLTF.preload('/models/vt-802.glb', false);

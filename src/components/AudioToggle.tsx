@@ -14,7 +14,7 @@ import {
 } from '@/lib/audio';
 
 /**
- * `AUDIO ▸ ARMED / MUTED` — the one audio control, per DESIGN-LANGUAGE §4.2.
+ * `AUDIO ▸ ARMED / MUTED` - the one audio control, per DESIGN-LANGUAGE §4.2.
  * Console language rather than museum language, always visible, keyboard
  * reachable, `aria-pressed` carrying the state to a screen reader.
  *
@@ -23,9 +23,9 @@ import {
  *
  * Why it starts at `muted` and corrects on mount: the preference lives in
  * `localStorage`, which the server cannot read, so rendering the stored value
- * directly would be a hydration mismatch. Unlike the theme toggle — which
+ * directly would be a hydration mismatch. Unlike the theme toggle - which
  * dodges this by keeping its state in a DOM attribute an inline script sets
- * before paint — audio cannot be resolved before paint, because there is
+ * before paint - audio cannot be resolved before paint, because there is
  * nothing to resolve until a gesture happens. Muted-then-correct is right in a
  * way it would not be for theme: the wrong state for one frame is invisible,
  * and it fails to the silent side.
@@ -51,7 +51,7 @@ export function AudioToggle({
     setLevel(readVolume());
     const unsubscribe = subscribe(setState);
     // Carries an `armed` preference in from a previous visit or route without
-    // autoplaying — it waits for the next gesture. No-op when muted.
+    // autoplaying - it waits for the next gesture. No-op when muted.
     const cancel = resumeIfArmed();
     return () => {
       unsubscribe();
@@ -77,7 +77,7 @@ export function AudioToggle({
         type="button"
         // `toggle()` runs synchronously inside this handler, which is what makes
         // the AudioContext legal to construct. Anything async between the click
-        // and the context — an await, a transition, a timeout — and the browser
+        // and the context - an await, a transition, a timeout - and the browser
         // stops counting it as a user gesture.
         onClick={() => setState(toggle())}
         data-audio-toggle
@@ -115,7 +115,7 @@ export function AudioToggle({
           style={
             {
               // The filled portion is drawn with a gradient rather than a second
-              // element, so the whole control is one native input — which is
+              // element, so the whole control is one native input - which is
               // what keeps it keyboard-operable (arrows, Home/End) for free.
               '--pf-vol': `${level * 100}%`,
               backgroundColor: overlay

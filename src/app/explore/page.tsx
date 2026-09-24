@@ -7,7 +7,7 @@ import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Explore — fly through the portfolio',
+  title: 'Explore - fly through the portfolio',
   description:
     'The same portfolio, as somewhere to fly. Pilot a drone around a wireframe world and the projects, background and contact details appear as you reach them.',
 };
@@ -51,7 +51,7 @@ export default function ExplorePage() {
         The same portfolio, arranged as somewhere to fly rather than something
         to scroll. Take the controls and the projects, the background and the
         contact details are out there waiting to be reached. Nine markers, and
-        nothing is hidden behind being good at it — every one is a click away in
+        nothing is hidden behind being good at it - every one is a click away in
         the list underneath, and all of it is written out in plain text below.
       </p>
 
@@ -61,7 +61,7 @@ export default function ExplorePage() {
 
       {/*
         Everything in the world, as ordinary HTML. This is not a fallback bolted
-        on afterwards — it is the same `zones` array the canvas renders, so the
+        on afterwards - it is the same `zones` array the canvas renders, so the
         two cannot disagree. A recruiter with WebGL disabled, a screen reader,
         and a search crawler all get the whole thing.
 
@@ -130,10 +130,10 @@ export default function ExplorePage() {
                 <p className="mt-3">
                   <Link
                     href={zone.href}
-                    className="text-sm hover:underline"
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5 text-sm"
                     style={{ color: 'var(--accent)' }}
                   >
-                    Read the full version →
+                    Full version
                   </Link>
                 </p>
               )}
@@ -143,29 +143,29 @@ export default function ExplorePage() {
       </details>
 
       <nav
-        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-2.5 border-t pt-6 text-sm"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
           href="/"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          ← Back to the readable version
+          Readable version
         </Link>
         <Link
           href="/explore/lab"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Inside the lab →
+          Inside the lab
         </Link>
         <Link
           href="/lab"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Airframe explorer →
+          Drone Frame
         </Link>
       </nav>
     </div>

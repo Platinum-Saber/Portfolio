@@ -13,12 +13,12 @@ import {
 import type { Guide } from '@/lib/explore/guide';
 
 /**
- * The waypoint ribbon — Phase 9.2, Tier B particles (DESIGN-LANGUAGE §5.1).
+ * The waypoint ribbon - Phase 9.2, Tier B particles (DESIGN-LANGUAGE §5.1).
  *
  * One BufferGeometry of COUNT points, allocated once. A new route rewrites its
  * positions a single time (when `guide.version` changes); everything that
- * moves after that — the ribbon drawing itself out, light pulsing along it
- * towards the target, the stretch behind the craft dissolving — is the vertex
+ * moves after that - the ribbon drawing itself out, light pulsing along it
+ * towards the target, the stretch behind the craft dissolving - is the vertex
  * shader reading four uniforms. No per-particle JavaScript in the render loop.
  *
  * Additive and unlit, in the accent, like the rest of the world's schematic

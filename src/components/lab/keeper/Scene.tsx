@@ -32,7 +32,7 @@ const TRUTH_COLOUR = '#7d8794';
 /** Readouts to React at 6 Hz: live enough to watch, cheap enough to ignore. */
 const READOUT_INTERVAL = 1 / 6;
 
-/** The goal mouth, as a schematic frame — the language the other scenes use. */
+/** The goal mouth, as a schematic frame - the language the other scenes use. */
 function Goal() {
   const geometry = useMemo(() => {
     const w = GOAL_HALF_WIDTH;
@@ -126,7 +126,7 @@ function Gate({ z, label }: { z: number; label: string }) {
 
 /**
  * The depth camera: centred on the goal, behind it and above the crossbar,
- * looking down the pitch — where it sat on the real stand. Mounted high and
+ * looking down the pitch - where it sat on the real stand. Mounted high and
  * central it sees the whole mouth and the approach, and nothing the keeper
  * does can block its view of the ball.
  */
@@ -281,7 +281,7 @@ function Simulation({
     if (reducedMotion) {
       // Someone who has asked for less motion still gets the answer: the shot
       // is resolved in one frame, at the same fixed step the animated path
-      // uses, so the sightings and the outcome are identical — only the
+      // uses, so the sightings and the outcome are identical - only the
       // flying ball is gone. The cap stops a pathological run from spinning.
       for (let i = 0; i < 600 && sim.snapshot().phase === 'flight'; i += 1) {
         sim.step(1 / 120);

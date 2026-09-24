@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * and a second hand-written copy would get some of them wrong:
  *
  * ── iPhone has no Fullscreen API ───────────────────────────────────────────
- * Safari on iPhone has never implemented `Element.requestFullscreen` — iPad
+ * Safari on iPhone has never implemented `Element.requestFullscreen` - iPad
  * has. So the one platform where a small canvas hurts most is the one the
  * standard route does not reach, and a fixed-position overlay has to stand in.
  * Detected by looking for the method, never by sniffing the browser.
@@ -42,7 +42,7 @@ export function useImmersive<T extends HTMLElement>() {
     try {
       await element.requestFullscreen({ navigationUI: 'hide' });
     } catch {
-      // Refused — some embedded and cross-origin contexts disallow it
+      // Refused - some embedded and cross-origin contexts disallow it
       // outright. The overlay still gets the visitor a full-viewport canvas.
       setFallback(true);
     }
@@ -89,14 +89,14 @@ export function useImmersive<T extends HTMLElement>() {
  * nearest ancestor with a `transform`, not to the viewport. `/explore` centres
  * its canvas with `left-1/2 -translate-x-1/2`, which silently turned this into
  * an absolutely-positioned box inside a 94vw column. Any wrapper's transform
- * has to come off while immersive — see `Explorer.tsx`.
+ * has to come off while immersive - see `Explorer.tsx`.
  */
 export const IMMERSIVE_FRAME =
   'fixed inset-0 z-[60] h-full w-full overflow-hidden rounded-none border-0';
 
 /** One look for every control that floats over a canvas, in either scene. */
 /* 9.0d: HUD glass capsules. Blurred (they sit on the live scene) but never
-   refracted — `.glass-btn` is excluded from the refraction rule, because a
+   refracted - `.glass-btn` is excluded from the refraction rule, because a
    dozen displacement filters over a WebGL canvas is the one cost here that
    would show up on the budget phone. An active button is tinted through the
    glass variables rather than painted over. */
@@ -111,3 +111,10 @@ export const overlayButtonStyle = (active = false) =>
         color: '#3ddba0',
       }
     : { color: '#aab2bd' }) as React.CSSProperties;
+
+/** The exit capsule: red, so leaving is never hunted for among the zones. */
+export const exitButtonStyle = {
+  '--glass-tint': 'rgba(239, 68, 68, 0.22)',
+  '--glass-rim-hi': 'rgba(248, 113, 113, 0.7)',
+  color: '#fca5a5',
+} as React.CSSProperties;

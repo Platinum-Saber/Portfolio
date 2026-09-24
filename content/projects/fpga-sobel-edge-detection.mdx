@@ -1,6 +1,6 @@
 ---
 title: Real-Time Sobel Edge Detection on FPGA
-summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 — OV7670 capture, a streaming Sobel core producing one pixel per clock, and live 640×480 VGA output, verified bit-exact against a NumPy model.
+summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 - OV7670 capture, a streaming Sobel core producing one pixel per clock, and live 640×480 VGA output, verified bit-exact against a NumPy model.
 order: 3
 year: '2026'
 status: complete
@@ -23,7 +23,7 @@ stack:
 ## The problem
 
 Sobel edge detection is trivial in software and interesting in hardware. On an FPGA you
-can't just index into an image — the pixels arrive as a stream, one per clock, and you need
+can't just index into an image - the pixels arrive as a stream, one per clock, and you need
 a 3×3 neighbourhood. The whole design problem is buffering exactly enough of the past to
 compute the present, and doing it fast enough to keep up with the camera without ever
 falling behind the display.
@@ -58,29 +58,29 @@ OV7670 → SCCB config → capture
 The core of the design is a pair of **Block RAM line buffers** holding the previous two
 image rows. As each new pixel arrives, the buffers and a set of shift registers present a
 complete 3×3 window, and the Sobel core produces a new output **every clock** once the
-pipeline is full — three stages, three clocks of latency.
+pipeline is full - three stages, three clocks of latency.
 
 The ×2 kernel weights are wired shifts, so the core is nothing but adders: **53 LUTs, 94
 flip-flops and zero DSP slices**. Magnitude is `|Gx| + |Gy|` rather than a true square
-root — it over-estimates diagonal edges by up to ~41 %, but costs three adders instead of a
+root - it over-estimates diagonal edges by up to ~41 %, but costs three adders instead of a
 multiplier and a square root, and the threshold absorbs the difference.
 
 The single easiest thing to get wrong is the line buffer's latency. Its output is
 registered, so a buffer of length N delays by N + 1 clocks; the window therefore uses
-`IMG_W − 1`. Off by one, and the edge map looks _almost_ right — which is exactly why a
+`IMG_W − 1`. Off by one, and the edge map looks _almost_ right - which is exactly why a
 testbench checks every one of the nine taps instead of eyeballing a picture.
 
 ## Three clocks that don't agree
 
 The board's 100 MHz oscillator drives an MMCM for a 25 MHz pixel clock; the camera returns
 its own 12.5 MHz pixel clock. Those never line up, so the only crossings are two dual-clock
-frame-buffer BRAMs — structurally safe, write port on one clock and read port on the other
-— plus two-flop synchronisers for reset and the threshold. The constraints declare the clock
+frame-buffer BRAMs - structurally safe, write port on one clock and read port on the other -
+plus two-flop synchronisers for reset and the threshold. The constraints declare the clock
 trees asynchronous so the tools don't try to time paths between them.
 
 Getting the camera clock onto the chip at all took some digging: the only pin available for
 it is the wrong half of a clock-capable pair, so Vivado refuses to place the design without
-an explicit routing exception — and that exception has to live in an implementation-only
+an explicit routing exception - and that exception has to live in an implementation-only
 constraints file, because the net it names does not exist until synthesis creates it.
 
 ## Runs without a camera
@@ -96,19 +96,19 @@ checkerboard and a diagonal bar. An optional build bakes a photograph into Block
 The design is verified bottom-up, so a failure points at one module rather than "the
 picture looks wrong". **Nine testbenches**, all passing:
 
-- **Kernel arithmetic** against hand-computed windows — flat field, ideal edges, impulse,
+- **Kernel arithmetic** against hand-computed windows - flat field, ideal edges, impulse,
   threshold from both sides
 - **Windowing** on an image whose every pixel value is its own index, so each tap has a
   closed-form expectation
 - **Whole image** streamed through the pipeline and compared with a **bit-exact NumPy
-  golden model** — **76,800 / 76,800 pixels match** at 320×240
+  golden model** - **76,800 / 76,800 pixels match** at 320×240
 - **Camera protocol and capture** against a behavioural OV7670 model, with the SCCB write
   reconstructed from the bus itself
-- **VGA timing** counted over a whole frame — 307,200 active pixels at 59.52 Hz
+- **VGA timing** counted over a whole frame - 307,200 active pixels at 59.52 Hz
 - **Full system** in both camera and camera-free modes, including a check that every 2×2
   screen block is uniform, which proves the upscaling is aligned
 
-The whole suite also runs under open-source tools — Icarus Verilog plus Python — in one
+The whole suite also runs under open-source tools - Icarus Verilog plus Python - in one
 command, with no Vivado licence needed.
 
 ## Results
@@ -117,7 +117,7 @@ Post-implementation, camera-free build:
 
 - **Logic:** 658 of 20,800 LUTs (3.2 %) and 599 of 41,600 registers (1.4 %)
 - **Block RAM:** 28.5 of 50 tiles (57 %) · **DSP slices:** 3 of 90
-- **Timing:** met with **+26.9 ns** of worst-case slack at 25 MHz — roughly 76 MHz Fmax
+- **Timing:** met with **+26.9 ns** of worst-case slack at 25 MHz - roughly 76 MHz Fmax
 - **Power:** 0.2 W on-chip
 
 Almost all of that Block RAM is the two frame buffers, which exist only to cross clock
@@ -128,14 +128,14 @@ card's circle-drawing logic, not in the image processing.
 ## Starting point
 
 The idea and the OV7670 register approach come from Angelo Jacobo's ULX3S Sobel design, but
-this is a re-implementation for a different architecture rather than a port — Xilinx
+this is a re-implementation for a different architecture rather than a port - Xilinx
 instead of Lattice, on-board VGA instead of HDMI, on-chip RAM instead of external SDRAM, a
 single streaming pipeline instead of a split-kernel state machine, and a full testbench
 suite where the reference had hardware testing only.
 
 ## The same operator, on a GPU
 
-I've since built [the same 3×3 convolution as a WebGL2 fragment shader](/lab/sobel) — it
+I've since built [the same 3×3 convolution as a WebGL2 fragment shader](/lab/sobel) - it
 runs live on your camera, in the browser, no server involved. Worth clicking, because the
 comparison is the point.
 
@@ -143,7 +143,7 @@ Almost nothing carries over. On the FPGA there is no image: pixels arrive one pe
 a 3×3 neighbourhood only exists because block RAM is holding the previous two rows. That
 line buffer, plus reconciling the clock domains around it, _is_ the design. On a GPU the
 frame is already in memory and every output pixel reads whatever it likes, so the hard part
-simply isn't there — and instead every pixel is computed at once, which the FPGA cannot do.
+simply isn't there - and instead every pixel is computed at once, which the FPGA cannot do.
 
 Sobel in Verilog on an FPGA, in C on a CPU, and in GLSL on a GPU are three genuinely
 different engineering problems wearing the same fifteen multiply-accumulates. That is most

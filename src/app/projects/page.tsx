@@ -6,7 +6,7 @@ import { ParticleField } from '@/components/ParticleField';
 export const metadata: Metadata = {
   title: 'Projects',
   description:
-    'Robotics, embedded systems and backend engineering projects — autonomous drones, multi-robot SLAM, FPGA design and low-latency market data.',
+    'Robotics, embedded systems and backend engineering projects - autonomous drones, multi-robot SLAM, FPGA design and low-latency market data.',
 };
 
 export default function ProjectsPage() {
@@ -15,7 +15,7 @@ export default function ProjectsPage() {
 
   return (
     <div>
-      {/* Index — a lattice, not a drift. The case studies themselves get no
+      {/* Index - a lattice, not a drift. The case studies themselves get no
           field at all; that exclusion is a non-negotiable in §5.2. */}
       <ParticleField mood="index" />
 

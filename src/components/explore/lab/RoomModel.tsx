@@ -18,7 +18,7 @@ import { COLLIDERS, ROOM, type Box } from '@/lib/explore/lab';
 /**
  * The lab itself.
  *
- * Loaded and rendered as authored — its materials are already what we want and
+ * Loaded and rendered as authored - its materials are already what we want and
  * the pipeline has already thinned them (see `scripts/build-assets.mjs`, the
  * `interior` profile). The only thing this component adds is the marker boxes,
  * and those are drawn from measured data rather than from the mesh.
@@ -47,14 +47,14 @@ export function RoomModel() {
  *
  * The first pass used near-black fill and faint lines, on the theory that the
  * shell should recede. It receded so far it was indistinguishable from the
- * void it was covering — the gap still read as a hole, just a hole with a
+ * void it was covering - the gap still read as a hole, just a hole with a
  * couple of lines in it. A backdrop has to be visibly *something*.
  */
 const SHELL_LINE = '#5c8b9c';
 const SHELL_FILL = '#1b2b34';
 /**
  * Metres between grid lines. The openings are only a metre or two from where
- * you fly, so the shell is seen steeply angled and close — at 2 m the lines
+ * you fly, so the shell is seen steeply angled and close - at 2 m the lines
  * were too sparse to read as a surface from most of the room.
  */
 const SHELL_CELL = 0.7;
@@ -62,7 +62,7 @@ const SHELL_CELL = 0.7;
 /**
  * Closes the room.
  *
- * The set is open-fronted — the way almost every downloadable interior is.
+ * The set is open-fronted - the way almost every downloadable interior is.
  * Above y = 2 there are walls only at z = -7 and x = 11; the other two sides
  * simply are not modelled, so from most of the room you look out through a
  * hole into nothing and the canvas shows through as black.
@@ -75,7 +75,7 @@ const SHELL_CELL = 0.7;
  * ── Why all six faces, and not just the missing two ────────────────────────
  * Because the real walls are in front of it and hide it. Drawing the whole box
  * and letting the depth buffer sort it out means this component never has to
- * know which walls the model actually has — so it cannot fall out of step if
+ * know which walls the model actually has - so it cannot fall out of step if
  * the room is ever re-exported with different geometry. The alternative,
  * enumerating the gaps, is a list that silently goes stale.
  *
@@ -176,7 +176,7 @@ function buildShellGrid(
  * Built from the collider box in `lab.ts`, not from the object's own geometry.
  * That is deliberate: the box is exactly the volume you cannot fly into, so
  * the highlight is showing you the truth about the thing rather than a
- * decoration near it — approach and the outline tells you where you will stop.
+ * decoration near it - approach and the outline tells you where you will stop.
  *
  * It is also the one place the lab borrows the rest of the site's visual
  * language. A photoreal room with a wireframe box round the thing you can use

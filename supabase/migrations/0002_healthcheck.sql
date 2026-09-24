@@ -1,10 +1,10 @@
 -- A heartbeat the keep-alive workflow can actually assert on.
 --
 -- Why this exists: the obvious probe, GET /rest/v1/, returns 401 for anon on
--- this project — measured, not guessed. That is fine as a security posture and
+-- this project - measured, not guessed. That is fine as a security posture and
 -- useless as a health check, because a 401 cannot be told apart from a wrong
 -- key, a dropped grant or a paused project. And PostgREST serves that root from
--- a cached schema, so it is not clear it touches Postgres at all — which is the
+-- a cached schema, so it is not clear it touches Postgres at all - which is the
 -- one thing a pause-prevention ping has to do.
 --
 -- The contacts table is deliberately unreadable by anon, so it cannot serve as

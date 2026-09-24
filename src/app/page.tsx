@@ -11,13 +11,13 @@ import { SUMMARY } from '@/lib/operator';
 import { site } from '@/lib/site';
 
 /**
- * The home page is a guided sequence — Phase 8.9.
+ * The home page is a guided sequence - Phase 8.9.
  *
  * A consequence of stacking every chapter on one pinned surface: they are all
  * inside the viewport at all times, faded out or not, so Next prefetches every
  * link on the page at load. Measured, that put 53 KB on `/` for four routes
  * the visitor had not asked for. The lab links and the portal therefore carry
- * `prefetch={false}` — `/projects` keeps its prefetch, being both cheap and
+ * `prefetch={false}` - `/projects` keeps its prefetch, being both cheap and
  * the likely next stop.
  *
  * Five chapters, each pinned for about a screen: who this is, what he builds,
@@ -55,18 +55,43 @@ export default function HomePage() {
                   {site.cv && (
                     <a
                       href={site.cv}
-                      className="glass glass-btn glass-press px-3.5 py-1.5"
+                      className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                       style={{ color: 'var(--accent)' }}
                     >
-                      CV (PDF) →
+                      <svg
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 3v5h5" />
+                        <path d="M12 11v6" />
+                        <path d="m9 14 3 3 3-3" />
+                      </svg>
+                      CV
                     </a>
                   )}
                   <a
                     href={site.socials.github}
-                    className="glass glass-btn glass-press px-3.5 py-1.5"
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                     style={{ color: 'var(--accent)' }}
                   >
-                    GitHub →
+                    <svg
+                      aria-hidden="true"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                    GitHub
                   </a>
                 </div>
               }
@@ -89,7 +114,7 @@ export default function HomePage() {
               multi-robot SLAM system that gets two scouts to agree on one map.
             </p>
             <p style={{ color: 'var(--fg-muted)' }}>
-              My work sits where embedded systems meet perception — ROS 2 and
+              My work sits where embedded systems meet perception - ROS 2 and
               Jetson on one side, Verilog and VHDL on an FPGA on the other. I
               like the problems that only appear once the thing is real: clock
               domains that disagree, frames that drift, mass budgets that
@@ -110,10 +135,10 @@ export default function HomePage() {
             <p className="mt-5">
               <TransitionLink
                 href="/projects"
-                className="text-sm hover:underline"
+                className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5 text-sm"
                 style={{ color: 'var(--accent)' }}
               >
-                All projects →
+                All projects
               </TransitionLink>
             </p>
           </div>
@@ -129,52 +154,50 @@ export default function HomePage() {
               the browser, on its own route, and none of them loads until you
               ask.
             </p>
-            <ConsoleCard title="Lab" meta="Interactive">
-              <ConsoleField label="Airframe">
-                <Link
-                  href="/lab"
-                  prefetch={false}
-                  className="hover:underline"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  The FYP quadrotor as a schematic →
-                </Link>
-              </ConsoleField>
-              <ConsoleField label="Sobel">
-                <Link
-                  href="/lab/sobel"
-                  prefetch={false}
-                  className="hover:underline"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  Edge detection on your camera, in a shader →
-                </Link>
-              </ConsoleField>
-              <ConsoleField label="ASCILAM">
-                <Link
-                  href="/lab/ascilam"
-                  prefetch={false}
-                  className="hover:underline"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  Two scouts, drift, and one fused map →
-                </Link>
-              </ConsoleField>
-              <ConsoleField label="Keeper">
-                <Link
-                  href="/lab/keeper"
-                  prefetch={false}
-                  className="hover:underline"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  Two sightings, a Kalman filter, one save →
-                </Link>
-              </ConsoleField>
-            </ConsoleCard>
+            <ConsoleCard
+              title="Lab"
+              meta="Interactive"
+              lead={
+                <div className="flex flex-wrap gap-2.5 text-sm">
+                  <Link
+                    href="/lab"
+                    prefetch={false}
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Drone Frame
+                  </Link>
+                  <Link
+                    href="/lab/sobel"
+                    prefetch={false}
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Sobel FPGA
+                  </Link>
+                  <Link
+                    href="/lab/ascilam"
+                    prefetch={false}
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    ASCILAM
+                  </Link>
+                  <Link
+                    href="/lab/keeper"
+                    prefetch={false}
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Goal keeper
+                  </Link>
+                </div>
+              }
+            />
           </div>
         </Chapter>
 
-        <Chapter index={4} count={5} label="The other version">
+        <Chapter index={4} count={5} label="Flight Experience">
           <HomePortal />
         </Chapter>
       </Stage>

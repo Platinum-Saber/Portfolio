@@ -14,7 +14,7 @@ import { Lighting } from './Lighting';
 import { World, zoneColor } from './World';
 import { Ribbon } from './Ribbon';
 import { Guide } from '@/lib/explore/guide';
-import { ConsoleCard, ConsoleField } from '../ConsoleCard';
+import { ConsoleCard } from '../ConsoleCard';
 
 /**
  * A request to reposition the drone, carried as a value rather than a mutable
@@ -77,7 +77,7 @@ function Rig({
       const target = zones.find((zone) => zone.id === jump.id);
       if (target) {
         // 9.2: a jump is a guided flight. Teleport is the reduced-motion
-        // branch only — an instant reposition is the right behaviour there,
+        // branch only - an instant reposition is the right behaviour there,
         // and a cut everywhere else.
         if (reducedMotion) drone.teleport(target.position);
         else
@@ -137,8 +137,8 @@ function Rig({
     look.set(drone.x, drone.y + 0.6, drone.z);
     state.camera.lookAt(look);
 
-    // Zone entry. Hysteresis on the way out — leaving needs a little more
-    // distance than entering — or a panel flickers when you hover on the edge.
+    // Zone entry. Hysteresis on the way out - leaving needs a little more
+    // distance than entering - or a panel flickers when you hover on the edge.
     let nearestId: string | null = null;
     let nearestDistance = Infinity;
     let entered: string | null = null;
@@ -156,7 +156,7 @@ function Rig({
     }
 
     // A guided route can cross other zones' trigger radius on the way. They
-    // must not open mid-flight, nor count as found — the visitor did not go
+    // must not open mid-flight, nor count as found - the visitor did not go
     // there. Entry resumes the moment the guide lets go, which on arrival
     // opens the target exactly as a teleport did.
     if (guide.driving) entered = null;
@@ -255,11 +255,22 @@ function Rig({
             }
           >
             {active.tags && (
-              <ConsoleField label="Stack">
-                <span className="font-mono text-[11px]">
+              // Label above, value below and left-aligned: the panel is too
+              // narrow for a label column beside a multi-line tag list.
+              <div>
+                <dt
+                  className="font-mono text-[11px] tracking-wider uppercase"
+                  style={{ color: 'var(--fg-muted)' }}
+                >
+                  Stack
+                </dt>
+                <dd
+                  className="mt-1 font-mono text-[11px] leading-relaxed"
+                  style={{ color: 'var(--fg)' }}
+                >
                   {active.tags.join(' · ')}
-                </span>
-              </ConsoleField>
+                </dd>
+              </div>
             )}
           </ConsoleCard>
         </Html>
@@ -286,7 +297,7 @@ export function Scene(props: {
       dpr={[1, 1.75]}
       camera={{ position: [0, 11, 36], fov: 55, far: 400 }}
       gl={{ antialias: true, powerPreference: 'low-power' }}
-      /* Reflections only — set so the generated room lights the
+      /* Reflections only - set so the generated room lights the
          craft to read as metal against a deliberately dark world. */
       scene={{ environmentIntensity: 1.05 }}
     >

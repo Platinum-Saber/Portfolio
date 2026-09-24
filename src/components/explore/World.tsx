@@ -19,7 +19,7 @@ export const zoneColor = (kind: Zone['kind']) =>
  * has something to measure motion against. An empty plane gives no parallax,
  * and without parallax flying feels like sliding a cursor.
  *
- * One merged LineSegments rather than fifty meshes — the whole city is a single
+ * One merged LineSegments rather than fifty meshes - the whole city is a single
  * draw call.
  */
 function Scenery() {
@@ -85,7 +85,7 @@ function Scenery() {
  *
  * It sits *under* the procedural skyline rather than replacing it, because the
  * two are doing different jobs and neither can do the other's. This plate is a
- * regular grid of identical towers on a gradient — handsome, and completely
+ * regular grid of identical towers on a gradient - handsome, and completely
  * uniform, which is exactly what you want underfoot and exactly what you do
  * not want as the thing you navigate by. `Scenery` above is seeded and
  * irregular, so no two parts of the sky look alike and you can tell where you
@@ -93,8 +93,8 @@ function Scenery() {
  * the first three markers live, which a uniform grid cannot.
  *
  * ── The two numbers ────────────────────────────────────────────────────────
- * RELIEF squashes it vertically. At true scale the towers stand about 10 units
- * — straight through the flight volume, so you would fly inside buildings that
+ * RELIEF squashes it vertically. At true scale the towers stand about 10 units -
+ * straight through the flight volume, so you would fly inside buildings that
  * have no collision, and markers at y = 4–9 would be swallowed. Flattened they
  * read as a city seen from a great height, which is what a drone at altitude
  * should see anyway. Non-uniform scale on an authored mesh is usually a smell;
@@ -104,7 +104,7 @@ function Scenery() {
  * very bright, and this world is deliberately dark so that the markers and the
  * craft own every bright pixel in the frame. Untinted, the ground shouts over
  * both. Multiply only ever removes light, so the gradient the author drew
- * survives intact — just quieter.
+ * survives intact - just quieter.
  */
 const CITY_RELIEF = 0.32;
 const CITY_TINT = '#1b4f52';
@@ -187,8 +187,8 @@ function Marker({
 
   useFrame((_state, delta) => {
     if (!ring.current) return;
-    // Under prefers-reduced-motion the markers hold still. They are decoration
-    // — the drone's own movement is the visitor's doing and stays.
+    // Under prefers-reduced-motion the markers hold still. They are decoration -
+    // the drone's own movement is the visitor's doing and stays.
     if (reducedMotion) return;
     elapsed.current += delta;
     ring.current.rotation.y += delta * (active ? 1.4 : 0.5);

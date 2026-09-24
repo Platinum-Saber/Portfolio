@@ -8,7 +8,7 @@ import { SKILL_GROUPS } from '@/lib/skills';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'The lab — fly a drone around the workshop',
+  title: 'The lab - fly a drone around the workshop',
   description:
     'The portfolio as a room. Fly a small drone around a lab and read the projects off the console, the background off the cabinet and the contact details off the door.',
 };
@@ -17,7 +17,7 @@ export default function LabRoomPage() {
   const projects = getAllProjects();
 
   // Same builder the outdoor world and the project pages use, so the room
-  // cannot say something the site does not — and so every word below is in the
+  // cannot say something the site does not - and so every word below is in the
   // HTML whether or not the canvas ever runs.
   const zones = buildZones(
     projects.map((project) => ({
@@ -56,7 +56,7 @@ export default function LabRoomPage() {
         console along the far wall lists every project and opens any of them;
         the cabinet, the tank and the door hold the background, the tools and
         the way to reach me. You cannot fly through the walls, and nothing here
-        is hidden behind being good at it — every station has a button under the
+        is hidden behind being good at it - every station has a button under the
         canvas, and all of it is written out in plain text below.
       </p>
 
@@ -118,10 +118,10 @@ export default function LabRoomPage() {
                       <p className="mt-3">
                         <Link
                           href={zone.href}
-                          className="text-sm hover:underline"
+                          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5 text-sm"
                           style={{ color: 'var(--accent)' }}
                         >
-                          Read the full version →
+                          Full version
                         </Link>
                       </p>
                     )}
@@ -154,22 +154,22 @@ export default function LabRoomPage() {
       </details>
 
       <nav
-        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-2.5 border-t pt-6 text-sm"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
           href="/explore"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          ← Out to the open world
+          Open world
         </Link>
         <Link
           href="/projects"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Projects →
+          Projects
         </Link>
       </nav>
     </div>

@@ -15,7 +15,7 @@
      themes through CSS variables, not colour utilities. (8.8 removed three
      unused --color-* keys, one of which disagreed with --accent.) */
 
-  /* Motion vocabulary — Phase 8.1. Components never hand-roll a duration:
+  /* Motion vocabulary - Phase 8.1. Components never hand-roll a duration:
      they use `transition-*` (which resolves to --t-fast through the two
      --default-* keys below) or `duration-[var(--t-page)]` for the page-level
      form. Overridden under prefers-reduced-motion at the foot of this file. */
@@ -80,11 +80,11 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Scroll disclosure — Phase 8.4.
+   Scroll disclosure - Phase 8.4.
 
    Both effects are pure CSS scroll-driven animations: no library, no
    IntersectionObserver, no client component, and they run off the main
-   thread. They are PROGRESSIVE ENHANCEMENT — a browser without
+   thread. They are PROGRESSIVE ENHANCEMENT - a browser without
    `animation-timeline` runs no animation at all and simply shows the
    content, which is the correct fallback and costs nothing. Deliberately
    NOT polyfilled: shipping JS to a content route so that a decoration
@@ -94,7 +94,7 @@
    start state (see 8.1), so it cannot leave anything invisible when the
    animation does not run.
 
-   Scope rule: `.rise` goes on cards, headings and chrome — never on a block
+   Scope rule: `.rise` goes on cards, headings and chrome - never on a block
    of prose. Scrubbing a paragraph moves the reader's content under them.
    --------------------------------------------------------------------------- */
 
@@ -118,7 +118,7 @@
   }
 }
 
-/* Hidden unless the enhancement applies — so reduced-motion users get no
+/* Hidden unless the enhancement applies - so reduced-motion users get no
    permanently-full bar, which is what a time-based fallback would leave. */
 .scroll-rail {
   opacity: 0;
@@ -144,18 +144,18 @@
 }
 
 /* ---------------------------------------------------------------------------
-   The guided home sequence — Phase 8.9. See `components/Chapter.tsx`.
+   The guided home sequence - Phase 8.9. See `components/Chapter.tsx`.
 
    `.stage` is a tall scroll runway carrying a view timeline. `.stage-inner`
    sticks to the viewport for the whole of it, and every `.chapter` is stacked
    absolutely on that one pinned surface, fading in and out over its own
    overlapping slice of the timeline. Nothing moves relative to the viewport
-   during a transition — only opacity — which is what makes it read as one
+   during a transition - only opacity - which is what makes it read as one
    item replacing another rather than as a page scrolling past.
 
    EVERYTHING is inside the support + motion + width query. Without it, no
    stage, no pinning, no absolute positioning: the chapters are ordinary
-   blocks in ordinary flow. That is the mobile experience on purpose — a
+   blocks in ordinary flow. That is the mobile experience on purpose - a
    chapter holding three project cards does not fit in a pinned phone screen.
    --------------------------------------------------------------------------- */
 
@@ -183,7 +183,7 @@
   }
 }
 
-/* The first chapter is already on screen at scroll 0 — it must not fade in
+/* The first chapter is already on screen at scroll 0 - it must not fade in
    from nothing while the visitor has not scrolled at all. */
 @keyframes chapter-open {
   0%,
@@ -200,7 +200,7 @@
   }
 }
 
-/* The last chapter is the door. It arrives and stays — fading the destination
+/* The last chapter is the door. It arrives and stays - fading the destination
    out as the visitor reaches it would be a joke at their expense. */
 @keyframes chapter-arrive {
   0% {
@@ -221,7 +221,7 @@
 }
 
 /* The mascot (components/Mascot.tsx). Absent unless the stage itself is on:
-   no support, reduced motion or a narrow screen means no drone — and, because
+   no support, reduced motion or a narrow screen means no drone - and, because
    the sprite is only named inside the query below, no 57 KB download either. */
 .mascot {
   display: none;
@@ -314,7 +314,7 @@
       position: absolute;
       left: 50%;
       /* The lap's near point (where it pushes) sits on the chapters' vertical
-         centre — ~53% of the stage, because .chapter pads 5.5rem top / 2.5rem
+         centre - ~53% of the stage, because .chapter pads 5.5rem top / 2.5rem
          bottom and centres its content. Chapters differ in height (a card,
          prose, three cards) but all share that centre line, so anchoring the
          push there hits every one. 0.94 = cos(tilt): the near point's height
@@ -354,7 +354,7 @@
 
     /* `pointer-events` is animated in the keyframes above rather than set
        here: a faded-out chapter must not swallow clicks aimed at the one that
-       replaced it, but it must stay in the accessibility tree — which
+       replaced it, but it must stay in the accessibility tree - which
        `visibility: hidden` would not. */
 
     /* Inside a pinned chapter a card is permanently in view, so its own
@@ -367,7 +367,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Audio volume slider — Phase 8.7.
+   Audio volume slider - Phase 8.7.
 
    `appearance: none` removes the native thumb along with the native track, and
    a range input with no thumb is a control nobody can find. Both vendor
@@ -376,7 +376,7 @@
    whole rule.
 
    The track itself is a gradient set inline from the current value, so the
-   fill and the element are the same node and the input stays native — which is
+   fill and the element are the same node and the input stays native - which is
    what keeps arrow keys, Home/End and the screen-reader value for free.
    --------------------------------------------------------------------------- */
 
@@ -409,7 +409,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Tier-A particle field — Phase 8.5. See `components/ParticleField.tsx`.
+   Tier-A particle field - Phase 8.5. See `components/ParticleField.tsx`.
 
    Same enhancement shape as `.scroll-rail` above: the container is
    `display: none` by default and only turned on inside the
@@ -417,7 +417,7 @@
    field at all rather than a field frozen mid-rise.
 
    Zero JavaScript. The quickening while a form field has focus is `:has()`,
-   not an event listener — which also means it works with JS disabled.
+   not an event listener - which also means it works with JS disabled.
    --------------------------------------------------------------------------- */
 
 @keyframes pf-rise {
@@ -437,7 +437,7 @@
   }
 }
 
-/* `calm` — a mote that drifts and breathes at the same time.
+/* `calm` - a mote that drifts and breathes at the same time.
    It bobs rather than travels: the mood is stillness, but *pure* stillness is
    indistinguishable from a static dot, which is exactly the bug this replaced.
    Scale and opacity move with the drift, which is what reads as depth. */
@@ -456,7 +456,7 @@
   }
 }
 
-/* `index` — a tick descending the lattice one cell at a time. `steps()` is the
+/* `index` - a tick descending the lattice one cell at a time. `steps()` is the
    whole idea: a machine reading down an index snaps between rows, it does not
    glide. Distinguishable from `pf-rise` at a glance for that reason alone, and
    it is what makes `/projects` legibly *moving* rather than merely lit. */
@@ -472,7 +472,7 @@
     opacity: 1;
   }
   100% {
-    /* 24 cells — past the bottom of any viewport the field is enabled at, and
+    /* 24 cells - past the bottom of any viewport the field is enabled at, and
        an exact multiple of the cell so every step lands on a rule. */
     transform: translateY(calc(var(--pf-cell) * 24));
     opacity: 0;
@@ -483,12 +483,12 @@
   display: none;
 }
 
-/* Narrow viewports have no margin to put atmosphere in — the reading column
+/* Narrow viewports have no margin to put atmosphere in - the reading column
    is the whole screen. Rather than draw behind the text, the field is simply
    absent. It is a decoration, and decorations may be absent.
 
    1200px, not 900px: `<main>` is `max-w-3xl` (48rem = 768px) centred, so the
-   free margin is (100vw - 768px) / 2 — 66px at 900px wide, which is not a
+   free margin is (100vw - 768px) / 2 - 66px at 900px wide, which is not a
    rail, it is a sliver under the text. At 1200px it is 216px, which is the
    narrowest width where a rail is honestly a rail. */
 @media (prefers-reduced-motion: no-preference) and (min-width: 1200px) {
@@ -502,7 +502,7 @@
 
     /* The free margin beside the reading column, less a 20px gap. Marks are
        positioned as a fraction of THIS rather than of the viewport, so the
-       field cannot grow into the text as the window narrows — which is
+       field cannot grow into the text as the window narrows - which is
        exactly what a percentage rail did. */
     --pf-rail: calc((100vw - 48rem) / 2 - 20px);
 
@@ -523,7 +523,7 @@
   }
 
   /* -------------------------------------------------------------------------
-     Mood mapping — `docs/DESIGN-LANGUAGE.md` §5.2. Four routes, four fields.
+     Mood mapping - `docs/DESIGN-LANGUAGE.md` §5.2. Four routes, four fields.
      The point is that a glance at the margin tells you which page you are on,
      so each mood differs in colour AND shape AND motion, not just in one of
      the three. Opacities were raised ~2x on 2026-09-03: the original values
@@ -531,7 +531,7 @@
      display, which is the same as not shipping the field at all.
      ------------------------------------------------------------------------- */
 
-  /* `/` — standby dust. The machine is powered and idle. */
+  /* `/` - standby dust. The machine is powered and idle. */
   .pfield--standby {
     color: var(--fg-muted);
     opacity: 0.75;
@@ -543,9 +543,9 @@
     animation-name: pf-rise;
   }
 
-  /* `/about` — human, calm. Larger, softer motes that bob and breathe rather
-     than rise. They stay in their own patch of the rail — the mood is
-     stillness — but they do move: a mote that only changed opacity was
+  /* `/about` - human, calm. Larger, softer motes that bob and breathe rather
+     than rise. They stay in their own patch of the rail - the mood is
+     stillness - but they do move: a mote that only changed opacity was
      indistinguishable from a static dot, which is the bug this replaced. */
   .pfield--calm {
     color: var(--fg-muted);
@@ -553,7 +553,7 @@
   }
   .pfield--calm > span {
     border-radius: 50%;
-    /* A soft edge rather than a hard dot — at 5–12px a crisp circle reads as
+    /* A soft edge rather than a hard dot - at 5–12px a crisp circle reads as
        a UI element that failed to load. The gradient makes it atmosphere. */
     background: radial-gradient(
       circle,
@@ -565,7 +565,7 @@
     animation-timing-function: ease-in-out;
   }
 
-  /* `/projects` — index, order. Ticks stepping down a lattice, snapped to its
+  /* `/projects` - index, order. Ticks stepping down a lattice, snapped to its
      columns. Not a drift: the mood is a catalogue being read, so the motion is
      discrete and on-grid where `/` and `/contact` are smooth and free. */
   .pfield--index {
@@ -576,7 +576,7 @@
     width: 4px;
     height: 4px;
     animation-name: pf-index;
-    /* One step per cell of travel — the tick lands in a cell, never between
+    /* One step per cell of travel - the tick lands in a cell, never between
        two.
        This is the one place a timing function carries meaning rather than
        feel, so it does not use `--ease-console`. */
@@ -586,7 +586,7 @@
   /* The lattice the ticks sit on: two rails of SQUARE cells, drawn on the
      container's own pseudo-elements so they cost no extra elements.
 
-     Four columns of exactly `--pf-cell`, anchored to the OUTER edge — so the
+     Four columns of exactly `--pf-cell`, anchored to the OUTER edge - so the
      rail is 176px wide at every viewport and every cell in it is whole. The
      previous version sized the rail as a percentage and spaced the rules at
      `100% / 6` horizontally and `11%` vertically, which produced rectangles
@@ -618,7 +618,7 @@
       );
     /* The viewport is not a whole number of cells tall, so the last row is
        always cut somewhere. Rather than leave a hard partial row at the
-       bottom edge, the lattice dissolves over the final two cells — the grid
+       bottom edge, the lattice dissolves over the final two cells - the grid
        fades out instead of being sliced. */
     -webkit-mask-image: linear-gradient(
       to bottom,
@@ -643,7 +643,7 @@
     transform: scaleX(-1);
   }
 
-  /* `/contact` — signal, transmission. Thin rising streaks in the accent. */
+  /* `/contact` - signal, transmission. Thin rising streaks in the accent. */
   .pfield--signal {
     color: var(--accent);
     opacity: 0.6;
@@ -662,14 +662,14 @@
   }
 
   /* Something is being transmitted: the field quickens while the visitor is
-     typing. No listener, no state — the selector is the whole mechanism. */
+     typing. No listener, no state - the selector is the whole mechanism. */
   body:has(input:focus, textarea:focus) .pfield--signal {
     --pf-speed: 0.32;
   }
 }
 
 /* ---------------------------------------------------------------------------
-   Glass — Phase 9.0. See docs/DESIGN-LANGUAGE.md §6.1.
+   Glass - Phase 9.0. See docs/DESIGN-LANGUAGE.md §6.1.
 
    Every text panel on the site is one material: a translucent tint, a rim
    that catches light along its top-left edge and fades round the sides, a
@@ -678,8 +678,8 @@
 
    BLUR IS OPT-IN (`.glass-blur`), and that is the load-bearing decision.
    Frosted glass only looks frosted when something with detail sits behind it.
-   On a content route nothing does — the particle rails live in the margins,
-   never under the 48rem column — so a backdrop blur there would blur a smooth
+   On a content route nothing does - the particle rails live in the margins,
+   never under the 48rem column - so a backdrop blur there would blur a smooth
    gradient into the same smooth gradient: an invisible effect that still
    costs a GPU pass per panel on every scroll frame, nine times over on
    /projects. Blur is spent only where content really scrolls or renders
@@ -737,7 +737,7 @@
 }
 
 /* The HUD variant sits on a 3D canvas that is dark in both themes, so it
-   carries its own palette — and redefines the site tokens locally, which is
+   carries its own palette - and redefines the site tokens locally, which is
    what lets ConsoleCard (and anything else built on the tokens) render
    correctly inside it with no second code path. */
 .hud {
@@ -773,7 +773,7 @@ body::before {
     radial-gradient(50vmax 40vmax at 30% 112%, var(--ambient-a), transparent 70%);
 }
 
-/* The pointer light (9.0b). `--glint` is registered so it can TRANSITION —
+/* The pointer light (9.0b). `--glint` is registered so it can TRANSITION -
    an unregistered custom property snaps. It is 0 at rest and eases to 1 while
    the pointer is over the pane (`[data-lit]`, set by components/GlassLight.tsx);
    `--gx` / `--gy` are the pointer's position inside the pane. Every light
@@ -835,7 +835,7 @@ body::before {
   }
 
   /* The rim: a 1px gradient ring, bright where light would catch it and
-     fading round the sides — plus a pool of light that follows the pointer
+     fading round the sides - plus a pool of light that follows the pointer
      around the edge. A gradient cannot be a border-color, so it is a masked
      pseudo-element: the mask cuts out the content box and leaves the ring. */
   .glass::before {
@@ -887,7 +887,7 @@ body::before {
       linear-gradient(172deg, var(--glass-sheen), transparent 42%);
   }
 
-  /* The click gleam (9.0c) — a diagonal band of light sweeping top-left to
+  /* The click gleam (9.0c) - a diagonal band of light sweeping top-left to
      bottom-right across a pressed pane, played by lib/gleam.ts before the
      navigation starts. It is the sheen layer's own light, so it sits behind
      the text like the rest of the pane's light and can never wash it out.
@@ -917,13 +917,13 @@ body::before {
   }
 
   /* The rim flashes with the sweep, so the edge of the pane catches the
-     light as the band crosses it — the gleam reads as light on glass rather
+     light as the band crosses it - the gleam reads as light on glass rather
      than a gradient sliding over a box. */
   .glass[data-gleam]::before {
     animation: glass-rim-flash 340ms ease-out both;
   }
 
-  /* Panes you can press — a link or a button made of glass. They lift toward
+  /* Panes you can press - a link or a button made of glass. They lift toward
      the pointer and give under a press, the "liquid" half of the material.
      Readouts (the dossier, a zone panel) take the light but never move: a
      block of text sliding under the cursor is not an affordance, it is a
@@ -937,7 +937,7 @@ body::before {
     transition-duration: 90ms;
   }
 
-  /* ── Small glass — 9.0d: buttons and tags ──────────────────────────────
+  /* ── Small glass - 9.0d: buttons and tags ──────────────────────────────
      The same material at control size, so a button and the card it sits in
      are visibly one substance. Only the shape, the lift and the light's
      reach change; tint, rim, sheen and pointer light are inherited from
@@ -959,8 +959,8 @@ body::before {
     --glass-shadow-lift: var(--glass-shadow-sm);
   }
 
-  /* A tag. Squarer than a button — it is a label on an instrument, not a
-     control — flatter, and it never moves. */
+  /* A tag. Squarer than a button - it is a label on an instrument, not a
+     control - flatter, and it never moves. */
   .glass-chip {
     --glass-radius: 6px;
     --glass-light-r: 44px;
@@ -968,7 +968,7 @@ body::before {
     box-shadow: inset 0 1px 0 var(--glass-rim-hi);
   }
 
-  /* A field you type into — a well in the glass rather than a pane on it:
+  /* A field you type into - a well in the glass rather than a pane on it:
      the lip is at the BOTTOM (light falling into a recess), there is no lift
      shadow, and focus lights the rim in the accent. */
   /* <input> and <textarea> are replaced elements and render no ::before or
@@ -1004,13 +1004,13 @@ body::before {
   backdrop-filter: blur(18px) saturate(165%);
 }
 
-/* Refraction — the "liquid" bend, Chromium only. The SVG filter
+/* Refraction - the "liquid" bend, Chromium only. The SVG filter
    (#liquid-glass, inlined once by components/GlassLight.tsx) displaces the
    backdrop outward near the pane's edges, so whatever sits behind a HUD panel
    bends as it passes under the rim. Only Chromium renders an SVG filter
    inside `backdrop-filter`; elsewhere the declaration is dropped or renders
    nothing, so it is switched on by a class GlassLight sets after detecting a
-   Chromium engine — never by guessing in CSS. Only on `.glass-blur`: a pane
+   Chromium engine - never by guessing in CSS. Only on `.glass-blur`: a pane
    with nothing detailed behind it has nothing to bend. */
 .glass-refract .glass-blur:not(.glass-btn) {
   -webkit-backdrop-filter: blur(14px) url(#liquid-glass) saturate(165%);
@@ -1065,11 +1065,11 @@ body::before {
   }
 }
 
-/* ── Phase 8.3 — view transitions ─────────────────────────────────────────
+/* ── Phase 8.3 - view transitions ─────────────────────────────────────────
    Driven by components/TransitionLink.tsx; the browser builds the
    ::view-transition-* tree, these rules only time it. One vocabulary:
    the outgoing page clears fast, the incoming one settles in on the console
-   ease — a sequential handoff, the same call the home chapters made
+   ease - a sequential handoff, the same call the home chapters made
    (Decision Log 2026-08-24), not a two-pages-at-once dissolve.
    Reduced motion never reaches here: TransitionLink does not start a
    transition at all under `prefers-reduced-motion: reduce`. */
@@ -1118,7 +1118,7 @@ body::before {
 /* Reduced motion is a branch, not a speed setting.
    1. The motion tokens collapse, so everything routed through them stops.
    2. Scroll-driven animations are detached from their timeline, which renders
-      the element at its END state — hence the authoring rule for 8.4: a reveal
+      the element at its END state - hence the authoring rule for 8.4: a reveal
       must be written as visible-by-default with the animation *subtracting*
       the start state. An element that is invisible without its animation will
       disappear here.
@@ -1183,7 +1183,7 @@ body::before {
  * Media inside a case study (MDX <figure>).
  *
  * The rules live here rather than on the elements because MDX strips
- * inline `style` attributes from raw HTML in content files — the markup
+ * inline `style` attributes from raw HTML in content files - the markup
  * in content/projects/*.mdx carries width/height (so the box is reserved
  * and nothing shifts when the bytes land) and everything visual is here.
  *

@@ -6,9 +6,9 @@ import type { EventManager } from '@react-three/fiber';
  *
  * `<Canvas>` configures its root asynchronously and only connects events to
  * its container once that resolves. If the canvas unmounts while a configure
- * is still pending — which is exactly what leaving a deep-linked /explore does,
+ * is still pending - which is exactly what leaving a deep-linked /explore does,
  * because `router.back()` tears the route down in the same beat as the
- * re-render that exiting fullscreen caused — the container ref is already
+ * re-render that exiting fullscreen caused - the container ref is already
  * null by the time `connect(divRef.current)` runs, and r3f throws
  * "Cannot read properties of null (reading 'addEventListener')" from its
  * Provider. A canvas that is gone has nothing to listen to, so skipping the

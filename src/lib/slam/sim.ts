@@ -3,7 +3,7 @@
  *
  * Each scout knows where it *thinks* it is, which is not where it is. Wheel
  * odometry integrates its own error, so the believed pose drifts away from the
- * true one — slowly, and faster when turning, because rotational error is what
+ * true one - slowly, and faster when turning, because rotational error is what
  * really hurts. Every scan the scout records is filed at the believed pose.
  *
  * That single detail produces everything worth showing here:
@@ -17,7 +17,7 @@
  *
  * The real system streams scans and odometry over micro-ROS to a Raspberry Pi
  * coordinator, whose map-merger node builds one probabilistic grid. Here the
- * corrected map is built from the true poses — an honest stand-in for a solved
+ * corrected map is built from the true poses - an honest stand-in for a solved
  * alignment, not a claim to have re-implemented the solver in a browser. The
  * page says so in as many words.
  */
@@ -58,7 +58,7 @@ export class Scout {
     start: Pose,
     waypoints: Array<[number, number]>,
     seed: number,
-    /** Scales the odometry error. Bravo drifts harder — one bad wheel is realistic. */
+    /** Scales the odometry error. Bravo drifts harder - one bad wheel is realistic. */
     private readonly driftScale: number,
   ) {
     this.truth = { ...start };
@@ -76,7 +76,7 @@ export class Scout {
     );
   }
 
-  /** Heading error in degrees — the one that does the real damage to a map. */
+  /** Heading error in degrees - the one that does the real damage to a map. */
   get headingError(): number {
     let d = this.truth.th - this.belief.th;
     while (d > Math.PI) d -= Math.PI * 2;
@@ -134,7 +134,7 @@ export class Scout {
     // true pose stops, the believed pose below does not. That is not a bug in
     // the simulation, it is wheel slip, and it is the fastest way to wreck an
     // odometry estimate in real life. Holding W against a wall for a few
-    // seconds tears the map visibly — the page invites you to try it.
+    // seconds tears the map visibly - the page invites you to try it.
 
     // The odometry the scout actually believes. Error scales with how much it
     // moved and, more sharply, with how much it turned.
@@ -153,8 +153,8 @@ export class Scout {
   }
 
   /**
-   * One LiDAR revolution's worth of beams, cast from the true pose — the
-   * sensor cannot lie about what is in front of it — and then filed twice:
+   * One LiDAR revolution's worth of beams, cast from the true pose - the
+   * sensor cannot lie about what is in front of it - and then filed twice:
    * into the scout's own map at the believed pose, and into the fused map at
    * the corrected one.
    */
@@ -225,7 +225,7 @@ export class SlamSim {
     // That overlap is the whole point and it took a rewrite to get right. The
     // first version kept the scouts strictly separated, which told the "fusion
     // buys you coverage" story well and the "misalignment is visible" story not
-    // at all — with nothing mapped twice, there was no doubled wall to see, and
+    // at all - with nothing mapped twice, there was no doubled wall to see, and
     // the unaligned view just looked like two tidy halves. The band around the
     // doorway is now surveyed by both, so their disagreement has somewhere to
     // show itself.
@@ -237,7 +237,7 @@ export class SlamSim {
         [-4.4, 4.6],
         [-1.4, 4.4],
         [-1.4, 0.6],
-        // Through the gap — the divider only opens between y = -1.2 and 1.2,
+        // Through the gap - the divider only opens between y = -1.2 and 1.2,
         // so every crossing waypoint sits at y = ±0.6.
         [1.6, 0.6],
         [2.3, 1.8],
@@ -250,7 +250,7 @@ export class SlamSim {
       1.5,
     );
 
-    // Bravo mirrors the route from the east, and drifts noticeably harder —
+    // Bravo mirrors the route from the east, and drifts noticeably harder -
     // one tired motor is all it takes.
     this.bravo = new Scout(
       'bravo',
@@ -295,8 +295,8 @@ export class SlamSim {
 
 /**
  * There is deliberately no `reset()` method. Restarting means restoring the
- * poses, the maps, *and* the position each scout's noise generator had reached
- * — and a reset that forgets the last of those would replay a different drift
+ * poses, the maps, *and* the position each scout's noise generator had reached -
+ * and a reset that forgets the last of those would replay a different drift
  * every time, quietly breaking the one property this simulation depends on.
  * Constructing a new SlamSim is exact by definition.
  */

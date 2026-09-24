@@ -8,7 +8,7 @@
  * keeps `Math.random` out of render paths, where an unstable value between
  * server and client is a hydration mismatch waiting to happen.
  *
- * Numerical recipes LCG. Not statistically strong, and it does not need to be —
+ * Numerical recipes LCG. Not statistically strong, and it does not need to be -
  * nothing here is a simulation of chance, only a source of stable variety.
  */
 export function makeSeededRandom(seed: number): () => number {

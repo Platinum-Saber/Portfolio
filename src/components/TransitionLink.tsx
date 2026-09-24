@@ -10,7 +10,7 @@ type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: string };
 
 /**
  * `next/link` plus a view transition (Phase 8.3). Everything Next already
- * filters — modifier keys, middle click, `target`, external URLs — happens
+ * filters - modifier keys, middle click, `target`, external URLs - happens
  * before `onNavigate` is called, so only a plain same-tab navigation is ever
  * intercepted. No support, reduced motion, or a same-page link: behaves
  * exactly like `<Link>`.

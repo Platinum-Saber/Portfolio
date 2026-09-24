@@ -27,7 +27,7 @@ export type FieldErrors = Partial<Record<keyof ContactDraft, string>>;
 
 /**
  * Deliberately permissive. The only question worth asking of an address here is
- * "could this plausibly be delivered to" — anything stricter rejects real
+ * "could this plausibly be delivered to" - anything stricter rejects real
  * people, and the real check is whether a reply bounces.
  */
 const EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
@@ -51,7 +51,7 @@ export function validate(draft: ContactDraft): FieldErrors {
 
   const message = draft.message.trim();
   if (message.length < LIMITS.message.min) {
-    errors.message = `A little more detail — at least ${LIMITS.message.min} characters.`;
+    errors.message = `A little more detail - at least ${LIMITS.message.min} characters.`;
   } else if (message.length > LIMITS.message.max) {
     errors.message = `That is over ${LIMITS.message.max} characters. Send a summary and we can go deeper by email.`;
   }

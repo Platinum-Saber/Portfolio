@@ -5,7 +5,7 @@ import type { DriveInput } from './types';
 
 /**
  * A thumb stick for touch, because "WASD to drive" is not an interaction on a
- * phone — it is a notice that the phone was an afterthought.
+ * phone - it is a notice that the phone was an afterthought.
  *
  * Pointer events rather than touch events, so the same code serves a finger, a
  * mouse and a stylus. Pointer capture means a drag that wanders outside the pad
@@ -37,7 +37,7 @@ export function DriveStick({
     }
 
     setKnob({ x: dx, y: dy });
-    // Screen down is positive, forward is negative — hence the sign. Turn is
+    // Screen down is positive, forward is negative - hence the sign. Turn is
     // inverted too: pushing right should yaw the robot right, and the
     // simulation's positive turn is anticlockwise.
     onChange({ forward: -dy / radius, turn: -dx / radius });

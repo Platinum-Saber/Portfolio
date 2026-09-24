@@ -12,7 +12,7 @@ const ACCENT = '#3ddba0';
  * The procedural quadrotor this world flew with before a real mesh existed.
  *
  * It is still here, and still worth its few KB, because it is what shows while
- * `/models/quadcopter.glb` is in flight — and what shows for good if that fetch
+ * `/models/quadcopter.glb` is in flight - and what shows for good if that fetch
  * never lands. A flight sim with no aircraft is a worse failure than a plain
  * one, so the craft is never allowed to be missing.
  *
@@ -66,7 +66,7 @@ function ProceduralDrone({ spin }: { spin: boolean }) {
             <meshBasicMaterial color={ACCENT} transparent opacity={0.35} />
             <Edges color={ACCENT} threshold={25} />
           </mesh>
-          {/* Prop guard — a ring reads as a rotor disc without drawing blades. */}
+          {/* Prop guard - a ring reads as a rotor disc without drawing blades. */}
           <mesh position={[0, 0.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[0.27, 0.3, 20]} />
             <meshBasicMaterial
@@ -107,7 +107,7 @@ function ProceduralDrone({ spin }: { spin: boolean }) {
  *
  * It is deliberately the only PBR object in the world. Everything around it is
  * unlit schematic geometry, so the craft reads as the one real thing in a
- * drawing of a place — which is also, conveniently, exactly where you want a
+ * drawing of a place - which is also, conveniently, exactly where you want a
  * visitor's eye. See `LoadedModel.tsx` for why it needs the lighting rig, and
  * `Scene.tsx` for the rig itself.
  *
@@ -122,7 +122,7 @@ function ProceduralDrone({ spin }: { spin: boolean }) {
  * nodes to attach a rotation to. The fix is upstream rather than here: export
  * them as their own nodes, add `keepNamed: true` to the `join` step in
  * scripts/build-assets.mjs so they survive the merge, then find them by name
- * and turn them. Until then `spin` only drives the procedural fallback — the
+ * and turn them. Until then `spin` only drives the procedural fallback - the
  * one case where the craft has no modelled props to look wrong.
  */
 export function DroneModel({ spin }: { spin: boolean }) {

@@ -8,21 +8,21 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 /**
  * The lighting rig, shared by both 3D scenes on this route.
  *
- * Outdoors it lights exactly one object — the craft — against a world of unlit
+ * Outdoors it lights exactly one object - the craft - against a world of unlit
  * wireframe. Indoors it lights everything, because the lab is PBR throughout.
  * The rig is the same either way, which is the reason it lives in its own
  * file: the environment map is the load-bearing part and it should not be
  * possible to build a scene that forgets it.
  *
  * The craft is metal, and metal shows you its surroundings rather than a
- * colour of its own — point every lamp you own at a metallic material with no
+ * colour of its own - point every lamp you own at a metallic material with no
  * environment map and it still renders very nearly black. So the scene needs
  * an environment, and the cheapest honest one is `RoomEnvironment`: procedural
  * geometry with emissive panels, prefiltered once into a cube map. It is code,
  * not a downloaded HDR, so it costs nothing on the wire and cannot fail to
  * load.
  *
- * Built once on mount and disposed on unmount — PMREM allocates a render
+ * Built once on mount and disposed on unmount - PMREM allocates a render
  * target, and remaking it per frame would be a leak with a framerate.
  *
  * The two lights on top of it are for shape, not brightness: the environment

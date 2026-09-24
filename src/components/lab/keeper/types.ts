@@ -39,6 +39,6 @@ export const ESTIMATORS: ReadonlyArray<{
     id: 'line',
     label: 'Straight line',
     blurb:
-      'The obvious thing — draw a line through the two sightings and follow it. It ignores gravity, so it consistently guesses high, and the faster the shot the less that costs.',
+      'The obvious thing - draw a line through the two sightings and follow it. It ignores gravity, so it consistently guesses high, and the faster the shot the less that costs.',
   },
 ];

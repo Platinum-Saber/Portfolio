@@ -9,7 +9,7 @@ export function ProjectCard({ project }: { project: Project }) {
     <li className="rise">
       <TransitionLink
         href={`/projects/${project.slug}`}
-        // 9.0: a pane of pressable glass — takes the pointer light, lifts
+        // 9.0: a pane of pressable glass - takes the pointer light, lifts
         // toward it, gives under a press (`.glass-press` in globals.css).
         className="glass glass-press group block p-5"
       >

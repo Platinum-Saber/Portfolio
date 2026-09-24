@@ -27,12 +27,12 @@ stack:
 
 One robot mapping a space is a solved problem, but it is slow and leaves gaps in anything
 large. Several robots mapping the _same_ space and agreeing on what they found is not
-solved — every scout's position estimate drifts on its own, and a shared map is only as good
+solved - every scout's position estimate drifts on its own, and a shared map is only as good
 as the worst of them.
 
 Most multi-robot SLAM work also assumes things a cheap robot doesn't have: precise
 localisation, a high-bandwidth link and enough on-board compute to run SLAM itself.
-**ASCILAM** asks how far you get without them — collaborative mapping on hobby-grade
+**ASCILAM** asks how far you get without them - collaborative mapping on hobby-grade
 hardware, in real time.
 
 The work is written up as a paper, _C-SLAM: Collaborative Simultaneous Localization and
@@ -52,7 +52,7 @@ with a **custom robot** built around two microcontrollers, each doing one job:
   and reports it over UART.
 - An **ESP32** parses the **LD19 LiDAR**'s serial protocol into ROS `LaserScan` messages,
   forwards the Arduino's odometry as ROS `Odometry`, and relays velocity commands back down.
-  It runs **micro-ROS**, so a microcontroller is a first-class ROS 2 node — its messages travel
+  It runs **micro-ROS**, so a microcontroller is a first-class ROS 2 node - its messages travel
   over **DDS-XRCE**, the DDS profile built for extremely resource-constrained devices,
   carried on UDP over Wi-Fi.
 
@@ -74,8 +74,8 @@ probability, updated with **Bayes' rule** on each observation rather than overwr
 declared free after several observations. A wall that is seen again and again stays; a
 person who walked through the room fades out of the map.
 
-**Frontier exploration.** The coordinator finds _frontiers_ — the boundary between explored
-free space and the unknown — clusters nearby frontier cells into targets, and sends each
+**Frontier exploration.** The coordinator finds _frontiers_ - the boundary between explored
+free space and the unknown - clusters nearby frontier cells into targets, and sends each
 scout to the nearest one that keeps it at least **1.5 m** from the other scout's goal. A
 separate safety loop checks the scouts' separation five times a second and stops both if
 they get too close.
@@ -85,7 +85,7 @@ they get too close.
 Tested indoors in corridors and rooms with obstacles.
 
 - **Moving objects.** A single scout mapping a room with moving objects in it left dense
-  clusters of black where they had passed. The probabilistic grid with two scouts clears them —
+  clusters of black where they had passed. The probabilistic grid with two scouts clears them -
   evidence that a cell is empty eventually outweighs one moment of it being occupied.
 - **Coverage.** Two scouts explored faster than one. Collaboration paid off in efficiency.
 - **Accuracy.** The merged map was _less_ accurate than a single scout's, with some walls
@@ -96,18 +96,18 @@ Tested indoors in corridors and rooms with obstacles.
 That last result is the honest shape of the problem, and it points at the next step: better
 per-scout localisation, or aligning the scouts' maps against each other rather than trusting where
 each one thinks it is. The approach suits warehouse automation, security patrols, search
-and rescue and building management — anywhere a few cheap robots beat one expensive one.
+and rescue and building management - anywhere a few cheap robots beat one expensive one.
 
 ## Watch it fail, then work
 
-I built [an interactive simulation of this exact problem](/lab/ascilam) — two scouts sweeping
+I built [an interactive simulation of this exact problem](/lab/ascilam) - two scouts sweeping
 an arena, their odometry drifting apart in real time, and four views of the result: each
 scout's own map, the two overlaid with no correction, and the fused version. You can take
 control of a scout and map wherever you drive it.
 
 The **unaligned** view is the one worth clicking. Both maps are faithful records of what
 their sensor saw; they disagree only about where the sensor was standing. Two ghosts of the
-same corridor, a few degrees apart — the misaligned walls from the results above, in one
+same corridor, a few degrees apart - the misaligned walls from the results above, in one
 picture.
 
 To be clear about what the simulation does and does not do: the fused map is built from

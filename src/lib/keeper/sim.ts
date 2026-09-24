@@ -2,7 +2,7 @@
  * The RoboKeeper problem, reduced to the part worth showing.
  *
  * A ball is kicked at the goal. A depth camera beside the goal sees it exactly
- * twice — once as it crosses a far gate, once at a near gate — and each of
+ * twice - once as it crosses a far gate, once at a near gate - and each of
  * those sightings is a noisy 3D position, because depth cameras are. From two
  * noisy dots the keeper has to work out where the ball will cross the goal
  * line, and swing there before it arrives.
@@ -11,8 +11,8 @@
  *
  *   - `line`: a straight line through the two points. No gravity. This is the
  *     obvious thing, and it aims high, because a real shot is falling.
- *   - `ekf`: the project's Extended Kalman Filter — six states (position and
- *     velocity), gravity in the motion model — initialised from the two
+ *   - `ekf`: the project's Extended Kalman Filter - six states (position and
+ *     velocity), gravity in the motion model - initialised from the two
  *     points, then marched forward to the goal plane.
  *
  * Everything here is deterministic given a seed, so a run can be reproduced.
@@ -36,13 +36,13 @@ export const LAUNCH_Y = 0.12;
 export const GOAL_HALF_WIDTH = 1.2;
 export const GOAL_HEIGHT = 1.25;
 
-/** Football radius, metres — a size 4 ball. */
+/** Football radius, metres - a size 4 ball. */
 export const BALL_RADIUS = 0.105;
 
 /**
  * The keeper is an arm pivoting about the goal's centre, like the real servo,
  * and its length is not a free choice: swung to either top corner it has to
- * just reach the mouth's diagonal, less the ball's radius — a ball whose
+ * just reach the mouth's diagonal, less the ball's radius - a ball whose
  * centre is that far out is still touching the arm, so anything longer is arm
  * outside the goal and anything shorter leaves the corners unreachable.
  */
@@ -52,7 +52,7 @@ export const ARM_LENGTH =
 export const SAVE_RADIUS = 0.26;
 /** Servo travel from vertical, radians. */
 export const ARM_LIMIT = Math.PI / 2;
-/** Servo slew rate, rad/s — an MG996R-class hobby servo under load. */
+/** Servo slew rate, rad/s - an MG996R-class hobby servo under load. */
 export const ARM_SLEW = (360 * Math.PI) / 180;
 
 export type Vec3 = { x: number; y: number; z: number };
@@ -139,7 +139,7 @@ function makeGaussian(random: () => number) {
 /** Angle the arm must hold to intercept a point on the goal plane. */
 export function armAngle(x: number, y: number): number {
   // Measured from straight up, positive toward +x, and clamped to the servo's
-  // travel — a prediction outside the post is still only worth 90°.
+  // travel - a prediction outside the post is still only worth 90°.
   return clamp(Math.atan2(x, Math.max(y, 0.05)), -ARM_LIMIT, ARM_LIMIT);
 }
 
@@ -204,8 +204,8 @@ function predictLine(a: Measurement, b: Measurement): Prediction {
  * updated on the second, then predicted forward under gravity.
  *
  * The Jacobian of this motion model is constant (position integrates velocity,
- * velocity is constant bar gravity), so the "extended" part costs nothing here
- * — it is what lets the same filter carry a non-linear measurement model when
+ * velocity is constant bar gravity), so the "extended" part costs nothing here -
+ * it is what lets the same filter carry a non-linear measurement model when
  * one is needed.
  */
 function predictEkf(a: Measurement, b: Measurement, noise: number): Prediction {

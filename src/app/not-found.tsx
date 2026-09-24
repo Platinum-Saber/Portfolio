@@ -10,14 +10,14 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="mt-3" style={{ color: 'var(--fg-muted)' }}>
-        That page doesn&apos;t exist — it may have moved.
+        That page doesn&apos;t exist - it may have moved.
       </p>
       <Link
         href="/"
-        className="mt-6 inline-block hover:underline"
+        className="glass glass-btn glass-press mt-6 inline-flex items-center gap-2 px-3.5 py-1.5"
         style={{ color: 'var(--accent)' }}
       >
-        Back home →
+        Home
       </Link>
     </div>
   );

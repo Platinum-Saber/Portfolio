@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SlamExplorer } from '@/components/lab/slam/SlamExplorer';
 
 export const metadata: Metadata = {
-  title: 'Lab — Collaborative SLAM Arena',
+  title: 'Lab - Collaborative SLAM Arena',
   description:
     'An interactive simulation of the ASCILAM problem: two LiDAR scouts map an arena, their odometry drifts apart, and their two maps only agree once the transform between their frames is solved.',
 };
@@ -69,7 +69,7 @@ export default function AscilamLabPage() {
           Watch the drift figures under the arena: the position number climbs
           steadily, but the map only starts to look visibly bent once the
           heading number does. Scout β is set to drift about twice as fast as α,
-          which is not unrealistic — one tired motor will do it.
+          which is not unrealistic - one tired motor will do it.
         </p>
 
         <p
@@ -79,7 +79,7 @@ export default function AscilamLabPage() {
           So each scout&rsquo;s own map is <em>self-consistent and wrong</em>.
           It is a faithful record of what the sensor saw, filed under a set of
           poses that were quietly diverging from reality the whole time. Two
-          such maps cannot simply be laid on top of each other — that is the{' '}
+          such maps cannot simply be laid on top of each other - that is the{' '}
           <strong>unaligned</strong> view, and the two ghosts of the same
           corridor refusing to line up are the actual problem the project is
           about. Finding the transform that reconciles them is the work.
@@ -97,7 +97,7 @@ export default function AscilamLabPage() {
           style={{ color: 'var(--fg-muted)' }}
         >
           Take control of a scout, drive it nose-first into a wall, and hold it
-          there. The robot stops. Its odometry does not — the wheels are still
+          there. The robot stops. Its odometry does not - the wheels are still
           turning, so it goes on believing it is travelling forward, and every
           scan it records for those few seconds gets filed metres from where it
           was actually taken. Watch the drift figure climb and the map tear.
@@ -112,9 +112,9 @@ export default function AscilamLabPage() {
           the limit the real system ran into: merging two scouts&apos; maps came
           out less accurate than one scout mapping alone, because each
           scout&apos;s idea of where it stood drifted from where it actually
-          was. The real scouts blend a gyro into their heading, which catches
-          a bad turn — but a wheel slipping in a straight line looks exactly
-          like driving forward to both sensors.
+          was. The real scouts blend a gyro into their heading, which catches a
+          bad turn - but a wheel slipping in a straight line looks exactly like
+          driving forward to both sensors.
         </p>
 
         <h2
@@ -130,14 +130,14 @@ export default function AscilamLabPage() {
         >
           The fused view here is built by filing every scan at its <em>true</em>{' '}
           pose, which the simulation happens to know because it invented it. It
-          is a stand-in for a solved alignment, not a scan matcher — I have not
+          is a stand-in for a solved alignment, not a scan matcher - I have not
           re-implemented graph SLAM in a browser and would not claim to. On the
           real system the scouts stream raw scans and odometry over micro-ROS to
           a Raspberry Pi coordinator, which files every scan into one
           probabilistic occupancy grid using each scout&apos;s own odometry from
-          a known starting pose — so the drift shown here is exactly what
-          limited it. What this page can show faithfully is the shape of
-          the problem and what success looks like.
+          a known starting pose - so the drift shown here is exactly what
+          limited it. What this page can show faithfully is the shape of the
+          problem and what success looks like.
         </p>
 
         <p
@@ -146,13 +146,14 @@ export default function AscilamLabPage() {
         >
           Everything else is close to the hardware. The occupancy grid is
           log-odds at 5 cm resolution, so evidence accumulates rather than
-          overwriting — a cell seen empty twenty times and occupied once stays
-          empty. The simulated LiDAR turns at 5.5 Hz with a 6 m useful range —
+          overwriting - a cell seen empty twenty times and occupied once stays
+          empty. The simulated LiDAR turns at 5.5 Hz with a 6 m useful range -
           slower and shorter-sighted than the LD19 on the real scouts, which
-          keeps the arena small enough to watch fill in. Unobserved cells are drawn transparent rather than as
-          floor, because &ldquo;I looked and it is clear&rdquo; and &ldquo;I
-          have never looked&rdquo; are different claims and conflating them
-          would hide the coverage gaps this is meant to expose.
+          keeps the arena small enough to watch fill in. Unobserved cells are
+          drawn transparent rather than as floor, because &ldquo;I looked and it
+          is clear&rdquo; and &ldquo;I have never looked&rdquo; are different
+          claims and conflating them would hide the coverage gaps this is meant
+          to expose.
         </p>
 
         <h2
@@ -178,8 +179,8 @@ export default function AscilamLabPage() {
           className="mt-4 leading-relaxed"
           style={{ color: 'var(--fg-muted)' }}
         >
-          The scouts are procedural geometry for now — a chassis, two drive
-          wheels, a castor and a spinning LiDAR puck — sized to the 0.16 m
+          The scouts are procedural geometry for now - a chassis, two drive
+          wheels, a castor and a spinning LiDAR puck - sized to the 0.16 m
           collision radius the simulation enforces. When the real CAD is
           exported there is a documented swap-in point in{' '}
           <code>ScoutModel.tsx</code>; that is also the moment the parked Phase
@@ -188,22 +189,22 @@ export default function AscilamLabPage() {
       </section>
 
       <nav
-        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-2.5 border-t pt-6 text-sm"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
           href="/projects/ascilam-collaborative-slam"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          ← ASCILAM write-up
+          ASCILAM write-up
         </Link>
         <Link
           href="/lab"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Airframe Explorer →
+          Drone Frame
         </Link>
       </nav>
     </div>

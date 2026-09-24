@@ -14,7 +14,7 @@ export function ThemeToggle() {
     try {
       localStorage.setItem('theme', next);
     } catch {
-      // Private mode or blocked storage — the toggle still works for this page view.
+      // Private mode or blocked storage - the toggle still works for this page view.
     }
   }
 
@@ -27,7 +27,7 @@ export function ThemeToggle() {
       className="glass glass-btn glass-press grid size-9 place-items-center"
       style={{ color: 'var(--fg-muted)' }}
     >
-      {/* Moon — shown in light mode, i.e. "switch to dark" */}
+      {/* Moon - shown in light mode, i.e. "switch to dark" */}
       <svg
         className="dark:hidden"
         width="16"
@@ -43,7 +43,7 @@ export function ThemeToggle() {
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
       </svg>
 
-      {/* Sun — shown in dark mode, i.e. "switch to light" */}
+      {/* Sun - shown in dark mode, i.e. "switch to light" */}
       <svg
         className="hidden dark:block"
         width="16"

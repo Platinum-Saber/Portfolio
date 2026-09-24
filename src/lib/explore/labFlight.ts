@@ -2,7 +2,7 @@
  * Flight model for the lab.
  *
  * A separate model from `flight.ts` rather than the same one with different
- * constants, for two reasons. The envelope is not a tuning difference — 2.2 m/s
+ * constants, for two reasons. The envelope is not a tuning difference - 2.2 m/s
  * in a 14 m room against 17 m/s in a 120 m world is a different machine, and
  * pretending otherwise would mean one file full of conditionals. And this one
  * has to collide, which the outdoor model deliberately does not.
@@ -28,7 +28,7 @@ const RESPONSE = 0.22;
 
 /**
  * The craft as a sphere, in metres. The VT-802 renders at 0.4 m across in
- * here, so this is a little generous — deliberately. A collision radius
+ * here, so this is a little generous - deliberately. A collision radius
  * slightly larger than the visible craft means you stop just before touching
  * something, which reads as careful piloting; slightly smaller means you visibly
  * clip into a wall before the collision fires, which reads as a bug.
@@ -63,7 +63,7 @@ export class LabDrone {
   tiltPitch = 0;
   tiltRoll = 0;
 
-  /** True on the frame a move was refused — the scene uses it for feedback. */
+  /** True on the frame a move was refused - the scene uses it for feedback. */
   bumped = false;
 
   constructor() {
@@ -92,7 +92,7 @@ export class LabDrone {
     // Resolved one axis at a time, and this is the whole trick: moving on all
     // three at once and rejecting the result would stick you to a wall you
     // brushed. Per-axis, a refused X leaves Y and Z free, so you slide along
-    // the surface instead — which is what every player expects without ever
+    // the surface instead - which is what every player expects without ever
     // being able to say why.
     this.x = this.tryAxis('x', this.x + this.vx * step);
     this.y = this.tryAxis('y', this.y + this.vy * step);
@@ -139,7 +139,7 @@ export class LabDrone {
    * canvas calls it, so nothing in the room is reachable only by flying well.
    * If an anchor has been placed badly and lands inside something solid, the
    * craft is nudged back along the approach until it is clear rather than
-   * being left stuck — a jump that strands you is worse than one that lands
+   * being left stuck - a jump that strands you is worse than one that lands
    * you a little short.
    */
   moveTo(anchor: Vec3, facing: Vec3): void {

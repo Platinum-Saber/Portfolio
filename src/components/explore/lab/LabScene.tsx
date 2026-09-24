@@ -106,7 +106,7 @@ function Rig({
     look.set(drone.x, drone.y + 0.1, drone.z);
     state.camera.lookAt(look);
 
-    // Proximity, with hysteresis on the way out — without it a station on the
+    // Proximity, with hysteresis on the way out - without it a station on the
     // edge of its radius flickers open and shut while you hover.
     let nearestId: string | null = null;
     let nearestDistance = Infinity;
@@ -249,7 +249,7 @@ function StationScreen({
  * readable at a glance while you are holding a drone still, so it is six rows
  * and nothing else; the detail is what you asked for, so it can be dense.
  *
- * Everything here is operable three ways — click, tap, and the arrow keys plus
+ * Everything here is operable three ways - click, tap, and the arrow keys plus
  * Enter (wired up in `LabExplorer`). A control that only responds to a mouse
  * would be the one part of this page a keyboard user cannot reach, and the
  * whole point of the terminal is that it is the way to the projects.
@@ -342,10 +342,10 @@ function Terminal({
           <button
             type="button"
             onClick={() => onOpenProject(open.id)}
-            className="mt-3 text-[13px] hover:underline"
+            className="glass glass-btn glass-press mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 text-[13px]"
             style={{ color: ACCENT }}
           >
-            Read the full write-up →
+            Full write-up
           </button>
         </div>
       )}

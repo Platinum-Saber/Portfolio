@@ -1,6 +1,6 @@
 ---
 title: 'Nutri-Mithu: Portion Control for Rice and Curry'
-summary: A nutrition tracker built for Sri Lankan meals — a food database, an app that turns biodata into portion sizes, and a lunch box with volume guides instead of measuring cups. Brainstorm 2025 finalist.
+summary: A nutrition tracker built for Sri Lankan meals - a food database, an app that turns biodata into portion sizes, and a lunch box with volume guides instead of measuring cups. Brainstorm 2025 finalist.
 order: 5
 year: '2025'
 status: complete
@@ -32,8 +32,8 @@ So the advice is sound and unusable, which is a design problem rather than a med
 
 ## What we built
 
-An **interdisciplinary team** — two engineering undergraduates and two medical students,
-with a doctor mentoring — which is the only reason the numbers can be trusted. Months went
+An **interdisciplinary team** - two engineering undergraduates and two medical students,
+with a doctor mentoring - which is the only reason the numbers can be trusted. Months went
 into compiling a **Sri Lankan food calorie database** and checking the calculations against
 standard nutrition guidelines before any of it reached an app.
 
@@ -49,8 +49,8 @@ standard nutrition guidelines before any of it reached an app.
   <figcaption>Plan a meal, keep the diary, ask the assistant.</figcaption>
 </figure>
 
-**The app.** A **Flutter** app where you pick what is actually on your plate — rice, carrot,
-beans, fish — and it returns **portion sizes computed for you** from your own biodata,
+**The app.** A **Flutter** app where you pick what is actually on your plate - rice, carrot,
+beans, fish - and it returns **portion sizes computed for you** from your own biodata,
 rather than generic ones. Accounts run through **Firebase Auth**, the diary is local
 **SQLite** so the history works offline, and a **FastAPI** service in front of a hosted
 **medical** language model answers nutrition questions in the terms they are asked in.
@@ -58,7 +58,7 @@ rather than generic ones. Accounts run through **Firebase Auth**, the diary is l
 **The meal box.** The part that makes the advice survive contact with a kitchen. It looks
 like an ordinary lunch box; inside are **removable dividers with volume guides**. You serve
 up to the marked line, pull the dividers out, and eat a normal plate of food. No cups, no
-weighing, no ritual — the measurement happens while you serve, which is the only moment it
+weighing, no ritual - the measurement happens while you serve, which is the only moment it
 costs nothing.
 
 <figure>
@@ -76,7 +76,7 @@ costs nothing.
 **The scale, earlier.** Before the box, the same idea was tried in hardware: an **ESP32**
 reading a load cell through an **HX711**, showing weight on an OLED and streaming it to the
 app over **Bluetooth Low Energy**. It works, and the firmware is in the repo. It also asks
-someone to own a gadget, charge it and use it at every meal — and a passive box made of
+someone to own a gadget, charge it and use it at every meal - and a passive box made of
 plastic dividers does the same job with nothing to fail. Replacing our own electronics with
 a moulded tray was the best decision the project made.
 

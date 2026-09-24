@@ -4,9 +4,9 @@ import { AirframeExplorer } from '@/components/lab/AirframeExplorer';
 import { DRONE_COMPONENTS, STATUS_LABEL } from '@/lib/drone';
 
 export const metadata: Metadata = {
-  title: 'Lab — Airframe Explorer',
+  title: 'Lab - Airframe Explorer',
   description:
-    'An interactive 3D schematic of my final year project quadrotor — compute, perception, structure, propulsion and power, with specs, data paths and honest build status for each.',
+    'An interactive 3D schematic of my final year project quadrotor - compute, perception, structure, propulsion and power, with specs, data paths and honest build status for each.',
 };
 
 export default function LabPage() {
@@ -38,7 +38,7 @@ export default function LabPage() {
         style={{ color: 'var(--fg-muted)' }}
       >
         The geometry is generated procedurally from primitives rather than
-        loaded from a mesh file — it costs a few kilobytes instead of megabytes,
+        loaded from a mesh file - it costs a few kilobytes instead of megabytes,
         and it stays editable as code while the real build changes. Read it as a
         schematic, not a render.
       </p>
@@ -89,13 +89,11 @@ export default function LabPage() {
                 {component.specs.map((spec) => (
                   <div
                     key={spec.label}
-                    className="flex justify-between gap-4 border-b pb-1 text-sm"
+                    className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-4 border-b pb-1 text-sm"
                     style={{ borderColor: 'var(--border)' }}
                   >
                     <dt style={{ color: 'var(--fg-muted)' }}>{spec.label}</dt>
-                    <dd className="text-right font-mono text-xs">
-                      {spec.value}
-                    </dd>
+                    <dd className="font-mono text-xs">{spec.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -138,36 +136,36 @@ export default function LabPage() {
       </section>
 
       <nav
-        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-2.5 border-t pt-6 text-sm"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
           href="/projects/autonomous-drone-platform"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          ← Autonomous Drone Platform write-up
+          Drone write-up
         </Link>
         <Link
           href="/lab/sobel"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Sobel edge detection in a shader →
+          Sobel FPGA
         </Link>
         <Link
           href="/lab/ascilam"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Collaborative SLAM arena →
+          ASCILAM
         </Link>
         <Link
           href="/lab/keeper"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Goalkeeper interception →
+          Goal keeper
         </Link>
       </nav>
     </div>

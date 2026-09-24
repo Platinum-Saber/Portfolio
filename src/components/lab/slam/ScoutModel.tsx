@@ -22,7 +22,7 @@ import type { Group } from 'three';
  *   2. Overall diameter about 0.32 m, so the body stays consistent with the
  *      0.16 m collision radius the simulation enforces.
  *   3. Leave the `lidar` ref attached to whatever spins, or delete the
- *      useFrame — a stationary LiDAR reads as a broken robot.
+ *      useFrame - a stationary LiDAR reads as a broken robot.
  *
  * That model will also need the Phase 3 asset pipeline, which is parked
  * precisely until a real .glb like this one exists. Unpark it then.
@@ -85,7 +85,7 @@ export function ScoutModel({
           <meshBasicMaterial color={color} transparent opacity={0.5} />
           <Edges color={color} threshold={20} />
         </mesh>
-        {/* The emitter window — the visual cue that it is spinning at all. */}
+        {/* The emitter window - the visual cue that it is spinning at all. */}
         <mesh position={[0.045, 0, 0]}>
           <boxGeometry args={[0.014, 0.024, 0.03]} />
           <meshBasicMaterial color={color} />

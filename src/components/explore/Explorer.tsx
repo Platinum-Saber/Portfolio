@@ -9,6 +9,7 @@ import type { Zone } from '@/lib/explore/zones';
 import { FlightSticks } from './FlightSticks';
 import { useWebGLSupport } from './useWebGLSupport';
 import {
+  exitButtonStyle,
   IMMERSIVE_FRAME,
   OVERLAY_BUTTON,
   overlayButtonStyle,
@@ -157,7 +158,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     engine(Math.min(1, next.speed / MAX_SPEED));
   }, []);
 
-  // Flight stopping — leaving fullscreen, unmounting, navigating away — has to
+  // Flight stopping - leaving fullscreen, unmounting, navigating away - has to
   // take the engine down with it. A tone that outlives the thing making it is
   // the single worst bug this feature could ship.
   useEffect(() => {
@@ -168,7 +169,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   /**
    * Taking control also brings the world fully into view. Without this you can
    * be flying a canvas whose top half is behind the sticky header and whose
-   * bottom half is below the fold — and the panels, which are clamped to the
+   * bottom half is below the fold - and the panels, which are clamped to the
    * canvas, end up hidden under the nav bar rather than misplaced.
    */
   const takeControl = useCallback(() => {
@@ -178,7 +179,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   }, [enter, frame]);
 
   /**
-   * Arriving with intent — `/explore?fly=1`.
+   * Arriving with intent - `/explore?fly=1`.
    *
    * The home portal's button already says "Take control". Landing here on a
    * second button with the same words, and having to press it again, reads as
@@ -194,7 +195,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
    * The fullscreen request rides the *navigation's* activation rather than a
    * local click, and a browser may decline it. `useImmersive` already treats a
    * refusal as the fixed-overlay case, so the visitor gets a full-viewport
-   * canvas either way — which is the part that matters.
+   * canvas either way - which is the part that matters.
    */
   useEffect(() => {
     if (support !== 'ok') return;
@@ -207,14 +208,14 @@ export function Explorer({ zones }: { zones: Zone[] }) {
    * Leaving the world returns a deep-linked visitor to where they were.
    *
    * Someone who reached `/explore` themselves is *at* `/explore`, and dropping
-   * them onto the page they chose is correct — Escape leaves fullscreen and
+   * them onto the page they chose is correct - Escape leaves fullscreen and
    * the canvas carries on inline. Someone who pressed `▸ Take control` at the
    * bottom of `/` never chose this page: they were reading the home sequence,
    * and to them `/explore` is the back of the room the door opened into.
    * Leaving the world should put them back where they were standing.
    *
    * `router.back()` rather than `push('/')` because only a history traversal
-   * restores scroll — a push lands them at the top of the home page, a long
+   * restores scroll - a push lands them at the top of the home page, a long
    * way above the portal they left from. The one case it cannot serve is a
    * `?fly=1` URL opened directly in a fresh tab, where there is nothing behind
    * this entry; that falls back to the home page.
@@ -249,7 +250,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     const down = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       if (!(key in KEYS)) return;
-      // Only once control has been taken — otherwise this steals the space bar
+      // Only once control has been taken - otherwise this steals the space bar
       // and the arrow keys from anyone trying to scroll the page.
       event.preventDefault();
       held.current.add(key);
@@ -286,7 +287,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           The world needs WebGL, which this browser has turned off.
         </p>
         <p className="mt-2">
-          Everything hidden in it is written out below — the flying is the fun
+          Everything hidden in it is written out below - the flying is the fun
           part, not the content.
         </p>
       </div>
@@ -346,12 +347,12 @@ export function Explorer({ zones }: { zones: Zone[] }) {
         )}
 
         {/* Discovery counter, and the audio control under it. Top-left is the
-            only corner occupied in every state — bottom-left carries telemetry
-            in fullscreen and top-right carries the jump list — and §4.2 asks
+            only corner occupied in every state - bottom-left carries telemetry
+            in fullscreen and top-right carries the jump list - and §4.2 asks
             for one control that is ALWAYS visible, not one that appears with
             the mode that happens to have room for it. */}
         {/* z-10: above the "Take control" scrim, which is later in the DOM
-            and otherwise covered this corner — the audio toggle, the one
+            and otherwise covered this corner - the audio toggle, the one
             control §4.2 says is ALWAYS reachable, could not be clicked until
             the visitor had taken control (found on the live site, 2026-09-24). */}
         <div className="pointer-events-none absolute top-3 left-3 z-10">
@@ -395,28 +396,36 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           The copy below stays mounted but hidden, so focus never jumps.
         */}
         {immersive && (
-          <div className="absolute top-3 right-3 flex max-w-[min(70vw,52rem)] flex-wrap justify-end gap-2">
-            {zones.map((zone) => (
-              <button
-                key={zone.id}
-                type="button"
-                onClick={() =>
-                  setJump((previous) => ({
-                    id: zone.id,
-                    nonce: (previous?.nonce ?? 0) + 1,
-                  }))
-                }
-                className={OVERLAY_BUTTON}
-                style={overlayButtonStyle(discovered.has(zone.id))}
-              >
-                {zone.label}
-              </button>
-            ))}
+          <div className="absolute top-3 right-3 flex items-start gap-2">
+            {/* Zones in two even rows; exit sits apart in the corner. */}
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${Math.ceil(zones.length / 2)}, minmax(0, 1fr))`,
+              }}
+            >
+              {zones.map((zone) => (
+                <button
+                  key={zone.id}
+                  type="button"
+                  onClick={() =>
+                    setJump((previous) => ({
+                      id: zone.id,
+                      nonce: (previous?.nonce ?? 0) + 1,
+                    }))
+                  }
+                  className={`${OVERLAY_BUTTON} truncate`}
+                  style={overlayButtonStyle(discovered.has(zone.id))}
+                >
+                  {zone.label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={exit}
-              className={OVERLAY_BUTTON}
-              style={overlayButtonStyle()}
+              className={`${OVERLAY_BUTTON} shrink-0`}
+              style={exitButtonStyle}
             >
               exit ✕
             </button>
@@ -449,7 +458,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
               </button>
               <p className="mt-3 text-xs" style={{ color: '#9aa1ac' }}>
                 {coarsePointer
-                  ? 'Two thumb sticks appear — throttle and yaw on the left, pitch and roll on the right.'
+                  ? 'Two thumb sticks appear - throttle and yaw on the left, pitch and roll on the right.'
                   : 'WASD to fly, arrow keys for altitude and yaw.'}
               </p>
             </div>
@@ -469,7 +478,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
         )}
 
         {/* Keyboard legend, bottom right, for anyone flying with a mouse and
-            keyboard — where the right thumb stick would otherwise sit. */}
+            keyboard - where the right thumb stick would otherwise sit. */}
         {flying && !coarsePointer && (
           <dl
             className="pointer-events-none absolute right-4 bottom-4 space-y-1 text-right"
@@ -509,7 +518,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
       </div>
 
       {/*
-        The jump list. Not a convenience — the point. Flying is a way to read
+        The jump list. Not a convenience - the point. Flying is a way to read
         this site, never a requirement, and nobody should have to be good at it
         to reach the contact details.
       */}
@@ -560,7 +569,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
         </ul>
 
         <p className="mt-3 text-xs" style={{ color: 'var(--fg-muted)' }}>
-          Or skip the flying entirely — everything in the world is written out
+          Or skip the flying entirely - everything in the world is written out
           below, and the ordinary pages are at{' '}
           <Link
             href="/projects"

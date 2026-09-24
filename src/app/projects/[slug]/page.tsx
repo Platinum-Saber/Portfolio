@@ -8,7 +8,7 @@ import { TransitionLink } from '@/components/TransitionLink';
 type Params = { params: Promise<{ slug: string }> };
 
 // Only the slugs that exist at build time. An unknown slug is a 404 from the
-// prebuilt output, never a render on request — on Cloudflare the Worker has
+// prebuilt output, never a render on request - on Cloudflare the Worker has
 // no filesystem to read content/projects from (docs/DEPLOY-CLOUDFLARE.md).
 export const dynamicParams = false;
 
@@ -43,10 +43,10 @@ export default async function ProjectPage({ params }: Params) {
   return (
     <article>
       {/*
-        Reading-progress rail — Phase 8.4. Chrome, not content: it is
+        Reading-progress rail - Phase 8.4. Chrome, not content: it is
         `aria-hidden`, it scrubs with the document's scroll position, and it
         is the ONLY animated thing on a case study. The prose is never
-        scrubbed, revealed or parallaxed — this is the page someone came to
+        scrubbed, revealed or parallaxed - this is the page someone came to
         read.
       */}
       <div
@@ -106,32 +106,32 @@ export default async function ProjectPage({ params }: Params) {
         </ul>
 
         {(project.repo || project.demo || project.writeup) && (
-          <div className="mt-5 flex flex-wrap gap-3 text-sm">
+          <div className="mt-5 flex flex-wrap gap-2.5 text-sm">
             {project.repo && (
               <a
                 href={project.repo}
-                className="hover:underline"
+                className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                 style={{ color: 'var(--accent)' }}
               >
-                Source code →
+                Source code
               </a>
             )}
             {project.demo && (
               <a
                 href={project.demo}
-                className="hover:underline"
+                className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                 style={{ color: 'var(--accent)' }}
               >
-                Live demo →
+                Live demo
               </a>
             )}
             {project.writeup && (
               <a
                 href={project.writeup}
-                className="hover:underline"
+                className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                 style={{ color: 'var(--accent)' }}
               >
-                Full write-up →
+                Full write-up
               </a>
             )}
           </div>

@@ -19,7 +19,7 @@ const projected = new Vector3();
  * Places the panel at its marker, but never outside the canvas.
  *
  * drei's default projects the anchor and leaves it there, which is fine until
- * you are close to the marker — and being close is the only time the panel is
+ * you are close to the marker - and being close is the only time the panel is
  * open. Arriving at a zone put the anchor near the top of the frame and the
  * first lines of every panel ran off the edge.
  *

@@ -1,25 +1,25 @@
 import type { CSSProperties } from 'react';
 
 /**
- * The home-page mascot — the VT-802, the craft you fly in /explore.
+ * The home-page mascot - the VT-802, the craft you fly in /explore.
  *
  * A pre-rendered sprite, not a live scene: `/` may not load three.js (the
  * locked "nothing 3D in the homepage's initial graph" rule, and ~1.4 MB it
  * cannot afford). `public/images/vt-802-sprite.webp` holds the real model
- * rendered at 24 headings, 15° apart, in /explore's lighting rig — 57 KB,
+ * rendered at 24 headings, 15° apart, in /explore's lighting rig - 57 KB,
  * fetched only where the stage exists (≥900px, motion allowed), because the
  * background image is declared inside that media query.
  *
  * Three nested layers, each owning one kind of motion, so none has to know
  * about the others:
  *
- *   .mascot-orbit   SCROLL — flies a tilted ellipse, one lap per chapter, on
+ *   .mascot-orbit   SCROLL - flies a tilted ellipse, one lap per chapter, on
  *                   the stage's own view timeline. Passes in FRONT of the
  *                   cards on the near half of the lap (larger, z above) and
  *                   BEHIND the glass on the far half (smaller, dimmer).
- *   .mascot-idle    TIME — hovers: a bob and a slow sway, always running, so
+ *   .mascot-idle    TIME - hovers: a bob and a slow sway, always running, so
  *                   the craft is alive when nobody is scrolling.
- *   .mascot-sprite  SCROLL — picks the heading frame that matches the
+ *   .mascot-sprite  SCROLL - picks the heading frame that matches the
  *                   direction of travel at that point of the lap.
  *
  * The push: each lap crosses the card at PUSH_AT of the chapter's slot, which
@@ -44,7 +44,7 @@ const A = 600;
 const B = 170; // keep in step with --orbit-b in globals.css
 /** Where in each chapter's slot the craft crosses the card. */
 export const PUSH_AT = 0.88;
-/** Keyframe segments per lap. The path is a 32-gon — invisible at this size. */
+/** Keyframe segments per lap. The path is a 32-gon - invisible at this size. */
 const SEGMENTS = 32;
 
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -107,7 +107,7 @@ function keyframes(): string {
       `${pct(t)}{transform:translate(calc(var(--orbit-a)*${px(p.xa)} + var(--orbit-b)*${px(p.xb)}),calc(var(--orbit-a)*${px(p.ya)} + var(--orbit-b)*${px(p.yb)})) scale(${scale.toFixed(3)});z-index:${p.depth > 0 ? 3 : 0};opacity:${p.depth > 0 ? 1 : 0.78}}`,
     );
     if (i < SEGMENTS) {
-      // Hold each frame for its segment, then jump — a heading is a pose,
+      // Hold each frame for its segment, then jump - a heading is a pose,
       // and interpolating background-position would slide between poses.
       const x = `${-frameFor(t + 0.5 / SEGMENTS) * SPRITE_W}px 0`;
       sprite.push(`${pct(t)}{background-position:${x}}`);
@@ -117,7 +117,7 @@ function keyframes(): string {
   return `@keyframes mascot-orbit{${orbit.join('')}}@keyframes mascot-heading{${sprite.join('')}}`;
 }
 
-/** Built once per server render — the page is static, so once per build. */
+/** Built once per server render - the page is static, so once per build. */
 const CSS = keyframes();
 
 export function Mascot({ range }: { range: [number, number] }) {

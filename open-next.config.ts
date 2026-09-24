@@ -8,7 +8,7 @@ import staticAssetsIncrementalCache from '@opennextjs/cloudflare/overrides/incre
  * /api/contact. The static-assets cache ships the prerendered HTML and RSC
  * payloads as Worker assets, and cache interception answers from them before
  * the Next server is even loaded. That is the static-first architecture of
- * docs/ARCHITECTURE.md, expressed for Workers — and it is not optional here:
+ * docs/ARCHITECTURE.md, expressed for Workers - and it is not optional here:
  * a render on request would need a filesystem (content/projects/*.mdx, the OG
  * portrait) that a Worker does not have.
  *
@@ -18,10 +18,10 @@ import staticAssetsIncrementalCache from '@opennextjs/cloudflare/overrides/incre
 export default defineCloudflareConfig({
   incrementalCache: staticAssetsIncrementalCache,
   // MUST stay false. Cache interception answers from the cache before Next
-  // runs — and it ignores Next 16's per-segment prefetch requests
+  // runs - and it ignores Next 16's per-segment prefetch requests
   // (`Next-Router-Segment-Prefetch: /_tree`), returning the whole page's RSC
   // payload to each. The router cannot use it and re-requests at once, so
-  // every open tab re-prefetched each in-view link ~15×/s — 520,780 requests
+  // every open tab re-prefetched each in-view link ~15×/s - 520,780 requests
   // from 248 page views on 2026-09-24, 5× the Workers Free daily limit.
   // Off, the Next handler serves those requests itself, still from the
   // prebuilt static-assets cache: nothing renders, no filesystem needed.

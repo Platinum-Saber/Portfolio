@@ -16,14 +16,14 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div>
-      {/* Calm — near-still motes, per the mood table. `/about` is the one
+      {/* Calm - near-still motes, per the mood table. `/about` is the one
           content route whose field does not travel. */}
       <ParticleField mood="calm" />
 
       <h1 className="text-3xl font-semibold tracking-tight">About</h1>
 
       {/*
-        The full dossier — the same primitive and the same source as the
+        The full dossier - the same primitive and the same source as the
         summary on `/`, extended rather than restated. Two cards carrying
         overlapping-but-different values would be worse than one card and
         a link, which is why both read from `lib/operator.ts`.
@@ -49,25 +49,25 @@ export default function AboutPage() {
         <p>
           I&apos;m {site.fullName}, an engineering undergraduate at the
           University of Moratuwa, based in {site.location}. My work is in
-          robotics and embedded systems — building machines that perceive
+          robotics and embedded systems - building machines that perceive
           something about the world and act on it.
         </p>
         <p>
           Most of what I do sits across a boundary. On one side, ROS 2 and
           Jetson-class compute: multi-robot mapping, sensor fusion, autonomous
-          navigation. On the other, the hardware underneath — processors and
+          navigation. On the other, the hardware underneath - processors and
           image pipelines written in Verilog and VHDL and synthesised onto an
           FPGA. Working both sides has made me suspicious of abstractions I
           haven&apos;t looked underneath at least once.
         </p>
         <p>
           Alongside that I spent six months as an intern software engineer at
-          GTN Technologies, on the backend team behind a global trading
-          platform — Java and Spring Boot services, Kafka messaging and Redis,
-          all in service of keeping live market data accurate. It&apos;s a
-          different discipline from robotics, and a useful one: it taught me to
-          measure before optimising and to distrust my instincts about where
-          time actually goes.
+          GTN Technologies, on the backend team behind a global trading platform
+          - Java and Spring Boot services, Kafka messaging and Redis, all in
+          service of keeping live market data accurate. It&apos;s a different
+          discipline from robotics, and a useful one: it taught me to measure
+          before optimising and to distrust my instincts about where time
+          actually goes.
         </p>
         <p>
           My coursework spans embedded systems, robotics, machine learning, HCI
@@ -145,10 +145,10 @@ export default function AboutPage() {
                 <p className="mt-4 text-sm">
                   <Link
                     href={job.caseStudy}
-                    className="hover:underline"
+                    className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
                     style={{ color: 'var(--accent)' }}
                   >
-                    More on this work →
+                    More on this work
                   </Link>
                 </p>
               )}
@@ -200,10 +200,10 @@ export default function AboutPage() {
           <p className="mt-3">
             <a
               href={site.cv}
-              className="hover:underline"
+              className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
               style={{ color: 'var(--accent)' }}
             >
-              Download CV (PDF) →
+              Download CV
             </a>
           </p>
         </section>

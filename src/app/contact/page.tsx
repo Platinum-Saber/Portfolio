@@ -5,7 +5,7 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: `Get in touch with ${site.fullName} — robotics and embedded systems engineer based in ${site.location}.`,
+  description: `Get in touch with ${site.fullName} - robotics and embedded systems engineer based in ${site.location}.`,
 };
 
 const LINKS = [
@@ -25,7 +25,7 @@ const LINKS = [
 export default function ContactPage() {
   return (
     <div>
-      {/* Phase 8.5 — rising streaks, quickening while a field has focus. The
+      {/* Phase 8.5 - rising streaks, quickening while a field has focus. The
           quickening is a `:has()` selector, not a listener: the form is
           untouched and it works with JavaScript disabled. */}
       <ParticleField mood="signal" />
@@ -44,7 +44,7 @@ export default function ContactPage() {
 
       {/*
         Kept deliberately, not left over. The form's every failure path ends in
-        a mailto: link, and this list is the same promise made statically — it
+        a mailto: link, and this list is the same promise made statically - it
         is in the HTML whether or not JavaScript runs, whether or not Supabase
         exists. Do not remove it to tidy up the page.
       */}

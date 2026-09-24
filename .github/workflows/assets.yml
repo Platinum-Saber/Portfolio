@@ -1,12 +1,12 @@
-# Phase 3 — the asset pipeline, as CI.
+# Phase 3 - the asset pipeline, as CI.
 #
 # Raw models live in `assets/raw/`; the web-ready output lives in
 # `public/models/` and is committed, so a Vercel build never processes a mesh
 # and never needs this toolchain installed. Push a raw file, get an optimised
 # one back in the same branch.
 #
-# Committing generated output is the deliberate choice here. The alternative —
-# building assets during the Vercel build — makes every deploy depend on a
+# Committing generated output is the deliberate choice here. The alternative -
+# building assets during the Vercel build - makes every deploy depend on a
 # toolchain that has nothing to do with Next.js, and makes a broken pipeline
 # look like a broken site.
 name: Build 3D assets
@@ -44,7 +44,7 @@ jobs:
         run: npm run assets:build
 
       # No texture step. Every scene on this site renders unlit, so the
-      # pipeline deletes textures rather than compressing them — see the header
+      # pipeline deletes textures rather than compressing them - see the header
       # of scripts/build-assets.mjs. When an asset first ships a texture, add
       # KTX-Software here and a textured profile there, in one commit.
 

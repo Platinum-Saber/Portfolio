@@ -18,7 +18,7 @@ const BACKGROUND: [number, number, number] = [0.043, 0.055, 0.067];
 type Status = 'idle' | 'requesting' | 'running' | 'error';
 type Source = 'camera' | 'synthetic';
 
-/** One run of the demo. The id remounts the canvas — see the effect below. */
+/** One run of the demo. The id remounts the canvas - see the effect below. */
 type Session = { id: number; source: Source };
 
 type Support = 'checking' | 'ok' | 'unsupported';
@@ -40,7 +40,7 @@ const SERVER_SNAPSHOT = (): Support => 'checking';
 function describeCameraFailure(error: unknown): string {
   const name = error instanceof DOMException ? error.name : '';
   if (name === 'NotAllowedError' || name === 'SecurityError') {
-    return 'Camera access was declined. The test target below runs the identical shader — nothing is missing except your face.';
+    return 'Camera access was declined. The test target below runs the identical shader - nothing is missing except your face.';
   }
   if (name === 'NotFoundError' || name === 'OverconstrainedError') {
     return 'No camera was found on this device. The test target runs the identical shader.';
@@ -135,7 +135,7 @@ export function EdgeDetector() {
   /**
    * The render loop lives in an effect rather than in the click handler because
    * disposing a WebGL context permanently poisons the canvas element it came
-   * from — a second run on the same <canvas> fails to compile the shader. The
+   * from - a second run on the same <canvas> fails to compile the shader. The
    * session id is the canvas key, so every run gets a genuinely new element and
    * React guarantees it is committed before this effect reads the ref.
    */
@@ -145,8 +145,8 @@ export function EdgeDetector() {
     const readFrame = readFrameRef.current;
     if (!canvas || !readFrame) return;
 
-    // Built on the first frame rather than here, so that both outcomes —
-    // running, or a driver that refused the shader — are reported from a
+    // Built on the first frame rather than here, so that both outcomes -
+    // running, or a driver that refused the shader - are reported from a
     // callback instead of synchronously inside the effect body.
     let renderer: SobelRenderer | null = null;
     const mirror = session.source === 'camera';
@@ -298,7 +298,7 @@ export function EdgeDetector() {
           support.
         </p>
         <p className="mt-2">
-          The explanation below stands on its own — and the kernel itself is
+          The explanation below stands on its own - and the kernel itself is
           printed there, so there is nothing hidden inside the shader.
         </p>
       </div>

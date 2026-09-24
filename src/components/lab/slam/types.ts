@@ -12,7 +12,7 @@ export type Readouts = {
   /** Metres between where the scout is and where it believes it is. */
   alphaError: number;
   bravoError: number;
-  /** Degrees of heading error — the component that actually warps a map. */
+  /** Degrees of heading error - the component that actually warps a map. */
   alphaHeading: number;
   bravoHeading: number;
 };
@@ -38,7 +38,7 @@ export const VIEWS: ReadonlyArray<{
     id: 'unaligned',
     label: 'Both, unaligned',
     blurb:
-      'The two maps laid on top of each other with no correction. Neither is wrong about what it saw — they disagree about where they were standing.',
+      'The two maps laid on top of each other with no correction. Neither is wrong about what it saw - they disagree about where they were standing.',
   },
   {
     id: 'fused',

@@ -30,7 +30,7 @@ export class GridLayer {
    * Repaint from `grid`, unless nothing has changed since last time.
    *
    * @param overlay paint on top of what is already in the buffer instead of
-   *   clearing it — used by the unaligned view to put two maps in one texture.
+   *   clearing it - used by the unaligned view to put two maps in one texture.
    */
   refresh(
     grid: OccupancyGrid,

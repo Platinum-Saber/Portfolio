@@ -15,7 +15,7 @@ The site moved from Vercel to Cloudflare Workers on 2026-09-24. It runs through 
 | `.gitignore` | `.open-next/`, `.wrangler/`, `.dev.vars` |
 
 `src/app/projects/[slug]/page.tsx` sets `dynamicParams = false` and `src/app/opengraph-image.tsx`
-reads its portrait inside the handler — both so that nothing touches a filesystem at request time.
+reads its portrait inside the handler - both so that nothing touches a filesystem at request time.
 
 ## Why the first deploy 500'd on every page
 
@@ -35,7 +35,7 @@ RSC navigation payloads served, zero errors.
 
 The 40 `ERROR Failed to copy … node_modules/mdast-util-…` lines in the build log are the MDX
 compiler's packages, which OpenNext could not trace into the server bundle. Harmless *because*
-nothing renders at runtime — MDX compiles during `next build` only. If they ever start to matter,
+nothing renders at runtime - MDX compiles during `next build` only. If they ever start to matter,
 it will be because something began rendering on request, which is the real bug.
 
 ## Dashboard settings (Workers & Pages → portfolio → Settings → Build)
@@ -48,14 +48,14 @@ it will be because something began rendering on request, which is the real bug.
 | Root directory | *(repo root)* |
 
 **Do not use plain `npx wrangler deploy`.** It skips populating the cache, and the site 500s
-again. (The first deploy happened to work only because Wrangler detected OpenNext and delegated —
+again. (The first deploy happened to work only because Wrangler detected OpenNext and delegated -
 with nothing to populate.)
 
-## Secrets (Settings → Variables and Secrets — the Worker's, NOT the build's)
+## Secrets (Settings → Variables and Secrets - the Worker's, NOT the build's)
 
 **Trap, hit on 2026-09-24:** Settings has *two* "Variables and secrets" panels. The one under
 **Build** (beside Branch control, Build watch paths and API token) is for the build container
-only — values there exist while `next build` runs and are gone when the Worker serves a request.
+only - values there exist while `next build` runs and are gone when the Worker serves a request.
 Put the Supabase pair there and the form answers `503 unavailable` with the "could not reach its
 database" fallback, while the dashboard shows both secrets as set. They belong in the
 **top-level** Variables and Secrets panel on the Worker's Settings page (or
@@ -75,13 +75,13 @@ deploys a new version with the new secret).
 
 Locally: put the same two lines in `.dev.vars` (git-ignored) for `npm run preview`.
 
-## The prefetch storm (2026-09-24) — why cache interception is off
+## The prefetch storm (2026-09-24) - why cache interception is off
 
 Workers Free allows 100,000 requests/day. On the first day the dashboard showed **654,500**:
 520,780 on the custom domain from **248 page views**. Cause: `enableCacheInterception: true`
 answered Next 16's per-segment prefetches (`Next-Router-Segment-Prefetch: /_tree`) with the
 full page payload; the router rejected it and re-requested immediately. Every open tab
-re-prefetched every in-view link ~15×/s, forever — the top paths were exactly the nav and
+re-prefetched every in-view link ~15×/s, forever - the top paths were exactly the nav and
 card links (`/projects` 97k, `/about` 88k, …).
 
 Reproduced and fixed locally, no live traffic needed: in `wrangler dev`, an idle tab on `/`
@@ -100,7 +100,7 @@ is this bug.
 - Worker logs: Workers & Pages → portfolio → Logs (observability is on). `[contact] …` lines mean
   the same things they did on Vercel (see `PHASE-5-SUPABASE.md`)
 
-## Custom domain — `sansikawaduge.dev`
+## Custom domain - `sansikawaduge.dev`
 
 1. Worker → Settings → Domains & Routes → Add → Custom domain → subdomain **empty** → Production.
    Cloudflare creates the DNS record and the certificate itself (a few minutes).
@@ -109,19 +109,19 @@ is this bug.
    are not split between two.
 3. `.dev` is on the HSTS preload list: HTTPS only, in every browser, with no setting to change.
 4. `site.url` in `src/lib/site.ts` is the canonical origin for the sitemap, robots.txt and
-   OpenGraph URLs — already `https://sansikawaduge.dev`.
+   OpenGraph URLs - already `https://sansikawaduge.dev`.
 5. **The domain must also be in `wrangler.jsonc` (`routes`, `custom_domain: true`).** A deploy
-   overwrites the Worker's dashboard config with the file — the 2026-09-24 build warned it was
+   overwrites the Worker's dashboard config with the file - the 2026-09-24 build warned it was
    dropping the dashboard-attached domain and re-enabling workers.dev. Same for any dashboard
    toggle: the file is the source of truth, so change settings there.
-6. The `*.workers.dev` URL keeps serving a copy of the site. Harmless for search — every page's
-   canonical link points at `sansikawaduge.dev` — and preview URLs for branches live on that
+6. The `*.workers.dev` URL keeps serving a copy of the site. Harmless for search - every page's
+   canonical link points at `sansikawaduge.dev` - and preview URLs for branches live on that
    subdomain, so leave `workers_dev` on unless the duplicate becomes a problem.
 
 ## Leftovers from Vercel
 
 - `vercel.json` can go once the Vercel project is deleted; it does nothing on Cloudflare.
-- The Vercel project's env vars and the old `*.vercel.app` URL — delete the project when the
+- The Vercel project's env vars and the old `*.vercel.app` URL - delete the project when the
   Cloudflare URL is confirmed.
 - The custom domain (Phase 6) is simpler here: if the domain's DNS is on Cloudflare, attach it
   under Settings → Domains & Routes.

@@ -1,8 +1,8 @@
 ---
 title: Real-Time Market Data Systems
-summary: Internship at GTN Technologies — backend services and tools that keep live stock-market data accurate for a global trading platform.
+summary: Internship at GTN Technologies - backend services and tools that keep live stock-market data accurate for a global trading platform.
 order: 8
-year: 'Nov 2025 — May 2026'
+year: 'Nov 2025 - May 2026'
 status: complete
 domain: Industry / Backend
 stack:
@@ -26,7 +26,7 @@ platform used by brokerages and fintech apps across several continents: prices a
 stock exchanges around the world, and those servers check them, process them and deliver
 them to the apps people trade from.
 
-In that setting a wrong or late number is not a cosmetic bug — it is what an investor sees
+In that setting a wrong or late number is not a cosmetic bug - it is what an investor sees
 when they decide to buy or sell. Most of my work was about making sure the data is right,
 and being able to prove it.
 
@@ -36,7 +36,7 @@ architecture details stay with the company.
 ## A testing tool for live price feeds
 
 Trading apps receive prices over a long-lived WebSocket connection rather than by
-refreshing a page. I built a full-stack tool — **Spring Boot** backend, **React** frontend —
+refreshing a page. I built a full-stack tool - **Spring Boot** backend, **React** frontend -
 that lets QA engineers and developers run structured checks against that connection:
 logging in, subscribing to instruments, and confirming every message type arrives in the
 right shape.
@@ -45,14 +45,14 @@ right shape.
   interfering with each other
 - Scenarios are described in **YAML profiles** instead of being hard-coded
 - Results are archived to **AWS S3**, so past runs can be reviewed later
-- Market-hours aware — it knows whether an exchange is open before judging its data
+- Market-hours aware - it knows whether an exchange is open before judging its data
 
 ## One set of data-quality rules, shared
 
 Several internal monitoring dashboards each needed to answer the same questions: *is this
 exchange open right now, and has this price gone stale?* I extracted that logic into a
-reusable **Java / Spring Boot library** — exchange calendars, market hours, staleness
-detection — and integrated it into two of those dashboards.
+reusable **Java / Spring Boot library** - exchange calendars, market hours, staleness
+detection - and integrated it into two of those dashboards.
 
 Before switching one over, I ran the old and new versions side by side on live market data
 and compared their verdicts. Along the way the dashboards gained a live market-status view,
@@ -63,7 +63,7 @@ clearing dependency security warnings.
 ## Live trading statistics at scale
 
 The largest project was a service that maintains a **running average trade price** for
-thousands of stocks at once — weighted by how many shares changed hands, and updated the
+thousands of stocks at once - weighted by how many shares changed hands, and updated the
 moment each trade happens (in trading this is called VWAP). It needs to be fast and exactly
 right, because other systems quote it directly.
 
@@ -74,7 +74,7 @@ right, because other systems quote it directly.
 - Connected the service to the existing data platform through **Apache Kafka** producers
   and consumers, with **JUnit** tests around both the calculation and the messaging
 - Built a comparison harness and a small testing UI that checked the new service's output,
-  symbol by symbol, against the system it was replacing — and traced the few mismatches to
+  symbol by symbol, against the system it was replacing - and traced the few mismatches to
   their cause
 - Handed over with an architecture document, an interface spec, an operations runbook and a
   deployment verification script
@@ -91,5 +91,5 @@ right, because other systems quote it directly.
 
 Industrial software has to be correct, observable and maintainable at a level coursework
 rarely asks for. The habit I kept is measuring before deciding: the benchmark, not intuition,
-picked the design — and a side-by-side comparison, not a passing test suite, is what made
+picked the design - and a side-by-side comparison, not a passing test suite, is what made
 anyone trust the new service.

@@ -1,5 +1,5 @@
 /**
- * A log-odds occupancy grid — the same representation the real coordinator
+ * A log-odds occupancy grid - the same representation the real coordinator
  * fuses, and the reason this visualisation is a grid rather than a point cloud.
  *
  * Every cell holds a running belief about whether it is occupied, expressed in
@@ -54,8 +54,8 @@ export class OccupancyGrid {
 
   /**
    * Integrate one beam: everything along the way is evidence of free space,
-   * and the endpoint — if the beam actually hit something rather than reaching
-   * its maximum range — is evidence of a wall.
+   * and the endpoint - if the beam actually hit something rather than reaching
+   * its maximum range - is evidence of a wall.
    *
    * Bresenham rather than stepping by a fixed distance, so no cell is skipped
    * on a shallow diagonal and none is counted twice.
@@ -106,13 +106,13 @@ export class OccupancyGrid {
    * Paint this grid into an RGBA buffer.
    *
    * Alpha carries confidence, so an unobserved cell is transparent rather than
-   * a colour meaning "empty" — the difference between "I looked and there is
+   * a colour meaning "empty" - the difference between "I looked and there is
    * nothing there" and "I have never looked" is most of what an occupancy grid
    * is for, and flattening it would hide exactly the coverage gaps this
    * visualisation exists to show.
    *
    * `mix` is true when another grid is already in the buffer, in which case
-   * this one is added over the top — that is how the unaligned view makes two
+   * this one is added over the top - that is how the unaligned view makes two
    * disagreeing maps visibly disagree.
    */
   paint(

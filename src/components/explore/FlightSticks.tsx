@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 type Axes = { x: number; y: number };
 
 /**
- * Twin thumb sticks, laid out Mode 2 — the way an actual transmitter is
+ * Twin thumb sticks, laid out Mode 2 - the way an actual transmitter is
  * arranged. Left stick is throttle and yaw, right stick is pitch and roll.
  * Anyone who has flown a quad will pick it up without reading anything, and
  * anyone who has not is no worse off than with an invented layout.
@@ -43,7 +43,7 @@ function Stick({
   const release = (event: React.PointerEvent<HTMLDivElement>) => {
     active.current = false;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
-    // Self-centring, like a real gimbal — except throttle, which on a real
+    // Self-centring, like a real gimbal - except throttle, which on a real
     // transmitter is ratcheted. Self-centring is kinder here: releasing should
     // stop the drone, not leave it climbing away while you read.
     setKnob({ x: 0, y: 0 });

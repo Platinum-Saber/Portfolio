@@ -157,7 +157,7 @@ export function SlamExplorer() {
         </p>
         <p className="mt-2">
           The write-up below explains what the simulation shows and why the two
-          maps disagree — which is the part worth reading anyway.
+          maps disagree - which is the part worth reading anyway.
         </p>
       </div>
     );
@@ -315,11 +315,11 @@ export function SlamExplorer() {
         ].map((row) => (
           <div
             key={row.label}
-            className="flex justify-between gap-4 border-b pb-1 text-sm"
+            className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-4 border-b pb-1 text-sm"
             style={{ borderColor: 'var(--border)' }}
           >
             <dt style={{ color: 'var(--fg-muted)' }}>{row.label}</dt>
-            <dd className="text-right font-mono text-xs">{row.value}</dd>
+            <dd className="font-mono text-xs">{row.value}</dd>
           </div>
         ))}
       </dl>

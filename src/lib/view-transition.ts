@@ -1,5 +1,5 @@
 /**
- * Phase 8.3 — hand-rolled same-document view transitions for the App Router.
+ * Phase 8.3 - hand-rolled same-document view transitions for the App Router.
  *
  * React 19.2 stable has no `<ViewTransition>`, and CSS `@view-transition`
  * only fires on cross-document navigation, which the App Router never does.

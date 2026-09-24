@@ -109,7 +109,7 @@ function Propeller({
   );
 }
 
-/** Generic payload block — compute module, camera, battery. */
+/** Generic payload block - compute module, camera, battery. */
 function Block({
   position,
   size,
@@ -128,7 +128,7 @@ function Block({
   );
 }
 
-/** Depth camera frustum — shows what the Gemini 336 actually sees. */
+/** Depth camera frustum - shows what the Gemini 336 actually sees. */
 function CameraFrustum() {
   const geometry = useMemo(() => {
     // H 90° x V 65°, drawn to 0.6 m for legibility rather than the full range.
@@ -172,9 +172,9 @@ export function Airframe({ spin }: { spin: boolean }) {
         </group>
       ))}
 
-      {/* Jetson Orin Nano — 100 x 79 mm carrier, stacked above the top plate. */}
+      {/* Jetson Orin Nano - 100 x 79 mm carrier, stacked above the top plate. */}
       <Block position={[0, 0.055, -0.02]} size={[0.1, 0.03, 0.079]} />
-      {/* Orbbec Gemini 336 — 90 x 25 x 30.7 mm, forward-facing. */}
+      {/* Orbbec Gemini 336 - 90 x 25 x 30.7 mm, forward-facing. */}
       <Block position={[0, 0.02, 0.115]} size={[0.09, 0.025, 0.031]} />
       {/* Battery, between the plates. */}
       <Block

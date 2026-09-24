@@ -9,7 +9,7 @@ import { Airframe } from './Airframe';
 import { Hotspot } from './Hotspot';
 
 /**
- * Render loop policy — this is most of what keeps /lab inside the budget:
+ * Render loop policy - this is most of what keeps /lab inside the budget:
  *  - stops entirely when the tab is hidden or the canvas scrolls out of view
  *  - stops the props (and never starts the loop) under prefers-reduced-motion
  *  - caps DPR at 1.75 so high-density phones don't render 3x the pixels
@@ -25,7 +25,7 @@ export function Scene({
   const [visible, setVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   // Auto-rotation is an invitation, not a feature. The moment the visitor
-  // touches the scene it stops for good — a slowly drifting model makes the
+  // touches the scene it stops for good - a slowly drifting model makes the
   // hotspots genuinely hard to hit, especially on touch.
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -63,7 +63,7 @@ export function Scene({
 
   const animating = visible && !reducedMotion;
 
-  // Narrow viewports get a closer camera — the same framing that reads well at
+  // Narrow viewports get a closer camera - the same framing that reads well at
   // 1100px leaves the airframe tiny at 390px. Set once, then the visitor's own
   // zoom takes over.
   const [start] = useState<[number, number, number]>(() =>
@@ -133,7 +133,7 @@ export function Scene({
 
       <p
         className="pointer-events-none absolute bottom-3 left-3 font-mono text-[11px]"
-        /* The canvas is always dark, in both themes — so this overlay can't
+        /* The canvas is always dark, in both themes - so this overlay can't
            use --fg-muted, which goes dark grey in light mode. */
         style={{ color: '#7d8794' }}
       >

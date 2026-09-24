@@ -1,5 +1,5 @@
 /**
- * Work experience — one source for `/about` and anything else that lists it.
+ * Work experience - one source for `/about` and anything else that lists it.
  *
  * Written for a reader who has never worked in finance. Company-internal
  * system names, topic names and architecture specifics are deliberately left
@@ -30,15 +30,15 @@ export const EXPERIENCE: Experience[] = [
     location: 'Colombo, Sri Lanka',
     period: 'Nov 2025 – May 2026',
     summary:
-      'Six months on the backend team behind a global trading and investment platform — the systems that take live prices from stock exchanges around the world and deliver them to trading apps.',
+      'Six months on the backend team behind a global trading and investment platform - the systems that take live prices from stock exchanges around the world and deliver them to trading apps.',
     work: [
       {
         title: 'Testing tool for live price feeds',
-        body: 'A full-stack web app that lets QA engineers and developers run scripted checks against the real-time price connection client apps use — logging in, subscribing, and confirming each kind of message arrives correctly. Test runs are queued per user, configured from YAML profiles and archived to cloud storage for later review.',
+        body: 'A full-stack web app that lets QA engineers and developers run scripted checks against the real-time price connection client apps use - logging in, subscribing, and confirming each kind of message arrives correctly. Test runs are queued per user, configured from YAML profiles and archived to cloud storage for later review.',
       },
       {
         title: 'Shared data-quality library and monitoring dashboards',
-        body: 'A reusable Java library that decides whether market data is healthy — which exchanges should be open right now, and which prices have gone stale — packaged so several monitoring tools could share one set of rules instead of each keeping its own. Integrated it into two dashboards, adding live market status, secured login and a history of past checks.',
+        body: 'A reusable Java library that decides whether market data is healthy - which exchanges should be open right now, and which prices have gone stale - packaged so several monitoring tools could share one set of rules instead of each keeping its own. Integrated it into two dashboards, adding live market status, secured login and a history of past checks.',
       },
       {
         title: 'Real-time trading statistics service',

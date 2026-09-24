@@ -1,7 +1,7 @@
 /**
  * The lab: room geometry, colliders and stations.
  *
- * Everything here is measured off `assets/raw/lab.glb` rather than guessed —
+ * Everything here is measured off `assets/raw/lab.glb` rather than guessed -
  * the numbers came from walking the glTF and reading each node's world-space
  * bounding box. If the model is ever re-exported, re-measure; nothing in this
  * file can detect that the room moved underneath it.
@@ -12,7 +12,7 @@
  * `Panel_sterowania` is the control panel, `drzwi` the door, `szafka_body` the
  * tall cabinet, `rura_gwna_baza` the central tank. Every mesh in the file has
  * exactly one primitive with exactly one material, so material name is a
- * reliable one-to-one handle on each object — the only reliable one available.
+ * reliable one-to-one handle on each object - the only reliable one available.
  *
  * This is also why the build pipeline gives this asset its own `interior`
  * profile: it must NOT merge meshes. Merging would save draw calls and leave
@@ -65,7 +65,7 @@ export type Box = {
  * physics dependency would cost more than the whole scene.
  *
  * Only objects big enough to fly into are listed. The small jars on the desk
- * are not solid — clipping a 12 cm specimen jar is far less noticeable than
+ * are not solid - clipping a 12 cm specimen jar is far less noticeable than
  * being mysteriously blocked by one.
  */
 export const COLLIDERS: Box[] = [
@@ -118,7 +118,7 @@ export type Station = {
 
 /**
  * Four stations, spread to the corners of the room so that reaching them all
- * means actually flying it. Approach anchors sit off each object's open face —
+ * means actually flying it. Approach anchors sit off each object's open face -
  * measured from the collider boxes above, because an anchor inside a solid
  * object is a station you can never quite reach.
  */
@@ -170,6 +170,6 @@ export const INTERACTIVE_MATERIALS = new Set(STATIONS.map((s) => s.material));
 export const findStation = (id: string) =>
   STATIONS.find((station) => station.id === id);
 
-/** The zones a terminal offers. Projects only — the rest have their own object. */
+/** The zones a terminal offers. Projects only - the rest have their own object. */
 export const projectZones = (zones: Zone[]) =>
   zones.filter((zone) => zone.kind === 'project');

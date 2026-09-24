@@ -2,14 +2,14 @@
  * The world the scouts are mapping.
  *
  * Walls are line segments in metres, and a scan is a raycast against all of
- * them. That is the entire physics model — there is no mesh, no collision
+ * them. That is the entire physics model - there is no mesh, no collision
  * library and no physics engine, because a 2D LiDAR only ever asks one
  * question: along this bearing, how far until something is in the way.
  *
  * The layout is designed, not arbitrary. The central spine splits the arena
  * into two halves that a single scout cannot see across, so each robot
  * naturally maps a region the other has never observed. That is what makes the
- * merge worth doing — if both scouts saw the same room, fusing their maps would
+ * merge worth doing - if both scouts saw the same room, fusing their maps would
  * be a redundancy exercise rather than the point of the project.
  */
 
@@ -54,7 +54,7 @@ export const ARENA: readonly Segment[] = [
   // Outer walls.
   ...box(0, 0, ARENA_HALF * 2, ARENA_HALF * 2),
 
-  // The spine — a divider with a single doorway, so the two halves are only
+  // The spine - a divider with a single doorway, so the two halves are only
   // connected through one gap. Built as two segments with a hole between them.
   { x1: 0, y1: -ARENA_HALF, x2: 0, y2: -1.2 },
   { x1: 0, y1: 1.2, x2: 0, y2: ARENA_HALF },
@@ -64,7 +64,7 @@ export const ARENA: readonly Segment[] = [
   ...box(-2.2, -2.9, 1.0, 2.4, 0.35),
   ...box(-4.6, -0.6, 1.2, 1.2, 0.8),
 
-  // Obstacles in the east half — deliberately a different character, so the
+  // Obstacles in the east half - deliberately a different character, so the
   // two local maps look distinct enough that a misalignment is obvious.
   ...box(3.2, 3.1, 1.4, 1.4, 0.5),
   ...box(4.3, -1.4, 1.0, 3.6),
@@ -78,7 +78,7 @@ export type Ray = { ox: number; oy: number; dx: number; dy: number };
  * escapes. Direction must be unit length.
  *
  * Plain segment-intersection over every wall. With ~40 segments and ~90 rays
- * this is a few thousand operations per scan, which is nothing — spatial
+ * this is a few thousand operations per scan, which is nothing - spatial
  * indexing here would be optimising the cheapest part of the frame.
  */
 export function castRay(ray: Ray, maxRange: number): number {
@@ -108,7 +108,7 @@ export function castRay(ray: Ray, maxRange: number): number {
   return nearest;
 }
 
-/** True when a point is inside a wall or outside the arena — used to keep the scouts honest. */
+/** True when a point is inside a wall or outside the arena - used to keep the scouts honest. */
 export function isBlocked(x: number, y: number, clearance: number): boolean {
   if (
     Math.abs(x) > ARENA_HALF - clearance ||

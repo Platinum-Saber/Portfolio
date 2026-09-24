@@ -11,7 +11,7 @@ export function Nav() {
 
   return (
     <header
-      // 9.0: the one content-route surface that earns real blur — the page
+      // 9.0: the one content-route surface that earns real blur - the page
       // scrolls underneath it, so the frost has something to frost.
       className="glass-blur sticky top-0 z-50 border-b"
       style={{
@@ -31,7 +31,7 @@ export function Nav() {
         </TransitionLink>
 
         {/*
-          Five destinations do not fit a 390px header at desktop sizing —
+          Five destinations do not fit a 390px header at desktop sizing -
           measured at 449px of content in a 390px bar. The row is tightened on
           small screens and, below that, scrolls horizontally rather than
           spilling: every destination stays reachable at any width.
@@ -61,7 +61,7 @@ export function Nav() {
                 href={item.href}
                 /*
                   Prefetch is off for the heavy route. Next prefetches links in
-                  the viewport, and this nav is above the fold on every page —
+                  the viewport, and this nav is above the fold on every page -
                   so a prefetched /explore would put its 16 KB route chunk on
                   every single page load, for every visitor, which is exactly
                   what removing the hero link fixed in 8.6.
@@ -69,7 +69,7 @@ export function Nav() {
                 prefetch={heavy ? false : undefined}
                 aria-current={active ? 'page' : undefined}
                 // 9.0d: the current page sits in a glass capsule; the others
-                // are plain text until you are on them — one pane, not five.
+                // are plain text until you are on them - one pane, not five.
                 className={`${active ? 'glass glass-btn' : 'rounded-full'} shrink-0 px-1.5 py-1.5 text-[13px] whitespace-nowrap transition-colors sm:px-3 sm:text-sm`}
                 style={{ color: active ? 'var(--fg)' : 'var(--fg-muted)' }}
               >

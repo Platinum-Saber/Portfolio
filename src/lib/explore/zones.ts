@@ -15,14 +15,14 @@ export type Zone = {
   id: string;
   kind: 'about' | 'skills' | 'contact' | 'project';
   title: string;
-  /** Category line on the panel — a domain, so several zones may share one. */
+  /** Category line on the panel - a domain, so several zones may share one. */
   short: string;
   /** Unique, short, for the jump list. Three projects share the domain
    *  "Robotics", so the list cannot be built from `short`. */
   label: string;
   /** Paragraphs revealed on arrival. */
   body: string[];
-  /** Small facts rendered as a monospace list — stack, year, that sort of thing. */
+  /** Small facts rendered as a monospace list - stack, year, that sort of thing. */
   tags?: string[];
   href?: string;
   /** World position. y is the altitude the marker floats at. */
@@ -44,7 +44,7 @@ type ProjectSeed = {
 
 /**
  * Where each project's marker sits. Keyed by slug so the arrangement is stable
- * as projects are reordered, and so a new project fails visibly — it lands at
+ * as projects are reordered, and so a new project fails visibly - it lands at
  * the fallback position rather than silently overlapping an existing marker.
  */
 const PROJECT_SITES: Record<string, [number, number, number]> = {
@@ -96,7 +96,7 @@ export function buildZones(
       short: 'About',
       label: 'About',
       body: [
-        `${personal.fullName} — ${personal.tagline.toLowerCase()}, based in ${personal.location}.`,
+        `${personal.fullName} - ${personal.tagline.toLowerCase()}, based in ${personal.location}.`,
         'Engineering undergraduate at the University of Moratuwa. Most of what I do sits across a boundary: ROS 2 and Jetson-class compute on one side, processors and image pipelines written in Verilog and VHDL on the other.',
         'Working both sides has made me suspicious of abstractions I have not looked underneath at least once.',
       ],

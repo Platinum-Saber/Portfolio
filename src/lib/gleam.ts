@@ -1,11 +1,11 @@
 /**
- * Phase 9.0c — the click gleam: a diagonal band of light sweeping across a
+ * Phase 9.0c - the click gleam: a diagonal band of light sweeping across a
  * pressable glass pane (`.glass-press`) before the navigation it triggers.
  *
  * It has to finish BEFORE the route changes, not during it: a view transition
  * captures the old page as a still image the moment it starts, so a gleam
  * still running would freeze mid-sweep inside the snapshot. The cost is a
- * short, deliberate beat between click and navigation — GLEAM_MS, kept under
+ * short, deliberate beat between click and navigation - GLEAM_MS, kept under
  * the ~400 ms at which a click starts to feel ignored.
  *
  * Skipped entirely (no delay either) under reduced motion.
@@ -22,7 +22,7 @@ export function canGleam(): boolean {
   );
 }
 
-/** True while a pane is mid-gleam — a second click then does nothing. */
+/** True while a pane is mid-gleam - a second click then does nothing. */
 export function isGleaming(): boolean {
   return running !== null;
 }

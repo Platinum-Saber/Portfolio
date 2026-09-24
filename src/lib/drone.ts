@@ -3,7 +3,7 @@
  *
  * This is the single source of truth for both the 3D scene and the static
  * HTML fallback. The fallback renders every field below as real text, so the
- * page is complete and indexable with WebGL disabled — the canvas is an
+ * page is complete and indexable with WebGL disabled - the canvas is an
  * enhancement, never the content.
  *
  * `position` is in scene units (metres, roughly to scale).
@@ -21,7 +21,7 @@ export type DroneComponent = {
   /** The component's actual location in the scene. */
   position: [number, number, number];
   /**
-   * Where the numbered marker sits — pushed clear of the airframe so markers
+   * Where the numbered marker sits - pushed clear of the airframe so markers
    * don't pile on top of each other, with a leader line back to `position`.
    */
   marker: [number, number, number];
@@ -55,13 +55,13 @@ export const DRONE_COMPONENTS: DroneComponent[] = [
       { label: 'Power', value: '7–25 W configurable' },
     ],
     connections: [
-      'Depth camera over USB 3.0 — the perception loop closes here, onboard',
+      'Depth camera over USB 3.0 - the perception loop closes here, onboard',
       'Flight controller over UART, publishing setpoints',
       'Powered from the 5 V regulated rail, not the raw battery',
     ],
     status: 'on-hand',
     statusNote:
-      'Already owned. This is the pivot point of the whole design — enough compute to run depth processing and navigation onboard, which means the aircraft does not depend on a radio link to stay alive.',
+      'Already owned. This is the pivot point of the whole design - enough compute to run depth processing and navigation onboard, which means the aircraft does not depend on a radio link to stay alive.',
   },
   {
     id: 'depth-camera',
@@ -79,7 +79,7 @@ export const DRONE_COMPONENTS: DroneComponent[] = [
       { label: 'Mass', value: '99 g' },
     ],
     connections: [
-      'USB 3.0 to the Orin Nano — depth and RGB both land on the compute module',
+      'USB 3.0 to the Orin Nano - depth and RGB both land on the compute module',
       'Rigidly mounted to the forward frame so the camera-to-body transform stays fixed',
     ],
     status: 'on-hand',
@@ -102,7 +102,7 @@ export const DRONE_COMPONENTS: DroneComponent[] = [
       },
     ],
     connections: [
-      'Carries every other component — the mass budget here arbitrates the whole design',
+      'Carries every other component - the mass budget here arbitrates the whole design',
       'Stiffness directly sets the vibration floor the state estimator has to live with',
     ],
     status: 'designed',
@@ -127,7 +127,7 @@ export const DRONE_COMPONENTS: DroneComponent[] = [
     ],
     status: 'sourcing',
     statusNote:
-      'One motor on hand; the remaining three still to source. Sizing is being worked against the mass budget the carbon frame and the Orin Nano impose — this is the current open work.',
+      'One motor on hand; the remaining three still to source. Sizing is being worked against the mass budget the carbon frame and the Orin Nano impose - this is the current open work.',
   },
   {
     id: 'power',

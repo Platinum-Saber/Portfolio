@@ -10,6 +10,7 @@ import type { Zone } from '@/lib/explore/zones';
 import { FlightSticks } from '../FlightSticks';
 import { useWebGLSupport } from '../useWebGLSupport';
 import {
+  exitButtonStyle,
   IMMERSIVE_FRAME,
   OVERLAY_BUTTON,
   overlayButtonStyle,
@@ -86,7 +87,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
   const sticks = useRef({ left: { x: 0, y: 0 }, right: { x: 0, y: 0 } });
 
   const projects = zones.filter((zone) => zone.kind === 'project');
-  // Read inside the key handler, which is registered once — a ref keeps it
+  // Read inside the key handler, which is registered once - a ref keeps it
   // seeing the current values without re-binding listeners on every render.
   // Written in an effect rather than during render: React may render without
   // committing, and a ref updated on an abandoned render is a lie the handler
@@ -132,7 +133,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
   const onTelemetry = useCallback((next: LabTelemetry) => {
     setTelemetry(next);
     // Same call as the outdoor world, against this room's own much lower
-    // ceiling (2.2 m/s against 17) — so a slow indoor drift sounds like one,
+    // ceiling (2.2 m/s against 17) - so a slow indoor drift sounds like one,
     // rather than like an idling version of the outdoor craft.
     engine(next.speed / MAX_SPEED);
   }, []);
@@ -225,13 +226,10 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
 
   if (support === 'unsupported') {
     return (
-      <div
-        className="glass p-6 text-sm"
-        style={{ color: 'var(--fg-muted)' }}
-      >
+      <div className="glass p-6 text-sm" style={{ color: 'var(--fg-muted)' }}>
         <p>
           The lab needs WebGL, which this browser has turned off. Nothing is
-          lost — every station in the room is written out in full below, and the
+          lost - every station in the room is written out in full below, and the
           projects are all on{' '}
           <Link
             href="/projects"
@@ -316,7 +314,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
         {/*
           While the canvas fills the viewport the nav below it is off-screen,
           and that nav is the accessible route to every station. It follows the
-          canvas in rather than being left behind — a fullscreen mode that
+          canvas in rather than being left behind - a fullscreen mode that
           quietly removes the keyboard-and-pointer path to the content would be
           a regression dressed as a feature.
         */}
@@ -337,7 +335,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
               type="button"
               onClick={exit}
               className={OVERLAY_BUTTON}
-              style={overlayButtonStyle()}
+              style={exitButtonStyle}
             >
               exit ✕
             </button>
@@ -398,7 +396,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
                 activeStation === station.id
                   ? 'var(--accent)'
                   : 'var(--fg-muted)',
-}}
+            }}
           >
             {station.label}
           </button>

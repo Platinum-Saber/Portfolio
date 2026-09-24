@@ -1,10 +1,10 @@
-# Phase 5 — contact form setup
+# Phase 5 - contact form setup
 
 Everything in the repo is written and tested. What remains are the steps that
 need your accounts. Work top to bottom; each section ends with a way to check
 it worked.
 
-Until you finish, **the site is already correct** — an unconfigured deployment
+Until you finish, **the site is already correct** - an unconfigured deployment
 returns `unavailable` from the API route and the form degrades to a `mailto:`
 link. There is no broken intermediate state to rush through.
 
@@ -16,15 +16,15 @@ Ticked off as of 2026-09-04. **The contact form is fully working**: a
 submission is stored and lands in Discord seconds later. What is left is
 hygiene, not function.
 
-- [x] **1. Create the table** — both migrations applied.
-- [x] **2. Point the site at the project** — Production only; Preview and
+- [x] **1. Create the table** - both migrations applied.
+- [x] **2. Point the site at the project** - Production only; Preview and
       Development still to tick, and §5 needs Preview.
-- [x] **2b. Deployment settings** — `vercel.json` pins `"framework": "nextjs"`.
-- [x] **3. Notification** — Discord, end to end. Resend was swapped out; §3
+- [x] **2b. Deployment settings** - `vercel.json` pins `"framework": "nextjs"`.
+- [x] **3. Notification** - Discord, end to end. Resend was swapped out; §3
       says why and §3d says how to go back.
-- [x] **4. Keep-alive** — green as of run #9.
-- [ ] **5. Prove the failure path** — five minutes, worth it.
-- [ ] **Clear the probe rows** — `verify:supabase` has run, so there are rows
+- [x] **4. Keep-alive** - green as of run #9.
+- [ ] **5. Prove the failure path** - five minutes, worth it.
+- [ ] **Clear the probe rows** - `verify:supabase` has run, so there are rows
       to clear.
 
 ---
@@ -37,8 +37,8 @@ hygiene, not function.
 
 Supabase dashboard → **SQL Editor** → paste and run, in order:
 
-1. [`supabase/migrations/0001_contacts.sql`](../supabase/migrations/0001_contacts.sql) — the table, RLS and grants.
-2. [`supabase/migrations/0002_healthcheck.sql`](../supabase/migrations/0002_healthcheck.sql) — a one-line function the keep-alive workflow calls. Needed because `GET /rest/v1/` answers 401 to the anon key on this project, so there is otherwise nothing anon may successfully request.
+1. [`supabase/migrations/0001_contacts.sql`](../supabase/migrations/0001_contacts.sql) - the table, RLS and grants.
+2. [`supabase/migrations/0002_healthcheck.sql`](../supabase/migrations/0002_healthcheck.sql) - a one-line function the keep-alive workflow calls. Needed because `GET /rest/v1/` answers 401 to the anon key on this project, so there is otherwise nothing anon may successfully request.
 
 It is written to be safely re-runnable, so if you are unsure whether it already
 applied, just run it again.
@@ -52,7 +52,7 @@ from pg_policies where tablename = 'contacts';
 ```
 
 Exactly one row, `cmd = INSERT`, `roles = {anon}`. If you see a SELECT policy,
-something else created it — drop it.
+something else created it - drop it.
 
 ---
 
@@ -66,7 +66,7 @@ something else created it — drop it.
 | `anon` `public` key | `SUPABASE_ANON_KEY` |
 
 > **Not the `service_role` key.** It bypasses RLS completely. The anon key is
-> the correct level of authority here — RLS restricts it to appending rows it
+> the correct level of authority here - RLS restricts it to appending rows it
 > can never read back, which is exactly what the endpoint needs and nothing
 > more. If a future session suggests "upgrading" to the service role key to fix
 > something, the actual bug is elsewhere.
@@ -74,7 +74,7 @@ something else created it — drop it.
 **Vercel → your project → Settings → Environment Variables.** Add both, for
 Production, Preview and Development.
 
-> **Done for Production, 2026-09-04** — a real message went through the
+> **Done for Production, 2026-09-04** - a real message went through the
 > deployed form and appeared in the table. **Preview and Development are still
 > unticked**, which is fine for the live site and not fine for §5: a preview
 > with no variables at all fails the bad-key test for the wrong reason. Edit
@@ -96,7 +96,7 @@ For local development, copy `.env.example` to `.env.local` and fill in the same
 two values. `.env*` is gitignored.
 
 > **If you edit `.env.local` on Windows**, watch the line endings. The file
-> currently has CRLF, which Next.js and `dotenv` handle fine — but `source
+> currently has CRLF, which Next.js and `dotenv` handle fine - but `source
 > .env.local` in a shell does not: the trailing `\r` rides along into the value
 > and every request 401s for no visible reason. `dos2unix .env.local`, or read
 > the values with `tr -d '\r' < .env.local`.
@@ -118,7 +118,7 @@ the service role key, that the table exists, that anon genuinely _cannot_ read
 it back, that a forged `created_at` is refused, and that the CHECK constraints
 bite. It writes one tagged row and prints the SQL to delete it.
 
-Then send yourself a real message through the deployed form — the row should
+Then send yourself a real message through the deployed form - the row should
 appear in the Table Editor. **Confirmed 2026-09-04.**
 
 **If the panel persists**, the function logs say which of the three failure
@@ -128,7 +128,7 @@ branches fired. Vercel → **Logs**, filtered to `/api/contact`:
 | --- | --- |
 | _nothing at all_ | The variables are not reaching the function. The unconfigured branch returns 503 silently, on purpose. |
 | `[contact] insert failed: 401 …` | They arrived; Supabase refused the key. Usually a stray space or newline in the pasted JWT. |
-| `[contact] insert threw: … TimeoutError` | The 6 s abort fired — the project is paused or unreachable. |
+| `[contact] insert threw: … TimeoutError` | The 6 s abort fired - the project is paused or unreachable. |
 
 Silence means Vercel, a log line means Supabase.
 
@@ -137,7 +137,7 @@ Silence means Vercel, a log line means Supabase.
 ## 2b. Deployment settings
 
 The build failing with **`No Output Directory named "public" found`** does not
-mean the build failed — read the log again and `next build` completed fine, all
+mean the build failed - read the log again and `next build` completed fine, all
 17 pages generated. It means Vercel was not treating this as a Next.js project:
 with the Framework Preset set to _Other_, it runs your build command and then
 looks for a folder of static files to serve, which a Next.js app does not
@@ -151,17 +151,17 @@ well: **Vercel → Settings → Build & Deployment → Framework Preset → Next
 > submission is a round trip from there to your Supabase project, so if that
 > project lives in Singapore or Mumbai the insert pays a transatlantic hop it
 > does not need. Once you know the region, `"regions": ["sin1"]` (or `bom1`) in
-> `vercel.json` moves the function next door to it. Not urgent — the form is
-> not on the render path — but it is free to fix.
+> `vercel.json` moves the function next door to it. Not urgent - the form is
+> not on the render path - but it is free to fix.
 
 ---
 
 ## 3. Notification (Discord)
 
-Without this the messages still arrive — they sit in the table. This step is
+Without this the messages still arrive - they sit in the table. This step is
 only about finding out promptly.
 
-> **Discord, not email — decided 2026-09-04.** The original plan was Resend, and
+> **Discord, not email - decided 2026-09-04.** The original plan was Resend, and
 > it is a good plan for a site that owns a domain. This one does not yet, which
 > meant a sender stuck on `onboarding@resend.dev` (deliverable only to my own
 > signup address) until Phase 6 resolves the domain question. A Discord incoming
@@ -178,7 +178,7 @@ only about finding out promptly.
 > Function on INSERT, notification is still strictly downstream of storage, and
 > a Discord outage still cannot fail a submission. Only the function's outbound
 > call is different. Reinstating Resend later means editing one function body
-> and swapping the secrets — nothing else in the chain knows the difference.
+> and swapping the secrets - nothing else in the chain knows the difference.
 
 ### 3a. The Discord webhook
 
@@ -187,7 +187,7 @@ channel only you can read, name it something like `portfolio-contact`, and
 **Copy Webhook URL**.
 
 > Treat that URL as a credential, not an address. Anyone holding it can post to
-> the channel. It is not the same thing as `WEBHOOK_SECRET` below — that one
+> the channel. It is not the same thing as `WEBHOOK_SECRET` below - that one
 > proves an inbound request to the *function* came from Postgres. Two secrets,
 > two directions.
 
@@ -217,7 +217,7 @@ npx supabase functions deploy notify-contact --no-verify-jwt
 > npx supabase link --project-ref qvcozegphyjdmabhmhjq
 >
 > $secret = -join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Max 256) })
-> $secret   # print it — you need this exact value in 3c
+> $secret   # print it - you need this exact value in 3c
 >
 > npx supabase secrets set "DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/<id>/<token>" "WEBHOOK_SECRET=$secret"
 >
@@ -239,21 +239,21 @@ $sha = [System.Security.Cryptography.SHA256]::Create()
 ```
 
 Worth the thirty seconds. `Finished supabase secrets set` only means Supabase
-stored what you handed it — on the first attempt here that was the literal
+stored what you handed it - on the first attempt here that was the literal
 string `https://discord.com/api/webhooks/...`, placeholder and all, copied
 straight out of this document. That deploys perfectly happily and then fails at
 runtime as `[notify-contact] discord 404`, which sends you looking at Discord
 rather than at the secret. A digest that matches is proof, and it also rules out
 the trailing whitespace that a copy-paste sometimes carries.
 
-Keep the `WEBHOOK_SECRET` value — you need it in the next step. `--no-verify-jwt`
+Keep the `WEBHOOK_SECRET` value - you need it in the next step. `--no-verify-jwt`
 is required because the caller is Postgres, not a logged-in user; the shared
 secret is what authenticates it instead, and the function rejects anything
 without the matching header.
 
 > `link` may ask for the **database** password (Project Settings → Database).
 > That is not the anon key. And if the CLI rejects `--no-verify-jwt` as
-> deprecated, `link` will have written `supabase/config.toml` — put
+> deprecated, `link` will have written `supabase/config.toml` - put
 > `verify_jwt = false` under `[functions.notify-contact]` there instead. It must
 > be off either way.
 
@@ -265,7 +265,7 @@ Dashboard → **Integrations → Webhooks** → _Create a new hook_.
 > drafts of this one) still say so. The dashboard files the wrapper under
 > Integrations now:
 > `/project/qvcozegphyjdmabhmhjq/integrations/webhooks/overview`. Underneath it
-> is unchanged — a Postgres trigger calling `supabase_functions.http_request()`
+> is unchanged - a Postgres trigger calling `supabase_functions.http_request()`
 > through `pg_net`.
 
 Fill in:
@@ -296,12 +296,12 @@ execute function supabase_functions.http_request(
 ```
 
 > **This one does not belong in `supabase/migrations/`**, unlike the other two
-> scripts — it embeds the shared secret and that directory is tracked. Run it in
+> scripts - it embeds the shared secret and that directory is tracked. Run it in
 > the SQL Editor and leave it out of the repo. That is the whole reason this
 > step is a dashboard step rather than a third migration file.
 
 **Check it.** Send another test message. The embed should appear within a few
-seconds — **confirmed working 2026-09-04**: the sender's name as the title, their message as the body, their email
+seconds - **confirmed working 2026-09-04**: the sender's name as the title, their message as the body, their email
 in a field below, and the row id in the footer. If nothing arrives, **Edge
 Functions → notify-contact → Logs** says why:
 
@@ -310,7 +310,7 @@ Functions → notify-contact → Logs** says why:
 | `403`, no body | The `x-webhook-secret` header does not match. Usually the secret was regenerated between 3b and 3c. |
 | `[notify-contact] missing DISCORD_WEBHOOK_URL` | The secret did not take. Check `npx supabase secrets list`. |
 | `[notify-contact] discord 401` | The webhook URL is wrong or was deleted in Discord. |
-| `[notify-contact] discord 400` | Discord refused the payload — an embed field over length, most likely, though `clamp()` exists to prevent exactly that. |
+| `[notify-contact] discord 400` | Discord refused the payload - an embed field over length, most likely, though `clamp()` exists to prevent exactly that. |
 | _no invocation at all_ | The database webhook is not firing. Check it is enabled and on INSERT. |
 
 None of these can lose a message. The row is committed before the webhook fires;
@@ -318,12 +318,12 @@ the worst case is finding out by opening the table instead of Discord.
 
 ### 3d. If you want email back later
 
-Once Phase 6 settles the domain, the email path becomes strictly better —
+Once Phase 6 settles the domain, the email path becomes strictly better -
 `reply_to` is worth having. Reinstating it means rewriting the one `fetch` in
 `supabase/functions/notify-contact/index.ts` to call `api.resend.com/emails`
 and swapping `DISCORD_WEBHOOK_URL` for `RESEND_API_KEY` / `NOTIFY_FROM` /
 `NOTIFY_TO`. The git history has the Resend version in full. Nothing else in the
-chain — the table, the trigger, the webhook, the shared secret — changes.
+chain - the table, the trigger, the webhook, the shared secret - changes.
 
 ---
 
@@ -336,14 +336,14 @@ pings every other day.
 GitHub → repo → **Settings → Secrets and variables → Actions** → add
 `SUPABASE_URL` and `SUPABASE_ANON_KEY` as repository secrets.
 
-> **Done** — run #9, 2026-09-04, green.
+> **Done** - run #9, 2026-09-04, green.
 >
 > Runs #1–#7 were red, all with the same annotation: _SUPABASE_URL /
 > SUPABASE_ANON_KEY repository secrets are not set_. Nothing was wrong with the
 > workflow or the database; the secrets had simply never been added. Worth
 > stating because it is the easy thing to misread: **Actions secrets are a
 > separate store.** `.env.local` is on your laptop and Vercel's environment
-> variables are Vercel's — neither is visible to a GitHub runner. The workflow
+> variables are Vercel's - neither is visible to a GitHub runner. The workflow
 > checks for both up front and exits 1 before making any request, which is why
 > the failure took 3 seconds and named itself precisely.
 
@@ -369,7 +369,7 @@ by its own database.
    button, prefilled with what you typed. No error text, no red, nothing lost.
 4. Put the key back.
 
-Already verified locally against a stubbed PostgREST — a 401, a 403 from RLS,
+Already verified locally against a stubbed PostgREST - a 401, a 403 from RLS,
 and a hung connection all produce that same panel, the last within a six-second
 timeout. Doing it once for real is still worth your five minutes.
 
@@ -383,8 +383,8 @@ Every row `npm run verify:supabase` writes is tagged `source = 'verify-probe'`:
 delete from public.contacts where source = 'verify-probe';
 ```
 
-The first two runs of the script predate that tagging and left four rows behind
-— two `SETUP-CHECK-…` and two `no-prefer-probe`. Clear those with:
+The first two runs of the script predate that tagging and left four rows behind -
+two `SETUP-CHECK-…` and two `no-prefer-probe`. Clear those with:
 
 ```sql
 delete from public.contacts
@@ -415,7 +415,7 @@ Written down so nobody has to rediscover it.
 - **No IP address is stored anywhere.** The rate limiter hashes it in memory for
   ten minutes and the table has no column for it.
 - **`Prefer: return=minimal` is explicit, not required.** PostgREST defaults to
-  it for POST — verified against the live project. It is set at the call site
+  it for POST - verified against the live project. It is set at the call site
   because `@supabase/supabase-js` defaults to `return=representation` instead,
   and anon has no select privilege, so anyone swapping the raw `fetch` for the
   client library without noticing would break the form.

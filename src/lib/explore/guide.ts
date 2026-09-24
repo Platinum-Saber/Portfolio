@@ -1,5 +1,5 @@
 /**
- * Guided flight — Phase 9.2.
+ * Guided flight - Phase 9.2.
  *
  * A jump button no longer teleports the craft. It plans a route to the zone,
  * DRAWS it first (the waypoint ribbon, so the button's effect is legible
@@ -8,7 +8,7 @@
  * velocity it had, so taking over feels like grabbing the sticks mid-flight
  * rather than being dropped.
  *
- * Teleport survives as the `prefers-reduced-motion` branch only — handled by
+ * Teleport survives as the `prefers-reduced-motion` branch only - handled by
  * the caller, which never starts a Guide in that case.
  *
  * Owns no renderer state: the scene reads `curve`, `drawn`, `progress` and
@@ -57,11 +57,11 @@ export class Guide {
   curve: CatmullRomCurve3 | null = null;
   /** Zone id being flown to, while drawing or flying. */
   target: string | null = null;
-  /** 0…1 — how much of the ribbon is drawn. */
+  /** 0…1 - how much of the ribbon is drawn. */
   drawn = 0;
-  /** 0…1 — the craft's position along the ribbon. */
+  /** 0…1 - the craft's position along the ribbon. */
   progress = 0;
-  /** 0…1 — the ribbon's overall opacity. */
+  /** 0…1 - the ribbon's overall opacity. */
   opacity = 0;
   /** Bumped whenever a new route is planned, so the ribbon rebuilds once. */
   version = 0;
@@ -69,7 +69,7 @@ export class Guide {
   private elapsed = 0;
   private duration = 0;
   private startYaw = 0;
-  /** Heading the craft settles on as it arrives — along its approach. */
+  /** Heading the craft settles on as it arrives - along its approach. */
   private arrivalYaw = 0;
 
   get driving(): boolean {
@@ -89,8 +89,8 @@ export class Guide {
     // Arrive along the direction of travel, stopping short of the marker by
     // the teleport's standoff (inside ZONE_RADIUS, so the zone opens). The
     // teleport always came in from the south; copying that here made every
-    // zone south of the craft a fly-past and a U-turn. What the rule was for —
-    // the marker ahead of the chase camera on arrival — holds for any
+    // zone south of the craft a fly-past and a U-turn. What the rule was for -
+    // the marker ahead of the chase camera on arrival - holds for any
     // direction, as long as the last stretch points at it.
     let dx = tx - fx;
     let dz = tz - fz;
@@ -174,7 +174,7 @@ export class Guide {
 
     if (this.phase === 'draw') {
       this.drawn = ease(Math.min(1, this.elapsed / DRAW_S));
-      // Hold position, but turn to face the route while it draws — the
+      // Hold position, but turn to face the route while it draws - the
       // craft visibly lines up before it goes.
       const origin = curve.getPointAt(0);
       curve.getTangentAt(0.02, tangent);

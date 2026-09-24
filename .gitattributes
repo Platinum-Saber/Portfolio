@@ -1,7 +1,7 @@
 # Normalise line endings in the repository to LF, and check out LF everywhere.
 #
 # Without this, editing on Windows rewrites whole files to CRLF and git reports
-# every line as changed — the LICENSE showed a 21-insertion, 21-deletion diff
+# every line as changed - the LICENSE showed a 21-insertion, 21-deletion diff
 # whose content was byte-identical. That noise hides real changes in review.
 #
 # LF also matches Prettier's default, so `npm run format` and git agree.

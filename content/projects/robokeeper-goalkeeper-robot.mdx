@@ -1,6 +1,6 @@
 ---
 title: 'RoboKeeper: A Goalkeeper Robot'
-summary: A depth camera spots an incoming ball, an Extended Kalman Filter predicts where it will cross the goal line, and a servo swings the keeper there — built for the IESL Techno 2025 exhibition.
+summary: A depth camera spots an incoming ball, an Extended Kalman Filter predicts where it will cross the goal line, and a servo swings the keeper there - built for the IESL Techno 2025 exhibition.
 order: 4
 year: '2025'
 status: complete
@@ -23,7 +23,7 @@ stack:
 ## The problem
 
 Someone kicks a ball at a goal. A robot keeper has a fraction of a second to decide where
-to be — and it cannot wait to see where the ball arrives, because by then it is too late to
+to be - and it cannot wait to see where the ball arrives, because by then it is too late to
 move. It has to watch the first part of the flight and **predict the rest**.
 
 A team project for the **IESL Techno 2025** exhibition, built at the University of Moratuwa
@@ -43,9 +43,9 @@ Astra Pro  colour + depth
 ```
 
 **Seeing the ball.** An **Orbbec Astra Pro** RGB-D camera sits above the crossbar, behind
-the goal and centred on it, looking down the pitch at the kicker — high enough that the
+the goal and centred on it, looking down the pitch at the kicker - high enough that the
 keeper never blocks its view of the ball. Each colour
-frame is paired with its depth frame, so a ball found in the image also has a distance —
+frame is paired with its depth frame, so a ball found in the image also has a distance -
 together, a position in three dimensions. The first detector used **HSV colour
 thresholding** and contours to find the red ball; the final one uses a custom-trained
 **YOLOv8** model, which does not depend on the ball's colour surviving the room's lighting.
@@ -56,8 +56,8 @@ far gate, and when the ball reaches the near gate it publishes the pair as one t
 Two well-chosen points are enough for the filter to work with, and far cheaper than
 following every frame.
 
-**Predicting the rest.** An **Extended Kalman Filter** with a six-value state — position
-and velocity in three axes — takes those measurements, with **gravity built into its motion
+**Predicting the rest.** An **Extended Kalman Filter** with a six-value state - position
+and velocity in three axes - takes those measurements, with **gravity built into its motion
 model**, so it predicts an arc rather than a straight line. It then steps the filter
 forward until the ball reaches the plane of the goal, converts the predicted crossing point
 into a keeper angle, and publishes it.
@@ -81,7 +81,7 @@ filter.
     <source src="/video/robokeeper-demo.mp4" type="video/mp4" />
     Your browser cannot play this video.
   </video>
-  <figcaption>The keeper saving shots on the stand at IESL Techno 2025. Silent — the hall was loud.</figcaption>
+  <figcaption>The keeper saving shots on the stand at IESL Techno 2025. Silent - the hall was loud.</figcaption>
 </figure>
 
 <figure>
@@ -114,7 +114,7 @@ replaced.
 
 ## Take the shot yourself
 
-I built [an interactive simulation of the interception problem](/lab/keeper) — a ball, two
+I built [an interactive simulation of the interception problem](/lab/keeper) - a ball, two
 camera sightings, and a servo with milliseconds to move. Aim it, then switch the keeper
 between the **Kalman filter** and a **straight line through the two points** and take the
 same shot again.
@@ -128,10 +128,10 @@ worse the miss.
 The other two sliders are the constraints the real robot lived under. Camera noise goes
 almost straight through to the prediction, because two sightings give the filter nothing to
 average. And moving the near gate toward the goal shrinks the reaction time until the servo
-cannot finish its swing — a right answer that arrives too late is still a goal.
+cannot finish its swing - a right answer that arrives too late is still a goal.
 
 ## What I took from it
 
 A prediction problem hides inside most "just react to it" robotics problems. The keeper
-never catches up with the ball; it gets there first. And the unglamorous part — making a
-camera produce trustworthy depth at all — is what everything else stood on.
+never catches up with the ball; it gets there first. And the unglamorous part - making a
+camera produce trustworthy depth at all - is what everything else stood on.

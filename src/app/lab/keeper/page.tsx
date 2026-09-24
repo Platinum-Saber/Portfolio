@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { KeeperExplorer } from '@/components/lab/keeper/KeeperExplorer';
 
 export const metadata: Metadata = {
-  title: 'Lab — Goalkeeper Interception',
+  title: 'Lab - Goalkeeper Interception',
   description:
     'An interactive simulation of the RoboKeeper problem: a depth camera sees a shot twice, an Extended Kalman Filter predicts where it will cross the goal, and a servo has milliseconds to get there.',
 };
@@ -46,7 +46,7 @@ export default function KeeperLabPage() {
         </Link>
         , with the lid off. Take a shot: the camera sees the ball exactly twice,
         at the two gates, and each sighting is a little bit wrong. From that
-        pair the keeper has to decide where the ball will cross the goal — and
+        pair the keeper has to decide where the ball will cross the goal - and
         get a servo there before it does.
       </p>
 
@@ -69,7 +69,7 @@ export default function KeeperLabPage() {
           That gap is not a constant. Wind the shot speed down and the ball
           spends longer in the air over the same distance, so it falls further
           and the line misses by more. A hard, flat shot is the one case where
-          ignoring gravity nearly works — which is exactly the case where the
+          ignoring gravity nearly works - which is exactly the case where the
           servo has the least time to move.
         </P>
 
@@ -79,7 +79,7 @@ export default function KeeperLabPage() {
           change two things at once, in opposite directions. Sliding them
           together shortens the baseline the velocity is measured over, and
           because each sighting carries the same error, halving the gap roughly
-          doubles the error in the estimated speed — the prediction gets worse.
+          doubles the error in the estimated speed - the prediction gets worse.
           Sliding the near gate toward the goal makes the reaction time readout
           shrink, and below roughly a tenth of a second the servo simply cannot
           swing far enough, however right the maths was. The verdict line says
@@ -88,8 +88,8 @@ export default function KeeperLabPage() {
 
         <H>What the filter is actually doing</H>
         <P>
-          The Extended Kalman Filter carries six numbers — position and velocity
-          in three axes — and a measure of how much it trusts each one. It
+          The Extended Kalman Filter carries six numbers - position and velocity
+          in three axes - and a measure of how much it trusts each one. It
           advances that state with a model of how a ball moves, gravity
           included, then folds in each measurement according to whether the
           model or the camera is more believable at that moment. Turn the noise
@@ -101,7 +101,7 @@ export default function KeeperLabPage() {
           That is the honest limit of the two-gate design. A filter earns its
           keep when it has a stream of measurements to smooth; here it earns its
           keep by knowing that balls fall. The real system chose two gates
-          because detecting reliably is easier than tracking continuously — and
+          because detecting reliably is easier than tracking continuously - and
           the filter is what makes two points enough.
         </P>
 

@@ -6,7 +6,7 @@
  * to save about forty lines. /lab already pays for three.js; this route does
  * not have to.
  *
- * The algorithm is the same 3x3 convolution as the Basys 3 Verilog build —
+ * The algorithm is the same 3x3 convolution as the Basys 3 Verilog build -
  * see /projects/fpga-sobel-edge-detection. There, the constraint was that
  * pixels arrive one per clock and you must buffer two rows to have a
  * neighbourhood at all. Here every output pixel gathers its own neighbourhood
@@ -66,7 +66,7 @@ void main() {
 
   float mag = clamp(sqrt(gx * gx + gy * gy), 0.0, 1.0);
 
-  // A gentle curve rather than a hard threshold — a binary cut looks crisp on
+  // A gentle curve rather than a hard threshold - a binary cut looks crisp on
   // a test chart and turns to confetti on a noisy phone camera.
   mag = smoothstep(0.06, 0.55, mag);
 
@@ -74,7 +74,7 @@ void main() {
 }`;
 
 export type RenderOptions = {
-  /** Mirror horizontally — correct for a user-facing camera, wrong otherwise. */
+  /** Mirror horizontally - correct for a user-facing camera, wrong otherwise. */
   mirror: boolean;
   /** Fraction of the width showing the untouched source, 0 to 1. */
   split: number;
@@ -203,7 +203,7 @@ export class SobelRenderer {
     const gl = this.gl;
 
     // Match the drawing buffer to the source so one output pixel is one input
-    // pixel — resampling before a gradient operator softens exactly what we
+    // pixel - resampling before a gradient operator softens exactly what we
     // are trying to measure. Capped so a 4K webcam can't melt a phone.
     const scale = Math.min(1, 1280 / Math.max(width, height));
     const targetW = Math.max(1, Math.round(width * scale));
@@ -241,7 +241,7 @@ export class SobelRenderer {
     gl.deleteVertexArray(this.vao);
     gl.deleteProgram(this.program);
     // Without this the context lingers until GC, and browsers cap how many a
-    // page may hold — leaking one per visit eventually kills /lab too.
+    // page may hold - leaking one per visit eventually kills /lab too.
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }

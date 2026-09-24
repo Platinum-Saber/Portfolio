@@ -1,6 +1,6 @@
 ---
 title: 4-Bit Nano Processor
-summary: A working 4-bit processor in VHDL on a Basys 3 — register file, ALU, program counter, instruction decoder and 7-segment display driver — plus an enhanced second revision.
+summary: A working 4-bit processor in VHDL on a Basys 3 - register file, ALU, program counter, instruction decoder and 7-segment display driver - plus an enhanced second revision.
 order: 6
 year: '2025'
 status: complete
@@ -12,7 +12,7 @@ stack: ['VHDL', 'Vivado', 'Basys 3', 'Artix-7 FPGA']
 
 ## The problem
 
-Build a processor. Not simulate one, not describe one on paper — synthesise it onto an
+Build a processor. Not simulate one, not describe one on paper - synthesise it onto an
 FPGA and watch it execute a program.
 
 Built for Computer Organization and Digital Design coursework at the University of
@@ -23,8 +23,8 @@ Moratuwa, as Group 34.
 A complete **4-bit architecture** in VHDL, assembled from components built and verified
 individually:
 
-- **Register file** — 8 registers of addressable data storage
-- **ALU** — arithmetic and control operations
+- **Register file** - 8 registers of addressable data storage
+- **ALU** - arithmetic and control operations
 - **Program counter** with the control logic for sequential and branching execution
 - **Instruction decoder**
 - **7-segment display driver** to get results off the board and in front of a human
@@ -36,7 +36,7 @@ files, testbenches per component, and bitstreams for the Basys 3.
 ## What I took from it
 
 Testbenches per component, before integration. When a processor doesn't work, the failure
-surfaces as "the number on the display is wrong" — which tells you nothing about which of a
+surfaces as "the number on the display is wrong" - which tells you nothing about which of a
 dozen interacting modules lied. Verifying each block against its own testbench first turns
 an unbounded debugging problem into a bounded one. It's the lesson that transferred most
 directly to every hardware project since.

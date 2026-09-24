@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { EdgeDetector } from '@/components/lab/sobel/EdgeDetector';
 
 export const metadata: Metadata = {
-  title: 'Lab — Sobel Edge Detection in a Shader',
+  title: 'Lab - Sobel Edge Detection in a Shader',
   description:
     'Real-time Sobel edge detection running as a WebGL2 fragment shader on live camera input, entirely in the browser. The same 3×3 convolution I built in Verilog on a Basys 3 FPGA, implemented a second way.',
 };
@@ -26,7 +26,7 @@ export default function SobelPage() {
       >
         The same 3×3 convolution I built in Verilog for a Basys 3 FPGA, running
         here as a WebGL2 fragment shader on your own camera. Nothing is uploaded
-        — the frames go from the camera to your GPU and are discarded. There is
+        - the frames go from the camera to your GPU and are discarded. There is
         no server involved in this page at all.
       </p>
 
@@ -47,8 +47,8 @@ export default function SobelPage() {
           style={{ color: 'var(--fg-muted)' }}
         >
           An edge is a place where brightness changes quickly. Sobel estimates
-          that rate of change by sliding two 3×3 kernels over the image — one
-          measuring the horizontal gradient, one the vertical — and combining
+          that rate of change by sliding two 3×3 kernels over the image - one
+          measuring the horizontal gradient, one the vertical - and combining
           them into a magnitude, <span className="font-mono">√(Gx² + Gy²)</span>
           . Bright output means a steep change; flat regions, however bright,
           come out dark. The middle row and column carry double weight, which is
@@ -59,13 +59,10 @@ export default function SobelPage() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {[
-            { label: 'Gx — vertical edges', rows: KERNEL_X },
-            { label: 'Gy — horizontal edges', rows: KERNEL_Y },
+            { label: 'Gx - vertical edges', rows: KERNEL_X },
+            { label: 'Gy - horizontal edges', rows: KERNEL_Y },
           ].map((kernel) => (
-            <div
-              key={kernel.label}
-              className="glass p-4"
-            >
+            <div key={kernel.label} className="glass p-4">
               <p
                 className="font-mono text-[11px] tracking-wide uppercase"
                 style={{ color: 'var(--fg-muted)' }}
@@ -86,7 +83,7 @@ export default function SobelPage() {
           The shader runs once per output pixel, gathering that pixel&rsquo;s
           eight neighbours and producing its gradient magnitude. Every pixel is
           independent of every other, which is exactly the shape of problem a
-          GPU exists for — a 1280×720 frame is nine hundred thousand of these,
+          GPU exists for - a 1280×720 frame is nine hundred thousand of these,
           and they all finish inside a frame budget without effort. Instead of a
           hard threshold the magnitude passes through a{' '}
           <span className="font-mono">smoothstep</span>: a binary cut looks
@@ -114,7 +111,7 @@ export default function SobelPage() {
             Verilog on an Artix-7
           </Link>
           , and the interesting part is how little the two implementations have
-          in common. On the FPGA there is no image — pixels arrive from an
+          in common. On the FPGA there is no image - pixels arrive from an
           OV7670 one per clock, and a 3×3 neighbourhood only exists if you have
           already spent block RAM buffering the previous two rows. The whole
           design is that line buffer, plus reconciling three clock domains that
@@ -127,8 +124,8 @@ export default function SobelPage() {
           style={{ color: 'var(--fg-muted)' }}
         >
           On a GPU the frame is already sitting in memory and every output pixel
-          can read whatever it likes, so the line buffer — the hard part, the
-          part the FPGA design was mostly about — simply does not exist. What
+          can read whatever it likes, so the line buffer - the hard part, the
+          part the FPGA design was mostly about - simply does not exist. What
           costs nothing on one machine is the entire problem on the other.
           Neither is the &ldquo;real&rdquo; implementation; the algorithm is the
           same fifteen multiply-accumulates either way.
@@ -152,7 +149,7 @@ export default function SobelPage() {
           clicks the link with a thirty-second spinner. Running client-side
           costs nothing, scales to any number of visitors, and means your camera
           frames never travel anywhere. It is also the more honest demonstration
-          — nothing is hidden behind an endpoint.
+          - nothing is hidden behind an endpoint.
         </p>
 
         <p
@@ -169,7 +166,7 @@ export default function SobelPage() {
           >
             Airframe Explorer
           </Link>{' '}
-          pays for three.js because it genuinely needs one — that cost stays on
+          pays for three.js because it genuinely needs one - that cost stays on
           that route.
         </p>
 
@@ -185,7 +182,7 @@ export default function SobelPage() {
           style={{ color: 'var(--fg-muted)' }}
         >
           If you would rather not turn on a camera, the fallback is a synthetic
-          scene drawn in code rather than a bundled video clip — a few kilobytes
+          scene drawn in code rather than a bundled video clip - a few kilobytes
           instead of the heaviest asset on the site. It is built to be read
           rather than admired: a contrast staircase showing roughly where the
           operator stops calling a step an edge, a wedge of converging lines
@@ -196,22 +193,22 @@ export default function SobelPage() {
       </section>
 
       <nav
-        className="mt-16 flex flex-wrap gap-x-8 gap-y-3 border-t pt-6"
+        className="mt-16 flex flex-wrap gap-2.5 border-t pt-6 text-sm"
         style={{ borderColor: 'var(--border)' }}
       >
         <Link
           href="/projects/fpga-sobel-edge-detection"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          ← The FPGA implementation
+          FPGA version
         </Link>
         <Link
           href="/lab"
-          className="hover:underline"
+          className="glass glass-btn glass-press inline-flex items-center gap-2 px-3.5 py-1.5"
           style={{ color: 'var(--accent)' }}
         >
-          Airframe Explorer →
+          Drone Frame
         </Link>
       </nav>
     </div>

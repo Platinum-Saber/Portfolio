@@ -226,8 +226,8 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
-        style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+        className="glass p-6 text-sm"
+        style={{ color: 'var(--fg-muted)' }}
       >
         <p>
           The lab needs WebGL, which this browser has turned off. Nothing is
@@ -302,8 +302,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
               <button
                 type="button"
                 onClick={takeControl}
-                className="rounded px-4 py-2 text-sm font-medium"
-                style={{ backgroundColor: '#3ddba0', color: '#08130e' }}
+                className="glass glass-btn glass-press glass-accent glass-blur hud px-4 py-2 text-sm font-semibold"
               >
                 Take control
               </button>
@@ -393,14 +392,13 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
             key={station.id}
             type="button"
             onClick={() => goTo(station.id)}
-            className="rounded border px-2.5 py-1 font-mono text-[11px] hover:underline"
+            className="glass glass-btn glass-press px-2.5 py-1 font-mono text-[11px]"
             style={{
-              borderColor: 'var(--border)',
               color:
                 activeStation === station.id
                   ? 'var(--accent)'
                   : 'var(--fg-muted)',
-            }}
+}}
           >
             {station.label}
           </button>
@@ -409,8 +407,8 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
           <button
             type="button"
             onClick={() => setFlying(false)}
-            className="rounded border px-2.5 py-1 font-mono text-[11px] hover:underline"
-            style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+            className="glass glass-btn glass-press px-2.5 py-1 font-mono text-[11px]"
+            style={{ color: 'var(--fg-muted)' }}
           >
             release controls
           </button>

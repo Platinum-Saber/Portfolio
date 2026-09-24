@@ -11,6 +11,7 @@ import { STATIONS, findStation, type Station } from '@/lib/explore/lab';
 import type { Zone } from '@/lib/explore/zones';
 import { DroneModel } from '../DroneModel';
 import { Lighting } from '../Lighting';
+import { ConsoleCard } from '../../ConsoleCard';
 import { clampedPosition } from '../panelPosition';
 import { RoomModel, RoomShell, StationOutline } from './RoomModel';
 
@@ -188,8 +189,6 @@ function Rig({
   );
 }
 
-const SURFACE = 'rgba(9,13,16,0.94)';
-
 function StationScreen({
   station,
   zones,
@@ -217,28 +216,29 @@ function StationScreen({
   const zone = zones.find((candidate) => candidate.id === station.zoneId);
   if (!zone) return null;
 
+  // 9.1: the same readout as the outdoor zones, in this room's amber.
   return (
-    <div
-      className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden rounded-lg border p-3.5 backdrop-blur-sm"
-      style={{ borderColor: AMBER, backgroundColor: SURFACE, color: '#e8eaed' }}
-    >
-      <p
-        className="font-mono text-[10px] tracking-widest uppercase"
-        style={{ color: AMBER }}
-      >
-        {zone.short}
-      </p>
-      <h2 className="mt-1.5 text-base font-semibold">{zone.title}</h2>
-      {zone.body.map((paragraph) => (
-        <p
-          key={paragraph.slice(0, 24)}
-          className="mt-2 text-[13px] leading-relaxed"
-          style={{ color: '#aab2bd' }}
-        >
-          {paragraph}
-        </p>
-      ))}
-    </div>
+    <ConsoleCard
+      tone="hud"
+      accent={AMBER}
+      title={zone.short}
+      meta="station"
+      className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden"
+      lead={
+        <>
+          <h2 className="text-base font-semibold">{zone.title}</h2>
+          {zone.body.map((paragraph) => (
+            <p
+              key={paragraph.slice(0, 24)}
+              className="mt-2 text-[13px] leading-relaxed"
+              style={{ color: 'var(--fg-muted)' }}
+            >
+              {paragraph}
+            </p>
+          ))}
+        </>
+      }
+    />
   );
 }
 
@@ -269,14 +269,7 @@ function Terminal({
   const open = projects.find((project) => project.id === selectedProject);
 
   return (
-    <div
-      className="w-[min(80vw,23rem)] overflow-hidden rounded-lg border backdrop-blur-sm"
-      style={{
-        borderColor: ACCENT,
-        backgroundColor: SURFACE,
-        color: '#e8eaed',
-      }}
-    >
+    <div className="glass hud glass-blur w-[min(80vw,23rem)] overflow-hidden">
       <div
         className="flex items-baseline justify-between border-b px-3.5 py-2"
         style={{ borderColor: 'rgba(61,219,160,0.35)' }}
@@ -338,8 +331,8 @@ function Terminal({
               {open.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="rounded border px-1.5 py-0.5 font-mono text-[10px]"
-                  style={{ borderColor: '#2c3946', color: '#7d8794' }}
+                  className="glass glass-chip px-1.5 py-0.5 font-mono text-[10px]"
+                  style={{ color: 'var(--fg-muted)' }}
                 >
                   {tag}
                 </li>

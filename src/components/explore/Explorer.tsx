@@ -67,6 +67,7 @@ const EMPTY: Telemetry = {
   heading: 0,
   nearestId: null,
   nearestDistance: 0,
+  guidingTo: null,
 };
 
 /**
@@ -151,7 +152,9 @@ export function Explorer({ zones }: { zones: Zone[] }) {
     // this call costs a function invocation and nothing else in the default,
     // silent case. Normalised here rather than inside the engine so the audio
     // never has to know how fast this particular craft goes.
-    engine(next.speed / MAX_SPEED);
+    // Guided flight (9.2) runs faster than a visitor can fly; the engine
+    // tops out at full throttle rather than being driven past it.
+    engine(Math.min(1, next.speed / MAX_SPEED));
   }, []);
 
   // Flight stopping — leaving fullscreen, unmounting, navigating away — has to
@@ -274,10 +277,8 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
+        className="glass p-6 text-sm"
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
           color: 'var(--fg-muted)',
         }}
       >
@@ -295,6 +296,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
   const found = discovered.size;
   const total = zones.length;
   const nearest = zones.find((zone) => zone.id === telemetry.nearestId);
+  const guiding = zones.find((zone) => zone.id === telemetry.guidingTo);
 
   return (
     /*
@@ -352,13 +354,30 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           <p className="font-mono text-[11px]" style={{ color: '#7d8794' }}>
             {found} of {total} found
           </p>
-          {nearest && !activeId && (
+          {guiding ? (
+            // 9.2: say what is flying the craft, and how to take it back.
+            // Live region, so a screen reader hears the flight start.
             <p
               className="mt-1 font-mono text-[11px]"
               style={{ color: '#3ddba0' }}
+              aria-live="polite"
             >
-              {nearest.label} · {telemetry.nearestDistance.toFixed(0)} m
+              autopilot ▸ {guiding.label}
+              <br />
+              <span style={{ color: '#7d8794' }}>
+                any flight control takes over
+              </span>
             </p>
+          ) : (
+            nearest &&
+            !activeId && (
+              <p
+                className="mt-1 font-mono text-[11px]"
+                style={{ color: '#3ddba0' }}
+              >
+                {nearest.label} · {telemetry.nearestDistance.toFixed(0)} m
+              </p>
+            )
           )}
           <div className="pointer-events-auto mt-2">
             <AudioToggle />
@@ -420,8 +439,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
               <button
                 type="button"
                 onClick={takeControl}
-                className="rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#3ddba0', color: '#08120e' }}
+                className="glass glass-btn glass-press glass-accent glass-blur hud px-5 py-2.5 text-sm font-semibold"
               >
                 Take control
               </button>
@@ -525,11 +543,8 @@ export function Explorer({ zones }: { zones: Zone[] }) {
                     }));
                     takeControl();
                   }}
-                  className="rounded border px-2.5 py-1.5 font-mono text-[11px] transition-colors"
-                  style={{
-                    borderColor: seen ? 'var(--accent)' : 'var(--border)',
-                    color: seen ? 'var(--accent)' : 'var(--fg-muted)',
-                  }}
+                  className="glass glass-btn glass-press px-2.5 py-1.5 font-mono text-[11px]"
+                  style={{ color: seen ? 'var(--accent)' : 'var(--fg-muted)' }}
                   title={`Fly to ${zone.title}`}
                 >
                   {seen ? '● ' : '○ '}

@@ -9,8 +9,9 @@ export function ProjectCard({ project }: { project: Project }) {
     <li className="rise">
       <TransitionLink
         href={`/projects/${project.slug}`}
-        className="group block rounded-lg border p-5 transition-colors"
-        style={{ borderColor: 'var(--border)' }}
+        // 9.0: a pane of pressable glass — takes the pointer light, lifts
+        // toward it, gives under a press (`.glass-press` in globals.css).
+        className="glass glass-press group block p-5"
       >
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {/* 8.3: morphs into the case study's <h1 data-vt-land>. */}
@@ -41,11 +42,8 @@ export function ProjectCard({ project }: { project: Project }) {
           {project.stack.slice(0, 5).map((tech) => (
             <li
               key={tech}
-              className="rounded px-2 py-0.5 font-mono text-[11px]"
-              style={{
-                backgroundColor: 'var(--bg-subtle)',
-                color: 'var(--fg-muted)',
-              }}
+              className="glass glass-chip px-2 py-0.5 font-mono text-[11px]"
+              style={{ color: 'var(--fg-muted)' }}
             >
               {tech}
             </li>

@@ -117,11 +117,8 @@ export default function ExplorePage() {
                   {zone.tags.map((tag) => (
                     <li
                       key={tag}
-                      className="rounded border px-1.5 py-0.5 font-mono text-[10px]"
-                      style={{
-                        borderColor: 'var(--border)',
-                        color: 'var(--fg-muted)',
-                      }}
+                      className="glass glass-chip px-1.5 py-0.5 font-mono text-[10px]"
+                      style={{ color: 'var(--fg-muted)' }}
                     >
                       {tag}
                     </li>

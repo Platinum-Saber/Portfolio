@@ -82,10 +82,8 @@ export function AirframeExplorer() {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
+        className="glass p-6 text-sm"
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
           color: 'var(--fg-muted)',
         }}
       >
@@ -126,8 +124,7 @@ export function AirframeExplorer() {
       {/* Selection panel. Lives outside the canvas so the text stays real,
           selectable, and readable by a screen reader. */}
       <div
-        className="mt-4 rounded-lg border p-5"
-        style={{ borderColor: 'var(--border)' }}
+        className="glass mt-4 p-5"
         aria-live="polite"
       >
         {component ? (
@@ -188,11 +185,8 @@ export function AirframeExplorer() {
                   <button
                     type="button"
                     onClick={() => setSelected(c.id)}
-                    className="rounded border px-2 py-1 font-mono text-[11px] transition-colors"
-                    style={{
-                      borderColor: 'var(--border)',
-                      color: 'var(--fg-muted)',
-                    }}
+                    className="glass glass-btn glass-press px-2 py-1 font-mono text-[11px]"
+                    style={{ color: 'var(--fg-muted)' }}
                   >
                     {i + 1} · {c.short}
                   </button>

@@ -51,11 +51,11 @@ export default function HomePage() {
               meta="Summary"
               portrait={<Portrait size={88} />}
               footer={
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <div className="flex flex-wrap gap-2.5 text-sm">
                   {site.cv && (
                     <a
                       href={site.cv}
-                      className="hover:underline"
+                      className="glass glass-btn glass-press px-3.5 py-1.5"
                       style={{ color: 'var(--accent)' }}
                     >
                       CV (PDF) →
@@ -63,7 +63,7 @@ export default function HomePage() {
                   )}
                   <a
                     href={site.socials.github}
-                    className="hover:underline"
+                    className="glass glass-btn glass-press px-3.5 py-1.5"
                     style={{ color: 'var(--accent)' }}
                   >
                     GitHub →

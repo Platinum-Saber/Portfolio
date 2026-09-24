@@ -26,7 +26,7 @@
 | 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — **unblocked 2026-09-24** (Phase 8 done) |
 | 7 | ~~*Optional* — AWS artifact~~ | — | ❌ Dropped (2026-09-23) |
 | 8 | Design architecture | One visual language across every route | ✅ Done (2026-09-24) — 8.1–8.9 all shipped; 8.3 hand-rolled |
-| 9 | Diegetic world | Zone info delivered inside the scene, not over it | ⬜ Not started — **unblocked 2026-08-24** |
+| 9 | Diegetic world | Zone info delivered inside the scene, not over it | 🟡 In progress — 9.0 glass and 9.2 guided flight done; 9.1 one item open |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
@@ -765,30 +765,115 @@ measured on its target device means debugging a frame rate with three new suspec
 
 ---
 
+#### 9.0 — Glass, site-wide — ✅ Done (2026-09-24)
+
+*Added 2026-09-24 at Suhan's request: every text panel looks like glass, in the manner of Apple's
+glass widgets. Inserted before 9.1 because 9.1 restyles the zone panel, and restyling it twice
+would be waste. Rules in `DESIGN-LANGUAGE.md` §6.1.*
+
+- [x] One material in `globals.css`: `.glass` (tint · gradient rim · sheen · lift shadow),
+      `.glass-blur` (the frost), `.hud` (the fixed dark palette, as local token overrides)
+- [x] **Blur only where something is behind the glass** — the nav and the 3D overlays. Content
+      panels sit over nothing with detail, so blur there would be an invisible GPU cost per
+      panel per scroll frame. This is the one place the request was adapted rather than followed
+      literally
+- [x] Faint static ambient light (`body::before`) so un-blurred glass has something to be over
+- [x] Applied: `ConsoleCard` (→ home summary, lab index, portal, About dossier), `ProjectCard`,
+      the contact form's sent and fallback panels, `/lab` selection panel, the Sobel kernel and
+      error panels, every scene's no-WebGL notice, the nav, and the 3D overlay buttons
+- [x] Fallbacks verified in headless Chromium: reduced transparency → opaque with no blur,
+      sheen or ambient light; forced colours → plain border; no `backdrop-filter` → tint raised
+- [x] Measured: content routes **464 KB, unchanged**; `/explore` +1 KB; CSS +1,452 B
+- [x] Both themes screenshotted: light reads as white glass on paper, dark as a lit-rim pane
+
+- [x] **9.0b — liquid and pointer-responsive** (same day, Suhan's follow-up request).
+      `components/GlassLight.tsx`: one delegated `pointermove` listener drives a specular pool
+      that follows the pointer and an accent glint on the nearest rim; `.glass-press` panes
+      (project cards) lift toward the pointer and squish on press; Chromium gets true
+      refraction on blurred panes via an SVG displacement filter in `backdrop-filter`,
+      switched on by engine detection. Mouse/pen only, off under reduced motion
+- [x] Verified in headless Chromium: hover sets `data-lit`, `--glint` eases to 1, the card
+      lifts 2 px; refraction confirmed over a striped test backdrop (edges bend, centre flat)
+- [x] Measured: **+2 KB JS on every route** — content routes 466 KB, inside budget; CSS 53.7 KB
+- [x] Pointer light tightened on request: face 240 → **130 px**, rim 170 → **90 px**, now the
+      `--glass-light-r` / `--glass-rim-r` tokens
+- [x] **9.0c — click gleam.** Pressing a `.glass-press` pane sweeps a diagonal band of light
+      across it (and flashes the rim) *before* navigating — `lib/gleam.ts`, called from
+      `TransitionLink`. It must finish first: a view transition snapshots the old page the
+      instant it starts, so a gleam still running would freeze mid-sweep. Costs a 340 ms beat
+      between click and navigation, measured at 377 ms to transition start. Double-clicks are
+      ignored while it runs; reduced motion skips it with no delay; a timeout floors it so a
+      skipped animation can never strand the visitor
+- [x] **9.0d — buttons and tags in the same glass.** Three sizes of the one material:
+      `.glass-btn` (capsule; pair with `.glass-press` for lift/squish/pointer light),
+      `.glass-chip` (6 px tag, flat, never moves), `.glass-field` (a recessed well for inputs).
+      `.glass-accent` — and automatically `aria-pressed="true"` / `aria-current="page"` — tints
+      the glass with the accent instead of painting over it. Applied to every button on the
+      site (lab controls, `/explore` HUD capsules, audio and theme toggles, the three primary
+      actions, the home card's CV/GitHub links), the nav's current page, every tag and status
+      badge, and the contact form's fields. No `rounded border` control is left anywhere
+      in `src/`
+- [x] HUD capsules are blurred but **never refracted** — a dozen displacement filters over a
+      live WebGL canvas is the cost that would show on the budget phone
+- [x] Inputs have no `::before`/`::after` (replaced elements), so their rim is box-shadow and
+      they take no pointer light — the one place the material is necessarily partial
+- [ ] **Real-device checks still owed:** frame rate of refraction + blur over the live scene on
+      the mid-range Android, and how the light reads in Safari (no refraction there, by design)
+
+---
+
 #### 9.1 — The panel stops looking like a website
 
 *Cheapest fix, largest share of the "feels out of place" problem, no new geometry.*
 
-- [ ] Restyle the zone panel as an instrument readout on the `ConsoleCard` primitive — docked
-      to the console frame, not a card floating in space
-- [ ] Same treatment for `/lab` hotspot callouts, so the two scenes agree
-- [ ] Keep the custom `calculatePosition` clamp — it exists because drei's default put the top
-      of every panel off-frame at exactly the moment you arrived to read it
+- [x] Restyle the zone panel as an instrument readout on the `ConsoleCard` primitive, in HUD
+      glass — zone name in the header, title and prose as the card's new `lead`, the stack as a
+      `STACK` field. The zone's colour passes through as the card's `accent`
+- [x] Same treatment in `/explore/lab`: station screens are the same readout in the room's amber,
+      the projects terminal is HUD glass. `/lab`'s callout is its selection panel under the
+      canvas (the in-scene markers are numbered buttons, not text), now site glass
+- [x] Keep the custom `calculatePosition` clamp — unchanged
+- [ ] **Found while verifying:** the clamp's 12 px top margin lets the readout cover the jump
+      buttons along the top of the frame (it did before 9.1 as well). Clamp below the chrome row,
+      or dock the readout to a fixed corner of the frame. This is the "docked to the console
+      frame" half of the original item
 
 **Done when:** nothing in the world is wearing site chrome, and no geometry was added.
 
 ---
 
-#### 9.2 — Waypoint ribbon
+#### 9.2 — Waypoint ribbon — ✅ Done for `/explore` (2026-09-24)
 
-- [ ] A catmull-rom of additive points from the craft to the selected zone, in the accent.
-      Tier B particles — one buffer geometry, animated by a time uniform, not per-particle JS
-- [ ] The existing jump buttons fly the craft **along the ribbon**; auto-flight is interrupted
-      the instant the visitor touches a control
-- [ ] `prefers-reduced-motion` → instant reposition. **This is where teleport belongs** — as
-      the accessible branch, not as the default
-- [ ] The ribbon is drawn before the flight starts, so the button's effect is legible rather
-      than magic
+- [x] A centripetal catmull-rom of 220 additive points from the craft to the selected zone,
+      in the accent (`components/explore/Ribbon.tsx`). Tier B: one BufferGeometry allocated
+      once, rewritten once per route; the drawing-out, the light pulsing towards the target and
+      the stretch behind the craft dissolving are all the vertex shader reading four uniforms
+- [x] The jump buttons fly the craft **along the ribbon** (`lib/explore/guide.ts`); any flight
+      control takes over instantly and the craft keeps the guide's velocity, so the hand-over
+      is continuous. Verified: holding W mid-route cancels the autopilot on the next frame
+- [x] `prefers-reduced-motion` → instant reposition, the only place teleport is still used.
+      Verified: the panel opens within one frame of the click
+- [x] The ribbon draws for 0.55 s before the craft moves, and the craft turns to face the route
+      while it does
+- [x] The route arcs up to ~10 m above the higher end (the flight volume above 12 m was
+      otherwise unused, §9) and finishes on a 12 m straight run at the marker along the
+      direction of travel, stopping inside ZONE_RADIUS so the zone opens on arrival
+- [x] Guided speed averages 30 m/s (1.4–4.2 s per jump), faster than the 17 m/s a visitor
+      flies: a shortcut that took longer than flying it yourself would not be one. The lean is
+      capped at the manual maximum, and the engine sound at full throttle
+- [x] Zones crossed on the way neither open nor count as found. Verified: jumping across the
+      world over the Contact marker, only the target was counted
+- [x] The guide runs on wall-clock time (capped at 0.25 s per frame), not the physics step's
+      50 ms clamp — at low frame rates a clamped clock stretched a 3 s flight to 20 s. Found
+      in headless verification at 3.5 fps; arrival there now takes ~5.5 s including load lag
+- [x] A corner line reads `autopilot ▸ <zone> · any flight control takes over`, in a live
+      region so a screen reader hears the flight start
+- [x] Measured: `/explore` **1,487 KB** (+6 KB — the curve class and the shader). Content
+      routes unaffected
+- [ ] **`/explore/lab` still snaps to its stations.** Not an oversight: the room has colliders,
+      so a guided route there needs pathing around furniture, a different problem from this
+      one. Separate follow-up, 9.2b
+- [ ] Frame rate on the mid-range Android with the ribbon visible — owed with the 9.0 glass check
 
 **Not doing: teleport as the default.** Spatial memory is the entire payoff of flying rather
 than clicking; a cut means you never learn where anything sits relative to anything else, and
@@ -849,6 +934,10 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date — decision — why.
 
+- **2026-09-24** — **Guided flights arrive along their direction of travel, not from the south.** The teleport always placed the craft south of a marker facing north, and the first guided build copied that — so every zone south of the craft became a fly-past and a U-turn. The rule existed for one reason, the marker ahead of the chase camera on arrival, and a final straight run *at* the marker from any direction satisfies it. Guided speed (30 m/s average) is deliberately above the 17 m/s a visitor can fly; the jump is a shortcut. `/explore/lab` keeps its snap until its colliders get a pathing answer (9.2b).
+- **2026-09-24** — **The click gleam delays navigation by 340 ms, on purpose.** Asked for "before going through the routing path", and that is the only way it can be seen: a view transition captures the old page as a still at the moment it starts, so any animation running then freezes. 340 ms stays under the ~400 ms at which a click starts to feel ignored, and the gleam itself is the feedback that the click landed. Under reduced motion there is no gleam and no delay.
+- **2026-09-24** — **Glass became liquid: pointer light, press, and Chromium-only refraction.** Refraction had been declined hours earlier for being Chromium-only. It is back as a *detected enhancement* — a class set only on a Chromium engine, applied only to panes with a live backdrop — so every other browser keeps correct frosted glass rather than a guessed filter that may render blank. The pointer light is one document-level listener writing three CSS variables per frame; a per-pane listener or React state would re-render panels on every mouse move. Cost +2 KB on every route, accepted: content routes stay at 466 KB against ~475 KB.
+- **2026-09-24** — **Text panels are glass, overturning 8.2's "no shadow, no gradient, no glass".** Suhan asked for Apple-widget glass on every text panel. It fits the metaphor as the instrument's cover glass, so it replaces the rule rather than breaking §2. **Adapted in one respect:** blur is applied only where something is behind the glass (the nav, and panels over a 3D canvas). A content panel sits over nothing with detail — the particle rails never enter the reading column — so blurring it costs a GPU pass per panel per scroll frame for an effect nobody can see. Refraction declined: Chromium-only. Inserted as 9.0 so the 9.1 restyle happens once.
 - **2026-09-24** — **Phase 8 closed; the harness anchors moved from 1,402 / 1,395 to 1,411 / 1,397.** The old numbers had stopped being reproducible and the check was about to be quietly skipped. Building the last commit separately showed why: 1,409 / 1,396 — the 8.7 `AudioToggle` added 7 KB to `/lab` after the anchor was taken, and 8.3 adds 2 KB to every route. A drifted anchor is re-baselined *by proving the drift*, never by accepting a new number on sight.
 - **2026-09-24** — **The WebGL-disabled guardrail found a real bug, so it stays mandatory.** `/lab` rendered blank without WebGL: 8.7 put a `useEffect` below the no-WebGL early return, the server's `'checking'` render ran it and the client's `'unsupported'` render did not, and React threw #300. Three sibling scenes with the same shape were fine, which is why "the structure looks the same" is not a substitute for running the check.
 - **2026-09-23** — **8.3 view transitions hand-rolled (option 2), names per click.** React still has no stable `ViewTransition` (19.2.8), so `TransitionLink` wraps `router.push` in `document.startViewTransition` and a layout effect watching the pathname says when the route has landed. The shared-element name is set on the one clicked title and the landing `<h1>` only for the transition: a static name on every card title made hidden home-page cards fly into `/projects`. Links into the 3D routes stay plain, because a view transition freezes the page until the next route arrives. Cost +2 KB per route, against the 0 KB the plan had assumed.

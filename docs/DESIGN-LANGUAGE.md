@@ -311,8 +311,10 @@ Rules:
 - **Real data only.** Chrome can invent "favourite meal: ramen" because it is a persona. An
   engineering portfolio's credibility is its currency — every field must be true and checkable.
   A dry field beats an invented quirky one.
-- **Borders are 1 px `--border`, corners near-square (2 px).** No shadows, no glass, no gradients —
-  the schematic language is line weight and spacing.
+- ~~**Borders are 1 px `--border`, corners near-square (2 px).** No shadows, no glass, no gradients —
+  the schematic language is line weight and spacing.~~ **Overturned 2026-09-24 by decision — see
+  §6.1.** The panel is now glass; the *fields* inside it (mono labels, dotted leaders, 1 px rules
+  between header and body) still carry the schematic language.
 - **Chrome text is decoration and must be `aria-hidden`.** Version strings, corner ticks and any junk
   glyphs are visual texture; screen readers get the fields only.
 - **Junk-glyph noise: at most one instance per page, and never near real content.** The reference
@@ -325,6 +327,79 @@ Rules:
 - *Corrected in 8.8:* STATUS does **not** reuse `StatusBadge`. That component states a *project's*
   lifecycle (complete / in progress); the operator's availability is a different kind of fact, and a
   pill that looks identical to a project's would claim they are the same one (PLAN 8.2).
+
+### 6.1 Glass — decided 2026-09-24
+
+Every text panel on the site is one material, in the manner of Apple's glass widgets: a
+translucent tint, a 1 px rim that catches light at the top-left and fades round the sides, a
+sheen across the top of the pane, and a soft lift shadow. Read through the console metaphor it
+is the instrument's **cover glass** — which is why it can replace "no glass" without breaking
+§2: the panel is still a console readout, now behind a pane.
+
+**Blur only where something is behind the glass.** This is the feasibility finding that shapes
+the whole material. A content route has nothing with detail under its panels — the particle
+rails live in the margins and never cross the 48rem reading column — so a backdrop blur there
+blurs a smooth gradient into the same smooth gradient: invisible, yet a GPU pass per panel per
+scroll frame, nine times over on `/projects`, on the mid-range Android the budget is written
+for. So:
+
+| Surface | Class | Blur | Why |
+|---|---|---|---|
+| Content-route panels — `ConsoleCard`, `ProjectCard`, the contact form's status panels, `/lab` notices and readouts | `.glass` | **no** | Nothing behind it to frost. The look comes from tint, rim, sheen and shadow over a faint ambient light |
+| The sticky nav | `.glass-blur` | yes | The page scrolls underneath it |
+| Every panel over a 3D canvas — `/explore` zone readouts, `/explore/lab` station screens and terminal, the overlay buttons | `.glass.hud.glass-blur` | yes | The scene renders behind it every frame; this is where frost earns its cost |
+
+**Ambient light.** Glass needs something to be glass *over*, so `body::before` carries three
+large, static radial gradients in `--accent` and a neutral at under 12% — fixed, never
+animated, 0 KB of JS, and far below anything that could move body-text contrast.
+
+**The HUD tone redefines the tokens, it does not fork the components.** `.hud` sets `--fg`,
+`--fg-muted`, `--border`, `--accent` and the glass variables to the fixed dark palette locally, so
+`ConsoleCard` renders correctly over a canvas with no second code path. A zone's own colour is
+passed as `accent` and overrides `--accent` for that one card.
+
+**Radius** is `--glass-radius`: 14 px on content routes, 12 px in the HUD. The 2 px near-square
+corner of 8.2 was part of the rule this replaced.
+
+**Fallbacks are part of the material, not polish:**
+- `prefers-reduced-transparency: reduce` → opaque `--bg-subtle`, no blur, no sheen, no ambient light
+- no `backdrop-filter` support → the blurred variants raise their tint to ~90%, so text never
+  sits on an unfrosted 3D scene
+- `forced-colors` → a plain `CanvasText` border; rim and sheen removed
+
+**Liquid, and alive under the pointer — added the same day, at Suhan's request.** Three layers:
+
+1. **Pointer light, every browser.** A pane under a mouse or pen gets a soft specular pool that
+   follows the pointer, and its rim catches an accent-tinted glint on the edge nearest it. One
+   delegated `pointermove` listener (`components/GlassLight.tsx`) writes `--gx`, `--gy` and a
+   `data-lit` flag once per frame; everything visible is CSS. `--glint` is a registered
+   `@property` so the light *eases* in and out instead of snapping — and it must be registered
+   `inherits: true`, because the light is painted by `::before`/`::after`, which only see it by
+   inheritance (registered `false`, the pane silently never lights; found in verification).
+   Off for touch and coarse pointers, and off under reduced motion — light chasing a cursor is
+   motion.
+2. **Press, every browser.** `.glass-press` panes — glass you can click, today the project
+   cards — lift 2 px toward the pointer and give under a press (`scale(.992)`). Readouts never
+   move: the dossier or a zone panel sliding under the cursor would be a nuisance, not an
+   affordance. Touch gets the press through plain `:active`.
+3. **Refraction, Chromium only, blurred panes only.** An SVG displacement filter inside
+   `backdrop-filter` bends the backdrop outward over the outer ~14% of each edge and leaves the
+   middle optically flat — a thick sheet of glass rather than a fish-eye. The scale is a
+   fraction of the pane (`objectBoundingBox`), so a chip and a readout bend in proportion. It is
+   enabled by a class set only after detecting a Chromium engine, because elsewhere an SVG
+   filter in `backdrop-filter` is dropped or renders nothing, and a guess in CSS risks a blank
+   pane. Earlier this section declined refraction for being Chromium-only; the answer changed
+   because it is now a detected *enhancement* over frosted glass that is correct everywhere,
+   not the material itself. On content routes it is deliberately absent — there is nothing
+   behind those panes to bend.
+
+`/explore` zone readouts are captions (`pointer-events: none`, so they never steal the flight
+controls' pointer), which means they take refraction but not pointer light. The `/explore/lab`
+terminal is a control and takes both.
+
+Implementation: `.glass`, `.glass-blur` and `.hud` in `globals.css` (PLAN 9.0). Cost measured:
+**+2 KB of JS on every route** (`GlassLight`), +1 KB more on the 3D routes (`ConsoleCard` in their
+client bundle); content routes 466 KB, inside the ~475 KB budget. CSS +5 KB in total.
 
 ### 6.5 Home page composition — decided 2026-08-24
 

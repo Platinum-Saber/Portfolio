@@ -124,11 +124,7 @@ export function ContactForm() {
   if (state.kind === 'sent') {
     return (
       <div
-        className="rounded-lg border p-6"
-        style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
-        }}
+        className="glass p-6"
         role="status"
       >
         <p className="font-medium">Sent — thank you.</p>
@@ -154,11 +150,8 @@ export function ContactForm() {
 
   const sending = state.kind === 'sending';
 
-  const inputStyle = {
-    borderColor: 'var(--border)',
-    backgroundColor: 'var(--bg)',
-    color: 'var(--fg)',
-  };
+  // 9.0d: fields are glass wells (`.glass-field`); only the text colour is set here.
+  const inputStyle = { color: 'var(--fg)' };
 
   const fields = [
     {
@@ -181,11 +174,7 @@ export function ContactForm() {
     <div>
       {state.kind === 'fallback' && (
         <div
-          className="mb-6 rounded-lg border p-5"
-          style={{
-            borderColor: 'var(--border)',
-            backgroundColor: 'var(--bg-subtle)',
-          }}
+          className="glass mb-6 p-5"
           role="status"
         >
           <p className="text-sm leading-relaxed">{state.note}</p>
@@ -230,7 +219,7 @@ export function ContactForm() {
               aria-describedby={
                 errors[field.key] ? `${fieldId}-${field.key}-error` : undefined
               }
-              className="mt-2 w-full rounded-md border px-3 py-2 text-sm disabled:opacity-60"
+              className="glass glass-field mt-2 w-full px-3 py-2 text-sm disabled:opacity-60"
               style={inputStyle}
             />
             {errors[field.key] && (
@@ -265,7 +254,7 @@ export function ContactForm() {
             aria-describedby={
               errors.message ? `${fieldId}-message-error` : undefined
             }
-            className="mt-2 w-full resize-y rounded-md border px-3 py-2 text-sm disabled:opacity-60"
+            className="glass glass-field mt-2 w-full resize-y px-3 py-2 text-sm disabled:opacity-60"
             style={inputStyle}
           />
           {errors.message && (
@@ -304,8 +293,8 @@ export function ContactForm() {
           <button
             type="submit"
             disabled={sending}
-            className="rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+            // 9.0d: the page's primary action, in tinted glass.
+            className="glass glass-btn glass-press glass-accent px-5 py-2.5 text-sm font-semibold disabled:opacity-50"
           >
             {sending ? 'Sending…' : 'Send message'}
           </button>

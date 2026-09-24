@@ -92,11 +92,8 @@ export default async function ProjectPage({ params }: Params) {
           {project.stack.map((tech) => (
             <li
               key={tech}
-              className="rounded px-2 py-1 font-mono text-[11px]"
-              style={{
-                backgroundColor: 'var(--bg-subtle)',
-                color: 'var(--fg-muted)',
-              }}
+              className="glass glass-chip px-2 py-1 font-mono text-[11px]"
+              style={{ color: 'var(--fg-muted)' }}
             >
               {tech}
             </li>

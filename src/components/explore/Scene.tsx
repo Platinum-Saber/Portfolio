@@ -12,6 +12,9 @@ import { ZONE_RADIUS, type Zone } from '@/lib/explore/zones';
 import { DroneModel } from './DroneModel';
 import { Lighting } from './Lighting';
 import { World, zoneColor } from './World';
+import { Ribbon } from './Ribbon';
+import { Guide } from '@/lib/explore/guide';
+import { ConsoleCard, ConsoleField } from '../ConsoleCard';
 
 /**
  * A request to reposition the drone, carried as a value rather than a mutable
@@ -28,6 +31,8 @@ export type Telemetry = {
   heading: number;
   nearestId: string | null;
   nearestDistance: number;
+  /** Zone the guide is flying to (9.2), or null under manual control. */
+  guidingTo: string | null;
 };
 
 const CAMERA_BACK = 9;
@@ -55,6 +60,7 @@ function Rig({
   reducedMotion: boolean;
 }) {
   const drone = useMemo(() => new Drone(), []);
+  const guide = useMemo(() => new Guide(), []);
   const body = useRef<Group>(null);
 
   const desired = useMemo(() => new Vector3(), []);
@@ -69,12 +75,42 @@ function Rig({
     if (jump && jump.nonce !== servedJump.current) {
       servedJump.current = jump.nonce;
       const target = zones.find((zone) => zone.id === jump.id);
-      if (target) drone.teleport(target.position);
+      if (target) {
+        // 9.2: a jump is a guided flight. Teleport is the reduced-motion
+        // branch only — an instant reposition is the right behaviour there,
+        // and a cut everywhere else.
+        if (reducedMotion) drone.teleport(target.position);
+        else
+          guide.start(
+            target.id,
+            [drone.x, drone.y, drone.z],
+            drone.yaw,
+            target.position,
+          );
+      }
     }
 
+    // Taking the sticks ends a guided flight on the spot. The craft keeps the
+    // velocity the guide gave it, so the hand-over is continuous.
+    const pilot = flying ? (input.current ?? NEUTRAL) : NEUTRAL;
+    const touching =
+      Math.abs(pilot.pitch) +
+        Math.abs(pilot.roll) +
+        Math.abs(pilot.lift) +
+        Math.abs(pilot.yaw) >
+      0.05;
+    if (touching) guide.cancel();
+
+    // The guide runs on wall-clock time, not the physics step's 50 ms clamp:
+    // its duration is a promise ("about three seconds to MediBox"), and at a
+    // low frame rate a clamped clock would stretch that promise out. The
+    // 0.25 s cap only stops a backgrounded tab resuming mid-route.
+    const guideDt = Math.min(delta, 0.25);
+    const pose = guide.update(guideDt);
+    if (pose) drone.follow(pose.x, pose.y, pose.z, pose.yaw, guideDt);
     // Not flying means the drone holds station: it still exists, the camera
     // still frames it, it simply ignores input until control is taken.
-    drone.step(delta, flying ? (input.current ?? NEUTRAL) : NEUTRAL);
+    else drone.step(delta, pilot);
 
     if (body.current) {
       body.current.position.set(drone.x, drone.y, drone.z);
@@ -119,6 +155,12 @@ function Rig({
       if (distance < threshold) entered = zone.id;
     }
 
+    // A guided route can cross other zones' trigger radius on the way. They
+    // must not open mid-flight, nor count as found — the visitor did not go
+    // there. Entry resumes the moment the guide lets go, which on arrival
+    // opens the target exactly as a teleport did.
+    if (guide.driving) entered = null;
+
     if (entered !== inZone.current) {
       inZone.current = entered;
       onEnter(entered);
@@ -133,6 +175,7 @@ function Rig({
         heading: ((-drone.yaw * 180) / Math.PI + 360) % 360,
         nearestId,
         nearestDistance,
+        guidingTo: guide.target,
       });
     }
   });
@@ -168,6 +211,8 @@ function Rig({
         <DroneModel spin={!reducedMotion} />
       </group>
 
+      <Ribbon guide={guide} />
+
       {/*
         Exactly one panel exists at a time. Nine <Html> panels would mean nine
         DOM subtrees being reprojected every frame, and only one of them can be
@@ -185,46 +230,38 @@ function Rig({
           zIndexRange={[40, 0]}
           style={{ pointerEvents: 'none' }}
         >
-          <div>
-            <div
-              className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden rounded-lg border p-3.5 backdrop-blur-sm"
-              style={{
-                borderColor: zoneColor(active.kind),
-                backgroundColor: 'rgba(11,14,17,0.92)',
-                color: '#e8eaed',
-              }}
-            >
-              <p
-                className="font-mono text-[10px] tracking-widest uppercase"
-                style={{ color: zoneColor(active.kind) }}
-              >
-                {active.short}
-              </p>
-              <h2 className="mt-1.5 text-base font-semibold">{active.title}</h2>
-              {active.body.map((paragraph) => (
-                <p
-                  key={paragraph.slice(0, 24)}
-                  className="mt-2 text-[13px] leading-relaxed"
-                  style={{ color: '#aab2bd' }}
-                >
-                  {paragraph}
-                </p>
-              ))}
-              {active.tags && (
-                <ul className="mt-3 flex flex-wrap gap-1.5">
-                  {active.tags.map((tag) => (
-                    <li
-                      key={tag}
-                      className="rounded border px-1.5 py-0.5 font-mono text-[10px]"
-                      style={{ borderColor: '#2c3946', color: '#7d8794' }}
-                    >
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+          {/* 9.1: an instrument readout on the ConsoleCard primitive in HUD
+              glass, not a website card floating in the sky. Same text, same
+              size box (clampedPosition's PANEL_W/H assume it). */}
+          <ConsoleCard
+            tone="hud"
+            accent={zoneColor(active.kind)}
+            title={active.short}
+            meta={active.kind}
+            className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden"
+            lead={
+              <>
+                <h2 className="text-base font-semibold">{active.title}</h2>
+                {active.body.map((paragraph) => (
+                  <p
+                    key={paragraph.slice(0, 24)}
+                    className="mt-2 text-[13px] leading-relaxed"
+                    style={{ color: 'var(--fg-muted)' }}
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </>
+            }
+          >
+            {active.tags && (
+              <ConsoleField label="Stack">
+                <span className="font-mono text-[11px]">
+                  {active.tags.join(' · ')}
+                </span>
+              </ConsoleField>
+            )}
+          </ConsoleCard>
         </Html>
       )}
     </>

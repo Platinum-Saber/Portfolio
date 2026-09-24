@@ -63,8 +63,7 @@ export function HomePortal() {
           /* See the note in page.tsx: on a stacked stage every link is always
              "in viewport", so this would prefetch the 3D route on page load. */
           prefetch={false}
-          className="rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
-          style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+          className="glass glass-btn glass-press glass-accent px-4 py-2 text-sm font-semibold"
         >
           ▸ Take control
         </Link>

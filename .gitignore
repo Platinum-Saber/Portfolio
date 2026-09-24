@@ -10,6 +10,7 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 _to_delete/
+logs/
 
 supabase/.temp
 

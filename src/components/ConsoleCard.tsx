@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 /**
  * The console card — Phase 8.2.
@@ -7,9 +7,14 @@ import type { ReactNode } from 'react';
  * summary, the About dossier, and (Phase 9) the explore zone panels and lab
  * callouts. It exists so those four stop being four different-looking boxes.
  *
- * Anatomy: mono uppercase label · dotted leader · value, inside a 1px frame
- * with a chrome header. Borders and spacing carry the schematic language —
- * no shadow, no gradient, no glass, in either theme.
+ * Anatomy: mono uppercase label · dotted leader · value, inside a pane of the
+ * site's glass material (Phase 9.0, `.glass` in globals.css) with a chrome
+ * header. The fields and leaders still carry the schematic language; the
+ * glass is the instrument's cover. (Until 9.0 the rule here was "no shadow,
+ * no gradient, no glass" — overturned by decision, see DESIGN-LANGUAGE §6.1.)
+ *
+ * `tone="hud"` is the same card over a 3D canvas: blurred, and on the fixed
+ * dark palette, because the scene behind it is dark in both themes.
  *
  * Two rules it enforces rather than documents:
  *   1. `meta` is decoration and is hidden from assistive tech. Version
@@ -22,8 +27,12 @@ export function ConsoleCard({
   title,
   meta,
   portrait,
+  lead,
   children,
   footer,
+  tone = 'site',
+  accent,
+  className = '',
 }: {
   /** Read aloud. Says what this card is: 'OPERATOR', 'ZONE', 'COMPONENT'. */
   title: string;
@@ -31,13 +40,22 @@ export function ConsoleCard({
   meta?: string;
   /** Optional image block, left of the fields on `sm` and above. */
   portrait?: ReactNode;
-  children: ReactNode;
+  /** Free content above the fields — a heading and prose, for panels that
+      describe rather than list (the /explore zone readout). */
+  lead?: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
+  /** `site` follows the theme; `hud` is for panels drawn over a 3D canvas. */
+  tone?: 'site' | 'hud';
+  /** Overrides `--accent` for this card only (a zone's own colour). */
+  accent?: string;
+  /** Sizing from the caller — width, max-height. Never colour. */
+  className?: string;
 }) {
   return (
     <div
-      className="rounded-sm border"
-      style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-subtle)' }}
+      className={`glass ${tone === 'hud' ? 'hud glass-blur' : ''} ${className}`}
+      style={accent ? ({ '--accent': accent } as CSSProperties) : undefined}
     >
       <div
         className="flex items-center justify-between gap-3 border-b px-3 py-2 font-mono text-[11px] tracking-widest uppercase"
@@ -47,10 +65,15 @@ export function ConsoleCard({
         {meta && <span aria-hidden="true">{meta}</span>}
       </div>
 
-      <div className="flex flex-col gap-4 px-3 py-3 sm:flex-row sm:items-start sm:gap-5 sm:px-4 sm:py-4">
-        {portrait && <div className="shrink-0">{portrait}</div>}
-        <dl className="min-w-0 flex-1 space-y-2">{children}</dl>
-      </div>
+      {lead && <div className="px-3 pt-3 sm:px-4 sm:pt-4">{lead}</div>}
+
+      {(portrait || children) && (
+        <div className="flex flex-col gap-4 px-3 py-3 sm:flex-row sm:items-start sm:gap-5 sm:px-4 sm:py-4">
+          {portrait && <div className="shrink-0">{portrait}</div>}
+          <dl className="min-w-0 flex-1 space-y-2">{children}</dl>
+        </div>
+      )}
+      {lead && !portrait && !children && <div className="pb-3 sm:pb-4" />}
 
       {footer && (
         <div

@@ -24,8 +24,8 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label="Toggle colour theme"
       title="Toggle colour theme"
-      className="grid size-9 place-items-center rounded-md border transition-colors"
-      style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+      className="glass glass-btn glass-press grid size-9 place-items-center"
+      style={{ color: 'var(--fg-muted)' }}
     >
       {/* Moon — shown in light mode, i.e. "switch to dark" */}
       <svg

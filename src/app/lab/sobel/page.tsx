@@ -64,11 +64,7 @@ export default function SobelPage() {
           ].map((kernel) => (
             <div
               key={kernel.label}
-              className="rounded-lg border p-4"
-              style={{
-                borderColor: 'var(--border)',
-                backgroundColor: 'var(--bg-subtle)',
-              }}
+              className="glass p-4"
             >
               <p
                 className="font-mono text-[11px] tracking-wide uppercase"

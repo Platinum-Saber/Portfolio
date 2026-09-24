@@ -571,6 +571,396 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Glass — Phase 9.0. See docs/DESIGN-LANGUAGE.md §6.1.
+
+   Every text panel on the site is one material: a translucent tint, a rim
+   that catches light along its top-left edge and fades round the sides, a
+   soft sheen, and a lift shadow. Apple-widget glass, read through the console
+   metaphor: the instrument's cover glass.
+
+   BLUR IS OPT-IN (`.glass-blur`), and that is the load-bearing decision.
+   Frosted glass only looks frosted when something with detail sits behind it.
+   On a content route nothing does — the particle rails live in the margins,
+   never under the 48rem column — so a backdrop blur there would blur a smooth
+   gradient into the same smooth gradient: an invisible effect that still
+   costs a GPU pass per panel on every scroll frame, nine times over on
+   /projects. Blur is spent only where content really scrolls or renders
+   behind the glass: the sticky nav and every panel over a 3D canvas (`.hud`).
+
+   The ambient light below is what gives the untinted glass something to be
+   glass *over*. Static, fixed, no animation, 0 KB of JS.
+
+   Fallbacks, in order of precedence:
+     prefers-reduced-transparency → opaque, flat, no blur
+     no backdrop-filter support   → the tint is raised so text never sits
+                                    on an unblurred 3D scene
+     forced-colors                → a plain system-coloured border
+   --------------------------------------------------------------------------- */
+
+:root {
+  --glass-tint: rgba(255, 255, 255, 0.55);
+  --glass-rim-hi: rgba(255, 255, 255, 0.95);
+  --glass-rim-lo: rgba(23, 25, 28, 0.09);
+  --glass-sheen: rgba(255, 255, 255, 0.55);
+  --glass-shadow:
+    0 1px 2px rgba(23, 25, 28, 0.05), 0 14px 34px -16px rgba(23, 25, 28, 0.22);
+  --glass-shadow-lift:
+    0 2px 4px rgba(23, 25, 28, 0.06), 0 22px 44px -18px rgba(23, 25, 28, 0.3);
+  --glass-spec: rgba(255, 255, 255, 0.85);
+  --glass-rim-spec: color-mix(in srgb, var(--accent) 60%, transparent);
+  --glass-radius: 14px;
+  /* Pointer-light size (9.0b): the specular pool on the face, and the glint
+     along the rim. The one knob for "how big is the light". */
+  --glass-light-r: 130px;
+  --glass-shadow-sm: 0 1px 2px rgba(23, 25, 28, 0.07), 0 6px 14px -8px rgba(23, 25, 28, 0.25);
+  --glass-shadow-sm-lift: 0 2px 4px rgba(23, 25, 28, 0.08), 0 10px 20px -8px rgba(23, 25, 28, 0.3);
+  /* The click gleam's band. Accent-tinted on paper: a white band on a white
+     pane would be invisible. */
+  --glass-gleam: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.6));
+  --glass-rim-r: 90px;
+  --ambient-a: color-mix(in srgb, var(--accent) 11%, transparent);
+  --ambient-b: color-mix(in srgb, var(--fg-muted) 9%, transparent);
+}
+
+[data-theme='dark'] {
+  --glass-tint: rgba(30, 35, 42, 0.42);
+  --glass-rim-hi: rgba(255, 255, 255, 0.22);
+  --glass-rim-lo: rgba(255, 255, 255, 0.045);
+  --glass-sheen: rgba(255, 255, 255, 0.055);
+  --glass-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.75);
+  --glass-shadow-lift: 0 26px 54px -18px rgba(0, 0, 0, 0.85);
+  --glass-gleam: rgba(255, 255, 255, 0.22);
+  --glass-shadow-sm: 0 6px 16px -8px rgba(0, 0, 0, 0.7);
+  --glass-shadow-sm-lift: 0 10px 22px -8px rgba(0, 0, 0, 0.8);
+  --glass-spec: rgba(255, 255, 255, 0.13);
+  --glass-rim-spec: color-mix(in srgb, var(--accent) 75%, white);
+  --ambient-a: color-mix(in srgb, var(--accent) 9%, transparent);
+  --ambient-b: color-mix(in srgb, #7f8ea3 7%, transparent);
+}
+
+/* The HUD variant sits on a 3D canvas that is dark in both themes, so it
+   carries its own palette — and redefines the site tokens locally, which is
+   what lets ConsoleCard (and anything else built on the tokens) render
+   correctly inside it with no second code path. */
+.hud {
+  --fg: #e8eaed;
+  --fg-muted: #aab2bd;
+  --border: rgba(170, 178, 189, 0.2);
+  --accent: #3ddba0;
+  --bg-subtle: rgba(255, 255, 255, 0.04);
+  --glass-tint: rgba(10, 13, 17, 0.5);
+  --glass-rim-hi: rgba(255, 255, 255, 0.3);
+  --glass-rim-lo: rgba(255, 255, 255, 0.05);
+  --glass-sheen: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
+  --glass-shadow-lift: 0 26px 54px -18px rgba(0, 0, 0, 0.9);
+  --glass-gleam: rgba(255, 255, 255, 0.22);
+  --glass-shadow-sm: 0 6px 16px -8px rgba(0, 0, 0, 0.75);
+  --glass-shadow-sm-lift: 0 10px 22px -8px rgba(0, 0, 0, 0.85);
+  --glass-spec: rgba(255, 255, 255, 0.12);
+  --glass-rim-spec: color-mix(in srgb, var(--accent) 75%, white);
+  --glass-radius: 12px;
+  color: var(--fg);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -20;
+  pointer-events: none;
+  background:
+    radial-gradient(60vmax 45vmax at 8% -6%, var(--ambient-a), transparent 70%),
+    radial-gradient(55vmax 50vmax at 104% 38%, var(--ambient-b), transparent 70%),
+    radial-gradient(50vmax 40vmax at 30% 112%, var(--ambient-a), transparent 70%);
+}
+
+/* The pointer light (9.0b). `--glint` is registered so it can TRANSITION —
+   an unregistered custom property snaps. It is 0 at rest and eases to 1 while
+   the pointer is over the pane (`[data-lit]`, set by components/GlassLight.tsx);
+   `--gx` / `--gy` are the pointer's position inside the pane. Every light
+   layer below scales with it, so nothing needs a second rule for "hovered". */
+/* `inherits: true` is load-bearing: the light is painted by ::before and
+   ::after, and a pseudo-element only sees a registered property through
+   inheritance. With `false` they read the initial 0 and the pane never lights. */
+@property --glint {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Keep the duration in step with GLEAM_MS in lib/gleam.ts. With a 300%-wide
+   layer, 100% puts the band off the left edge and 0% off the right. */
+@keyframes glass-gleam {
+  from {
+    background-position:
+      100% 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      0% 0,
+      0 0,
+      0 0;
+  }
+}
+
+@keyframes glass-rim-flash {
+  40% {
+    filter: brightness(1.9);
+  }
+}
+
+@layer components {
+  .glass {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--glass-radius);
+    background-color: var(--glass-tint);
+    /* Liquid depth: a lit top lip, a fainter bottom lip, and the lift. The
+       two inset lips are what make a flat tint read as a pane with thickness. */
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 var(--glass-rim-hi),
+      inset 0 -1px 0 color-mix(in srgb, var(--glass-rim-hi) 30%, transparent);
+    --gx: 30%;
+    --gy: 0%;
+    transition:
+      --glint var(--t-page) var(--ease-console),
+      transform var(--t-fast) var(--ease-console),
+      box-shadow var(--t-fast) var(--ease-console);
+  }
+
+  .glass[data-lit] {
+    --glint: 1;
+  }
+
+  /* The rim: a 1px gradient ring, bright where light would catch it and
+     fading round the sides — plus a pool of light that follows the pointer
+     around the edge. A gradient cannot be a border-color, so it is a masked
+     pseudo-element: the mask cuts out the content box and leaves the ring. */
+  .glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle var(--glass-rim-r) at var(--gx) var(--gy),
+        color-mix(in srgb, var(--glass-rim-spec) calc(var(--glint) * 100%), transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        155deg,
+        var(--glass-rim-hi),
+        var(--glass-rim-lo) 34%,
+        var(--glass-rim-lo) 66%,
+        color-mix(in srgb, var(--glass-rim-hi) 55%, transparent)
+      );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  /* The sheen and the specular: light falling across the top of the pane,
+     and a soft highlight under the pointer. Behind the content (z-index -1
+     inside the isolated pane), so neither can ever tint the text. */
+  .glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle var(--glass-light-r) at var(--gx) var(--gy),
+        color-mix(in srgb, var(--glass-spec) calc(var(--glint) * 100%), transparent),
+        transparent 65%
+      ),
+      linear-gradient(172deg, var(--glass-sheen), transparent 42%);
+  }
+
+  /* The click gleam (9.0c) — a diagonal band of light sweeping top-left to
+     bottom-right across a pressed pane, played by lib/gleam.ts before the
+     navigation starts. It is the sheen layer's own light, so it sits behind
+     the text like the rest of the pane's light and can never wash it out.
+     The two resting layers are restated because a background list is
+     replaced whole, not appended to. */
+  .glass[data-gleam]::after {
+    background:
+      linear-gradient(
+        115deg,
+        transparent 30%,
+        var(--glass-gleam) 48%,
+        var(--glass-gleam) 52%,
+        transparent 70%
+      ),
+      radial-gradient(
+        circle var(--glass-light-r) at var(--gx) var(--gy),
+        color-mix(in srgb, var(--glass-spec) calc(var(--glint) * 100%), transparent),
+        transparent 65%
+      ),
+      linear-gradient(172deg, var(--glass-sheen), transparent 42%);
+    background-size:
+      300% 100%,
+      auto,
+      auto;
+    background-repeat: no-repeat;
+    animation: glass-gleam 340ms cubic-bezier(0.45, 0, 0.2, 1) both;
+  }
+
+  /* The rim flashes with the sweep, so the edge of the pane catches the
+     light as the band crosses it — the gleam reads as light on glass rather
+     than a gradient sliding over a box. */
+  .glass[data-gleam]::before {
+    animation: glass-rim-flash 340ms ease-out both;
+  }
+
+  /* Panes you can press — a link or a button made of glass. They lift toward
+     the pointer and give under a press, the "liquid" half of the material.
+     Readouts (the dossier, a zone panel) take the light but never move: a
+     block of text sliding under the cursor is not an affordance, it is a
+     nuisance. */
+  .glass-press:hover {
+    transform: translateY(-2px);
+    --glass-shadow: var(--glass-shadow-lift);
+  }
+  .glass-press:active {
+    transform: translateY(0) scale(0.992);
+    transition-duration: 90ms;
+  }
+
+  /* ── Small glass — 9.0d: buttons and tags ──────────────────────────────
+     The same material at control size, so a button and the card it sits in
+     are visibly one substance. Only the shape, the lift and the light's
+     reach change; tint, rim, sheen and pointer light are inherited from
+     `.glass` as they are. */
+
+  /* A capsule you press. Pair with `.glass-press` for the lift and squish. */
+  .glass-btn {
+    --glass-radius: 999px;
+    --glass-light-r: 60px;
+    --glass-rim-r: 44px;
+    --glass-shadow: var(--glass-shadow-sm);
+    --glass-shadow-lift: var(--glass-shadow-sm-lift);
+  }
+
+  /* A tag. Squarer than a button — it is a label on an instrument, not a
+     control — flatter, and it never moves. */
+  .glass-chip {
+    --glass-radius: 6px;
+    --glass-light-r: 44px;
+    --glass-rim-r: 30px;
+    box-shadow: inset 0 1px 0 var(--glass-rim-hi);
+  }
+
+  /* A field you type into — a well in the glass rather than a pane on it:
+     the lip is at the BOTTOM (light falling into a recess), there is no lift
+     shadow, and focus lights the rim in the accent. */
+  /* <input> and <textarea> are replaced elements and render no ::before or
+     ::after, so the rim, sheen and pointer light cannot exist on them. The
+     edge is drawn in box-shadow instead: a 1px ring plus the lower lip. */
+  .glass-field {
+    --glass-radius: 10px;
+    box-shadow:
+      inset 0 0 0 1px var(--glass-rim-lo),
+      inset 0 1px 3px rgba(0, 0, 0, 0.08),
+      inset 0 -1px 0 var(--glass-rim-hi);
+  }
+  .glass-field:focus-visible {
+    outline-offset: 2px;
+    --glass-rim-hi: color-mix(in srgb, var(--accent) 60%, white);
+    --glass-rim-lo: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  /* Tinted glass: the primary action, a selected option, the current page,
+     a project in progress. The accent is in the glass, not painted over it. */
+  .glass-accent,
+  .glass-btn[aria-pressed='true'],
+  .glass-btn[aria-current='page'] {
+    --glass-tint: color-mix(in srgb, var(--accent) 16%, transparent);
+    --glass-rim-hi: color-mix(in srgb, var(--accent) 55%, white);
+    --glass-rim-lo: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--accent);
+  }
+}
+
+.glass-blur {
+  -webkit-backdrop-filter: blur(18px) saturate(165%);
+  backdrop-filter: blur(18px) saturate(165%);
+}
+
+/* Refraction — the "liquid" bend, Chromium only. The SVG filter
+   (#liquid-glass, inlined once by components/GlassLight.tsx) displaces the
+   backdrop outward near the pane's edges, so whatever sits behind a HUD panel
+   bends as it passes under the rim. Only Chromium renders an SVG filter
+   inside `backdrop-filter`; elsewhere the declaration is dropped or renders
+   nothing, so it is switched on by a class GlassLight sets after detecting a
+   Chromium engine — never by guessing in CSS. Only on `.glass-blur`: a pane
+   with nothing detailed behind it has nothing to bend. */
+.glass-refract .glass-blur:not(.glass-btn) {
+  -webkit-backdrop-filter: blur(14px) url(#liquid-glass) saturate(165%);
+  backdrop-filter: blur(14px) url(#liquid-glass) saturate(165%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-blur {
+    --glass-tint: color-mix(in srgb, var(--bg) 88%, transparent);
+  }
+  .hud.glass-blur {
+    --glass-tint: rgba(10, 13, 17, 0.9);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .hud {
+    --glass-tint: var(--bg-subtle);
+  }
+  .hud {
+    --glass-tint: #0e1216;
+  }
+  .glass-blur {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass::after,
+  body::before {
+    display: none;
+  }
+  .glass-refract .glass-blur:not(.glass-btn) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-press:hover,
+  .glass-press:active {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .glass {
+    border: 1px solid CanvasText;
+  }
+  .glass::before,
+  .glass::after {
+    display: none;
+  }
+}
+
 /* ── Phase 8.3 — view transitions ─────────────────────────────────────────
    Driven by components/TransitionLink.tsx; the browser builds the
    ::view-transition-* tree, these rules only time it. One vocabulary:

@@ -173,10 +173,8 @@ export function KeeperExplorer() {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
+        className="glass p-6 text-sm"
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
           color: 'var(--fg-muted)',
         }}
       >
@@ -250,12 +248,7 @@ export function KeeperExplorer() {
         <button
           type="button"
           onClick={() => setShotToken((n) => n + 1)}
-          className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-          style={{
-            borderColor: 'var(--accent)',
-            color: 'var(--accent)',
-            backgroundColor: 'var(--accent-soft)',
-          }}
+          className="glass glass-btn glass-press glass-accent px-3 py-1.5 font-mono text-[11px]"
         >
           ▸ take the shot
         </button>
@@ -270,8 +263,8 @@ export function KeeperExplorer() {
             }));
             setShotToken((n) => n + 1);
           }}
-          className="rounded border px-3 py-1.5 font-mono text-[11px]"
-          style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+          className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+          style={{ color: 'var(--fg-muted)' }}
         >
           random shot
         </button>
@@ -281,8 +274,8 @@ export function KeeperExplorer() {
             simRef.current?.reset();
             setReadouts(EMPTY);
           }}
-          className="rounded border px-3 py-1.5 font-mono text-[11px]"
-          style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+          className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+          style={{ color: 'var(--fg-muted)' }}
         >
           reset tally
         </button>
@@ -314,14 +307,8 @@ export function KeeperExplorer() {
               type="button"
               onClick={() => set('estimator', option.id)}
               aria-pressed={selected}
-              className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-              style={{
-                borderColor: selected ? 'var(--accent)' : 'var(--border)',
-                color: selected ? 'var(--accent)' : 'var(--fg-muted)',
-                backgroundColor: selected
-                  ? 'var(--accent-soft)'
-                  : 'transparent',
-              }}
+              className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+              style={{ color: selected ? 'var(--accent)' : 'var(--fg-muted)' }}
             >
               {option.label}
             </button>

@@ -35,7 +35,7 @@ const YAW_RATE = 1.7;
 const RESPONSE = 0.28;
 
 /** Comfortably inside the trigger radius, with room to see the marker. */
-const ARRIVAL_STANDOFF = ZONE_RADIUS * 0.6;
+export const ARRIVAL_STANDOFF = ZONE_RADIUS * 0.6;
 
 export const MIN_ALTITUDE = 1.2;
 export const MAX_ALTITUDE = 34;
@@ -100,14 +100,44 @@ export class Drone {
       this.vy = 0;
     }
 
-    // Lean proportional to the velocity component in each body axis.
-    const localForward = (-this.vx * sin - this.vz * cos) / MAX_SPEED;
-    const localRight = (this.vx * cos - this.vz * sin) / MAX_SPEED;
+    this.lean(blend);
+  }
+
+  /**
+   * Guided flight (9.2): put the craft where the guide says, and derive its
+   * velocity from the move. The velocity matters twice over — the body leans
+   * into it exactly as it does under manual control, and when the visitor
+   * takes over, `step()` continues from it instead of from a standstill.
+   */
+  follow(x: number, y: number, z: number, yaw: number, dt: number): void {
+    // Same 0.25 s ceiling the guide's clock uses, so a slow frame yields the
+    // true velocity rather than one inflated by a mismatched clamp.
+    const step = Math.max(Math.min(dt, 0.25), 1e-4);
+    this.vx = (x - this.x) / step;
+    this.vy = (y - this.y) / step;
+    this.vz = (z - this.z) / step;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.yaw = yaw;
+    this.lean(1 - Math.exp(-Math.min(step, 0.05) / RESPONSE));
+  }
+
+  /** Lean proportional to the velocity component in each body axis. Guided
+   *  flight runs faster than MAX_SPEED, so the lean is capped rather than
+   *  allowed to tip the craft past what manual flight ever shows. */
+  private lean(blend: number): void {
+    const cos = Math.cos(this.yaw);
+    const sin = Math.sin(this.yaw);
+    const cap = (v: number) => Math.max(-1, Math.min(1, v));
+    const localForward = cap((-this.vx * sin - this.vz * cos) / MAX_SPEED);
+    const localRight = cap((this.vx * cos - this.vz * sin) / MAX_SPEED);
     this.tiltPitch += (localForward * 0.42 - this.tiltPitch) * blend;
     this.tiltRoll += (-localRight * 0.42 - this.tiltRoll) * blend;
   }
 
-  /** Drops the drone next to a marker — the accessible route to any zone. */
+  /** Drops the drone next to a marker. Since 9.2 this is the
+   *  `prefers-reduced-motion` branch only — everyone else is flown there. */
   teleport(target: [number, number, number]): void {
     const [tx, ty, tz] = target;
     // Approach from the south so the marker is in front of the camera on

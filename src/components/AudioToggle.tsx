@@ -82,15 +82,12 @@ export function AudioToggle({
         className={
           variant === 'overlay'
             ? OVERLAY_BUTTON
-            : 'rounded border px-2.5 py-1 font-mono text-[11px] transition-colors'
+            : 'glass glass-btn glass-press px-2.5 py-1 font-mono text-[11px]'
         }
         style={
           variant === 'overlay'
             ? overlayButtonStyle(armed)
-            : {
-                borderColor: armed ? 'var(--accent)' : 'var(--border)',
-                color: armed ? 'var(--accent)' : 'var(--fg-muted)',
-              }
+            : { color: armed ? 'var(--accent)' : 'var(--fg-muted)' }
         }
       >
         audio ▸ {armed ? 'armed' : 'muted'}

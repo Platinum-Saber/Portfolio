@@ -288,10 +288,8 @@ export function EdgeDetector() {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
+        className="glass p-6 text-sm"
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
           color: 'var(--fg-muted)',
         }}
       >
@@ -391,8 +389,8 @@ export function EdgeDetector() {
 
       {status === 'error' && message && (
         <div
-          className="mt-4 rounded-lg border p-4 text-sm"
-          style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+          className="glass mt-4 p-4 text-sm"
+          style={{ color: 'var(--fg-muted)' }}
           role="status"
         >
           <p>{message}</p>
@@ -412,8 +410,8 @@ export function EdgeDetector() {
           <button
             type="button"
             onClick={() => setShowOriginal((prev) => !prev)}
-            className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-            style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+            className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+            style={{ color: 'var(--fg-muted)' }}
             aria-pressed={showOriginal}
           >
             {showOriginal ? 'edges only' : 'compare with source'}
@@ -422,8 +420,8 @@ export function EdgeDetector() {
             <button
               type="button"
               onClick={runSynthetic}
-              className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-              style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+              className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+              style={{ color: 'var(--fg-muted)' }}
             >
               switch to test target
             </button>
@@ -431,8 +429,8 @@ export function EdgeDetector() {
             <button
               type="button"
               onClick={() => void runCamera()}
-              className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-              style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+              className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+              style={{ color: 'var(--fg-muted)' }}
             >
               switch to camera
             </button>
@@ -440,8 +438,8 @@ export function EdgeDetector() {
           <button
             type="button"
             onClick={stop}
-            className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-            style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+            className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+            style={{ color: 'var(--fg-muted)' }}
           >
             stop
           </button>

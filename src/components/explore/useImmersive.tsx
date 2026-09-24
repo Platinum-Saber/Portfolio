@@ -95,11 +95,19 @@ export const IMMERSIVE_FRAME =
   'fixed inset-0 z-[60] h-full w-full overflow-hidden rounded-none border-0';
 
 /** One look for every control that floats over a canvas, in either scene. */
+/* 9.0d: HUD glass capsules. Blurred (they sit on the live scene) but never
+   refracted — `.glass-btn` is excluded from the refraction rule, because a
+   dozen displacement filters over a WebGL canvas is the one cost here that
+   would show up on the budget phone. An active button is tinted through the
+   glass variables rather than painted over. */
 export const OVERLAY_BUTTON =
-  'rounded border px-2.5 py-1 font-mono text-[11px] backdrop-blur-sm transition-colors';
+  'glass glass-btn glass-press glass-blur hud px-2.5 py-1 font-mono text-[11px]';
 
-export const overlayButtonStyle = (active = false) => ({
-  borderColor: active ? 'rgba(61,219,160,0.7)' : 'rgba(125,135,148,0.5)',
-  backgroundColor: 'rgba(9,13,16,0.7)',
-  color: active ? '#3ddba0' : '#aab2bd',
-});
+export const overlayButtonStyle = (active = false) =>
+  (active
+    ? {
+        '--glass-tint': 'rgba(61, 219, 160, 0.16)',
+        '--glass-rim-hi': 'rgba(61, 219, 160, 0.6)',
+        color: '#3ddba0',
+      }
+    : { color: '#aab2bd' }) as React.CSSProperties;

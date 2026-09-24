@@ -147,10 +147,8 @@ export function SlamExplorer() {
   if (support === 'unsupported') {
     return (
       <div
-        className="rounded-lg border p-6 text-sm"
+        className="glass p-6 text-sm"
         style={{
-          borderColor: 'var(--border)',
-          backgroundColor: 'var(--bg-subtle)',
           color: 'var(--fg-muted)',
         }}
       >
@@ -225,14 +223,8 @@ export function SlamExplorer() {
               type="button"
               onClick={() => setView(option.id)}
               aria-pressed={selected}
-              className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-              style={{
-                borderColor: selected ? 'var(--accent)' : 'var(--border)',
-                color: selected ? 'var(--accent)' : 'var(--fg-muted)',
-                backgroundColor: selected
-                  ? 'var(--accent-soft)'
-                  : 'transparent',
-              }}
+              className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+              style={{ color: selected ? 'var(--accent)' : 'var(--fg-muted)' }}
             >
               {option.label}
             </button>
@@ -270,11 +262,8 @@ export function SlamExplorer() {
             type="button"
             onClick={() => setDriving(id)}
             aria-pressed={driving === id}
-            className="rounded border px-3 py-1.5 font-mono text-[11px] transition-colors"
-            style={{
-              borderColor: driving === id ? 'var(--accent)' : 'var(--border)',
-              color: driving === id ? 'var(--accent)' : 'var(--fg-muted)',
-            }}
+            className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+            style={{ color: driving === id ? 'var(--accent)' : 'var(--fg-muted)' }}
           >
             {label}
           </button>
@@ -285,8 +274,8 @@ export function SlamExplorer() {
         <button
           type="button"
           onClick={() => setRunning((prev) => !prev)}
-          className="rounded border px-3 py-1.5 font-mono text-[11px]"
-          style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+          className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+          style={{ color: 'var(--fg-muted)' }}
         >
           {running ? 'pause' : 'resume'}
         </button>
@@ -296,8 +285,8 @@ export function SlamExplorer() {
             setGeneration((n) => n + 1);
             setReadouts(EMPTY);
           }}
-          className="rounded border px-3 py-1.5 font-mono text-[11px]"
-          style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+          className="glass glass-btn glass-press px-3 py-1.5 font-mono text-[11px]"
+          style={{ color: 'var(--fg-muted)' }}
         >
           restart
         </button>

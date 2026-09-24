@@ -11,10 +11,12 @@ export function Nav() {
 
   return (
     <header
-      className="sticky top-0 z-50 border-b backdrop-blur-md"
+      // 9.0: the one content-route surface that earns real blur — the page
+      // scrolls underneath it, so the frost has something to frost.
+      className="glass-blur sticky top-0 z-50 border-b"
       style={{
         borderColor: 'var(--border)',
-        backgroundColor: 'color-mix(in srgb, var(--bg) 85%, transparent)',
+        backgroundColor: 'color-mix(in srgb, var(--bg) 72%, transparent)',
         // Phase 8.3: its own transition group, so the bar holds still while
         // the page beneath it cross-fades.
         viewTransitionName: 'site-nav',
@@ -55,11 +57,10 @@ export function Nav() {
                 */
                 prefetch={heavy ? false : undefined}
                 aria-current={active ? 'page' : undefined}
-                className="shrink-0 rounded-md px-1.5 py-1.5 text-[13px] whitespace-nowrap transition-colors sm:px-3 sm:text-sm"
-                style={{
-                  color: active ? 'var(--fg)' : 'var(--fg-muted)',
-                  backgroundColor: active ? 'var(--bg-subtle)' : 'transparent',
-                }}
+                // 9.0d: the current page sits in a glass capsule; the others
+                // are plain text until you are on them — one pane, not five.
+                className={`${active ? 'glass glass-btn' : 'rounded-full'} shrink-0 px-1.5 py-1.5 text-[13px] whitespace-nowrap transition-colors sm:px-3 sm:text-sm`}
+                style={{ color: active ? 'var(--fg)' : 'var(--fg-muted)' }}
               >
                 {item.label}
               </L>

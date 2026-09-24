@@ -69,6 +69,14 @@ let engineVoice: Engine | null = null;
 let padVoice: GainNode | null = null;
 let lastTick = 0;
 let armGesture: (() => void) | null = null;
+/**
+ * Set while the visitor is on a route with no audio (a content page). The
+ * context is suspended but kept, the preference is untouched, and nothing —
+ * not even a tab becoming visible again — may make a sound until a scene
+ * un-parks it. See `park()`.
+ */
+let parked = false;
+let parkTimer: number | null = null;
 
 const listeners = new Set<(state: AudioState) => void>();
 
@@ -163,6 +171,12 @@ function announce(state: AudioState) {
  */
 export function arm(): void {
   cancelArmGesture();
+  parked = false;
+  // A park still fading out must not suspend the context we are reviving.
+  if (parkTimer !== null) {
+    window.clearTimeout(parkTimer);
+    parkTimer = null;
+  }
 
   if (!ctx) {
     ctx = new AudioContext();
@@ -257,7 +271,15 @@ export function toggle(): AudioState {
  * behind that arms audio on a page which has no toggle.
  */
 export function resumeIfArmed(): () => void {
-  if (readPreference() !== 'armed' || ctx) return () => {};
+  if (readPreference() !== 'armed') return () => {};
+
+  // Coming back from a content page in the same visit: the context exists
+  // (built inside an earlier gesture) and was parked on the way out. The page
+  // already has sticky user activation, so resuming needs no new gesture.
+  if (ctx) {
+    arm();
+    return () => {};
+  }
 
   // Any gesture arms — except one aimed at the audio toggle itself, which
   // arms through its own click handler (`toggle`). Letting pointerdown arm
@@ -284,6 +306,35 @@ function cancelArmGesture() {
   armGesture?.();
 }
 
+/**
+ * Leaving the audio routes. The site navigates client-side, so the module —
+ * and its AudioContext — outlives the scene that armed it: without this the
+ * ambient bed played on under `/` and the case studies, which §4.3 forbids
+ * ("content routes stay silent"). Found on the live site, 2026-09-24.
+ *
+ * Fades everything out, then suspends. Unlike `disarm()` it does NOT touch
+ * the preference: the visitor chose sound for the scenes, and gets it back
+ * the moment they return to one (`resumeIfArmed`).
+ *
+ * Called by `AudioToggle` on unmount, because the toggle is mounted on
+ * exactly the routes where audio is allowed — its lifetime IS the audio
+ * scope, so no route list has to be kept in sync with it.
+ */
+export function park(): void {
+  cancelArmGesture();
+  if (!ctx || !master) return;
+  parked = true;
+  engineOff();
+  ramp(master.gain, 0);
+  if (padVoice) ramp(padVoice.gain, 0);
+  const sleeping = ctx;
+  if (parkTimer !== null) window.clearTimeout(parkTimer);
+  parkTimer = window.setTimeout(() => {
+    parkTimer = null;
+    if (parked) void sleeping.suspend();
+  }, RAMP * 1000 + 60);
+}
+
 /* -------------------------------------------------------------------------
    Visibility
    ------------------------------------------------------------------------- */
@@ -295,7 +346,7 @@ function onVisibility() {
     window.setTimeout(() => {
       if (document.hidden) void ctx?.suspend();
     }, 200);
-  } else if (readPreference() === 'armed') {
+  } else if (readPreference() === 'armed' && !parked) {
     void ctx.resume();
     ramp(master.gain, MASTER * readVolume());
   }

@@ -6,6 +6,7 @@ import {
   type AudioState,
   readPreference,
   readVolume,
+  park,
   resumeIfArmed,
   setVolume,
   subscribe,
@@ -55,6 +56,9 @@ export function AudioToggle({
     return () => {
       unsubscribe();
       cancel();
+      // Leaving the scene: silence it (preference kept). The toggle lives on
+      // exactly the audio routes, so its unmount is the edge of the scope.
+      park();
     };
   }, []);
 

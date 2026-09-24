@@ -24,6 +24,17 @@
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "portfolio" }],
   // No IMAGES binding: the site never uses next/image (see Portrait.tsx), so
   // there is no optimiser to feed, and no Images quota to spend.
+  // The custom domain lives HERE, not only in the dashboard. Every deploy
+  // pushes this file over the Worker's remote config ("Uploading the Worker
+  // will override the remote configuration with your local one"), so a domain
+  // attached only in the dashboard is one deploy away from being detached.
+  // Add "www.sansikawaduge.dev" as a second entry if www is attached to the
+  // Worker as a custom domain (the www → apex redirect is a zone Redirect Rule).
+  "routes": [{ "pattern": "sansikawaduge.dev", "custom_domain": true }],
+  // Kept on: branch preview URLs live on the workers.dev subdomain, and every
+  // page's canonical link already points search engines at sansikawaduge.dev.
+  // To switch it off, change it HERE — a dashboard toggle is overwritten by
+  // the next deploy (it was, on 2026-09-24).
   "workers_dev": true,
   "preview_urls": true,
   "observability": { "enabled": true }

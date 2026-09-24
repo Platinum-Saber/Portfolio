@@ -93,7 +93,11 @@ Locally: put the same two lines in `.dev.vars` (git-ignored) for `npm run previe
 3. `.dev` is on the HSTS preload list: HTTPS only, in every browser, with no setting to change.
 4. `site.url` in `src/lib/site.ts` is the canonical origin for the sitemap, robots.txt and
    OpenGraph URLs — already `https://sansikawaduge.dev`.
-5. The `*.workers.dev` URL keeps serving a copy of the site. Harmless for search — every page's
+5. **The domain must also be in `wrangler.jsonc` (`routes`, `custom_domain: true`).** A deploy
+   overwrites the Worker's dashboard config with the file — the 2026-09-24 build warned it was
+   dropping the dashboard-attached domain and re-enabling workers.dev. Same for any dashboard
+   toggle: the file is the source of truth, so change settings there.
+6. The `*.workers.dev` URL keeps serving a copy of the site. Harmless for search — every page's
    canonical link points at `sansikawaduge.dev` — and preview URLs for branches live on that
    subdomain, so leave `workers_dev` on unless the duplicate becomes a problem.
 

@@ -23,9 +23,9 @@
 | 3 | Asset pipeline | Optimised GLB built in CI | ✅ Done |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | ✅ Done |
 | 5 | Supabase | Contact form, RLS, degrades gracefully | 🟢 Form live, notifications live. Preview/Dev env vars, the bad-key test and probe cleanup remain |
-| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — *gates Phase 8* |
+| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started — **unblocked 2026-09-24** (Phase 8 done) |
 | 7 | ~~*Optional* — AWS artifact~~ | — | ❌ Dropped (2026-09-23) |
-| 8 | Design architecture | One visual language across every route | 🟡 In progress — 8.1, 8.2, 8.4, 8.5, 8.6, 8.7, 8.9 done · 8.3 parked · 8.8 left |
+| 8 | Design architecture | One visual language across every route | ✅ Done (2026-09-24) — 8.1–8.9 all shipped; 8.3 hand-rolled |
 | 9 | Diegetic world | Zone info delivered inside the scene, not over it | ⬜ Not started — **unblocked 2026-08-24** |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
@@ -40,7 +40,7 @@ is never loaded by a content page:
 | `/lab/ascilam` | Collaborative SLAM arena — two scouts, drift, fusion | 1,395 KB |
 | `/explore` | The whole portfolio as a world you fly through | 1,469 KB + 437 KB models |
 | `/explore/lab` | The portfolio as a room, with an interactive console | 1,468 KB + 3,100 KB models |
-| `/lab/keeper` | Goalkeeper interception — two sightings, an EKF, one servo | not yet measured |
+| `/lab/keeper` | Goalkeeper interception — two sightings, an EKF, one servo | 1,376 KB |
 
 Content routes are unchanged at 462–475 KB. `/` gained only a link.
 
@@ -463,7 +463,28 @@ layout shift.
 
 ---
 
-#### 8.3 — Transitions — ⏸️ PARKED (2026-08-24)
+#### 8.3 — Transitions — ✅ Done (2026-09-23), by option 2
+
+- [x] `src/lib/view-transition.ts` + `components/TransitionLink.tsx` — `next/link` whose
+      `onNavigate` wraps `router.push` in `document.startViewTransition`. Next's own filtering
+      (modifier keys, middle click, `target`, external URLs) runs before `onNavigate`, so only a
+      plain same-tab navigation is intercepted. Off under reduced motion, without the API, and for
+      same-pathname links
+- [x] "Navigation finished" = `components/ViewTransitionSettle.tsx`, a pathname-watching layout
+      effect in the root layout. Measured settling at 225 ms (dev server), after Next's scroll-to-top,
+      so the new frame is captured already scrolled. 2 s `MAX_WAIT` floor under it
+- [x] Site-wide: old page clears over `--t-fast`, new one rises 6 px over `--t-page` on
+      `--ease-console`. The nav is its own group and holds still
+- [x] Shared element: clicked card title → case-study `<h1>`, and the "Next" link → the next
+      study's `<h1>`. Names assigned per click, never statically — see DESIGN-LANGUAGE §3.3
+- [x] Wired into the nav (not Explore), `ProjectCard`, `← Projects`, "Next", and the home page's
+      "All projects". Links into `/explore` and `/lab` stay plain `<Link>`: the page is frozen
+      until the next route lands, and those routes load megabytes
+- [x] Cost **+2 KB on every route**, measured. Not 0 KB, which is what the original plan assumed
+- [ ] ~~Back button animates~~ — not done. `popstate` never passes through `TransitionLink`
+- [ ] ~~Distinct forward/back forms~~ — not done; recorded in DESIGN-LANGUAGE §3.2 rule 2
+
+*The history of why it was parked first, kept for the record:*
 
 *One vocabulary, defined once, reused site-wide. Three different transitions read as a demo reel.*
 
@@ -673,14 +694,40 @@ speed 0→1.
 
 ---
 
-#### 8.8 — Consolidation
+#### 8.8 — Consolidation — ✅ Done (2026-09-24)
 
-- [ ] Delete the ad-hoc styles each of the above replaces — the phase is not done while both
-      the old and new way exist
-- [ ] Re-run the §8 guardrails in `DESIGN-LANGUAGE.md` in full
-- [ ] Record the new per-route numbers in §6 of this file
-- [ ] Re-read `DESIGN-LANGUAGE.md` and correct anything the build proved wrong. A design doc
-      that survives implementation unedited was not specific enough
+- [x] Delete the ad-hoc styles each of the above replaces. Swept `globals.css` and every content
+      component: no hand-rolled durations or easings remain outside `/explore` and `/lab`, and no
+      dead component or module. Removed: three unused `@theme` `--color-*` keys (one,
+      `--color-accent: #1d9d74`, disagreed with the real `--accent`) and the never-adopted
+      `--measure` token. `AudioToggle`'s hardcoded overlay colours stay — they are the documented
+      fixed dark palette for a canvas overlay, not drift
+- [x] Re-run the §8 guardrails in full — results below. **One failure found and fixed:** `/lab`
+      rendered blank with WebGL disabled (React #300), a hook placed below the no-WebGL early
+      return in 8.7. Present in the last commit too; moved above the return in
+      `AirframeExplorer.tsx`
+- [x] Record the new per-route numbers in §6 of this file
+- [x] Re-read `DESIGN-LANGUAGE.md` and correct what the build proved wrong — seven corrections,
+      each marked *Corrected in 8.8* in place: the 8.3 row and the transition signature (§3),
+      static vs per-click morph names (§3.3), Tier-A particles as 0 KB CSS (§5.1), STATUS not
+      reusing `StatusBadge` (§6), the type scale and measure that were never built (§6.5), the
+      adoption order as history (§7), and the harness anchors (§8)
+
+**Guardrail run, 2026-09-24** (fresh `next build`, one headless context per route):
+
+| Check | Result |
+|---|---|
+| Harness honest | Last commit reproduces `/lab` 1,409 / `/lab/ascilam` 1,396; +7 KB over the old 1,402 is the 8.7 `AudioToggle`. New anchors 1,411 / 1,397 |
+| Content routes < ~475 KB, no three.js | ✅ 464 KB on all six measured, none loads `WebGLRenderer` |
+| No render-path network fetch | ✅ zero non-localhost requests on every route, 3D included |
+| Reduced motion, by hand | ✅ no field, `.rise` inert at opacity 1, stage unpinned, card click starts **no** view transition |
+| Keyboard | ✅ skip link → nav → theme toggle → cards, every stop shows the ring; Enter on a card runs the transition; Ctrl-click opens a tab untouched; audio toggle arms from Enter and reveals the slider |
+| Both themes | ✅ `/`, a case study and `/contact` screenshotted light and dark |
+| JS disabled | ✅ every content route and `/lab`, `/lab/keeper`, `/explore` render their full text |
+| WebGL disabled | ❌ → ✅ `/lab` was blank (fixed above); `/lab/ascilam`, `/lab/keeper`, `/lab/sobel`, `/explore` fine |
+
+**Noted, not fixed (pre-existing, same in the last commit):** after a client-side navigation focus
+lands on `<body>`, not the new page's heading. Belongs to Phase 6's accessibility pass.
 
 **Guardrails, re-checked before each sub-phase ships:**
 per-route JS measured in headless Chromium with one fresh context per route (`/lab` must still
@@ -802,6 +849,9 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date — decision — why.
 
+- **2026-09-24** — **Phase 8 closed; the harness anchors moved from 1,402 / 1,395 to 1,411 / 1,397.** The old numbers had stopped being reproducible and the check was about to be quietly skipped. Building the last commit separately showed why: 1,409 / 1,396 — the 8.7 `AudioToggle` added 7 KB to `/lab` after the anchor was taken, and 8.3 adds 2 KB to every route. A drifted anchor is re-baselined *by proving the drift*, never by accepting a new number on sight.
+- **2026-09-24** — **The WebGL-disabled guardrail found a real bug, so it stays mandatory.** `/lab` rendered blank without WebGL: 8.7 put a `useEffect` below the no-WebGL early return, the server's `'checking'` render ran it and the client's `'unsupported'` render did not, and React threw #300. Three sibling scenes with the same shape were fine, which is why "the structure looks the same" is not a substitute for running the check.
+- **2026-09-23** — **8.3 view transitions hand-rolled (option 2), names per click.** React still has no stable `ViewTransition` (19.2.8), so `TransitionLink` wraps `router.push` in `document.startViewTransition` and a layout effect watching the pathname says when the route has landed. The shared-element name is set on the one clicked title and the landing `<h1>` only for the transition: a static name on every card title made hidden home-page cards fly into `/projects`. Links into the 3D routes stay plain, because a view transition freezes the page until the next route arrives. Cost +2 KB per route, against the 0 KB the plan had assumed.
 - **2026-09-23** — **Phase 7 (optional AWS artifact) is dropped.** Decided by Suhan: it will not be done. It was always optional and off the render path, so nothing else depends on it.
 - **2026-09-23** — **The keeper simulation shows the estimator, not the vision.** `/lab/keeper` is the RoboKeeper counterpart to `/lab/ascilam`, and the same rule applies: show the thing that is hard to explain in prose, and say plainly what is faked. The hard part here is **prediction from two noisy points**, so the page models the ball ballistically, takes exactly two gate sightings with Gaussian error (depth 1.5× the image axes, as a structured-light camera behaves), and runs both estimators the project compared — the six-state EKF with gravity in the motion model, and the straight line through the two points. The **detection** half is deliberately not modelled: no YOLO in a browser, no missed frames, no motion blur. A visitor cannot learn from a fake detector, and pretending otherwise would be the one thing the ASCILAM page refuses to do.
 - **2026-09-23** — **The servo has a top speed, which is why the near gate is a slider.** Without a slew limit the page would have exactly one lesson (gravity), and a keeper that teleports to the right answer makes the gate placement look free. `ARM_SLEW` is 360°/s, an MG996R-class figure, and the arm returns to neutral at each kick — otherwise a keeper left near the previous prediction gets accidental saves and the reaction-time readout flatters itself. The outcome now distinguishes `missed-prediction` from `too-slow`, which is the distinction the sliders exist to make visible.
@@ -987,6 +1037,9 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go — 
 | 2026-08-24 | Portrait assets | 256 px WebP **8,496 B** · 512 px WebP **21,206 B** · OG JPEG 280 px **16,696 B** — crop `left:150 top:120 580×580` of the 865×870 source |
 | 2026-08-24 | `/` model requests, fresh context, models present | **none** — the homepage pulls no GLB, confirmed after a harness error suggested otherwise |
 | 2026-08-24 | Phase 8.1 tokens, emitted CSS | 40,460 → 40,610 bytes (**+150**), no utility changed shape, JS untouched |
+| 2026-09-24 | **Per-route JS after 8.8** (8.3 + 8.8, fresh build) | `/` 464 · `/projects` 464 · case studies 464 · `/about` 464 · `/contact` 464 · `/lab` **1,411** · `/lab/sobel` 477 · `/lab/ascilam` **1,397** · `/lab/keeper` 1,376 · `/explore` 1,478 + 437 models · `/explore/lab` 1,476 + 3,100 models KB |
+| 2026-09-24 | Same harness, last commit (before 8.3/8.8) | content 462 · `/lab` 1,409 · `/lab/ascilam` 1,396 · `/lab/keeper` 1,374 — so 8.3 costs **+2 KB on every route** |
+| 2026-09-24 | Emitted CSS after 8.3 + 8.8 | 48,651 B; `--measure` and `--color-*` confirmed absent, `--t-page` / `--ease-console` present |
 | 2026-08-23 | Environment candidates rejected on measurement | `a_metaverse_bar` floors at 400k tris / 7.1 MB; `sci_fi_hallway` 402 MB source, over GitHub's 100 MB file limit; `scifi_room_interior` 170–262 KB but an interior |
 
 Measured by loading each route from `next start` in headless Chromium and summing JS

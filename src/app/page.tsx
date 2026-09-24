@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getFeaturedProjects } from '@/lib/projects';
+import { TransitionLink } from '@/components/TransitionLink';
 import { ProjectCard } from '@/components/ProjectCard';
 import { Chapter, Stage } from '@/components/Chapter';
 import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
@@ -107,13 +108,13 @@ export default function HomePage() {
               ))}
             </ul>
             <p className="mt-5">
-              <Link
+              <TransitionLink
                 href="/projects"
                 className="text-sm hover:underline"
                 style={{ color: 'var(--accent)' }}
               >
                 All projects →
-              </Link>
+              </TransitionLink>
             </p>
           </div>
         </Chapter>

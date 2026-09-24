@@ -11,9 +11,9 @@
     'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
-  --color-ink: #0b0d10;
-  --color-paper: #fbfbfa;
-  --color-accent: #1d9d74;
+  /* Colour lives in the :root / [data-theme] blocks below, not here: the site
+     themes through CSS variables, not colour utilities. (8.8 removed three
+     unused --color-* keys, one of which disagreed with --accent.) */
 
   /* Motion vocabulary — Phase 8.1. Components never hand-roll a duration:
      they use `transition-*` (which resolves to --t-fast through the two
@@ -36,12 +36,6 @@
 
   --accent: #0f7d5c;
   --accent-soft: rgba(15, 125, 92, 0.1);
-
-  /* Reading measure. Lives here rather than in @theme because Tailwind drops
-     theme variables no utility references, and nothing references this yet:
-     it is applied by the components that adopt it in 8.2/8.4. Applying it now
-     would be a layout change, and 8.1 ships none. */
-  --measure: 68ch;
 }
 
 [data-theme='dark'] {
@@ -574,6 +568,56 @@
      typing. No listener, no state — the selector is the whole mechanism. */
   body:has(input:focus, textarea:focus) .pfield--signal {
     --pf-speed: 0.32;
+  }
+}
+
+/* ── Phase 8.3 — view transitions ─────────────────────────────────────────
+   Driven by components/TransitionLink.tsx; the browser builds the
+   ::view-transition-* tree, these rules only time it. One vocabulary:
+   the outgoing page clears fast, the incoming one settles in on the console
+   ease — a sequential handoff, the same call the home chapters made
+   (Decision Log 2026-08-24), not a two-pages-at-once dissolve.
+   Reduced motion never reaches here: TransitionLink does not start a
+   transition at all under `prefers-reduced-motion: reduce`. */
+::view-transition-group(*) {
+  animation-duration: var(--t-page);
+  animation-timing-function: var(--ease-console);
+}
+
+::view-transition-old(root) {
+  animation: vt-out var(--t-fast) ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in var(--t-page) var(--ease-console) both;
+}
+
+/* The shared element: a card title growing into the case-study <h1>.
+   Default snapshots are stretched to the group box, which squashes text whose
+   line breaks differ between the two sizes. Pinning height and letting width
+   follow keeps the glyphs' aspect ratio; the text is left-aligned, so the
+   left edge is the anchor. The morph also skips the root's cross-fade on
+   itself: a plain swap reads as one object moving, not two blending. */
+::view-transition-old(vt-morph),
+::view-transition-new(vt-morph) {
+  height: 100%;
+  width: auto;
+  animation: none;
+}
+::view-transition-old(vt-morph) {
+  opacity: 0;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 

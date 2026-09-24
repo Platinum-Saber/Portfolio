@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
+import { ViewTransitionSettle } from '@/components/ViewTransitionSettle';
 import { site } from '@/lib/site';
 import './globals.css';
 
@@ -63,6 +64,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <ViewTransitionSettle />
       </body>
     </html>
   );

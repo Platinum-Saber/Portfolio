@@ -1,19 +1,21 @@
-import Link from 'next/link';
 import type { Project } from '@/lib/projects';
 import { StatusBadge } from './StatusBadge';
+import { TransitionLink } from './TransitionLink';
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
     // `rise` is Phase 8.4: a pure-CSS scroll-driven reveal, no-op where
     // `animation-timeline` is unsupported or motion is reduced.
     <li className="rise">
-      <Link
+      <TransitionLink
         href={`/projects/${project.slug}`}
         className="group block rounded-lg border p-5 transition-colors"
         style={{ borderColor: 'var(--border)' }}
       >
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          {/* 8.3: morphs into the case study's <h1 data-vt-land>. */}
           <h3
+            data-vt-morph
             className="text-base font-semibold group-hover:underline"
             style={{ color: 'var(--fg)' }}
           >
@@ -49,7 +51,7 @@ export function ProjectCard({ project }: { project: Project }) {
             </li>
           ))}
         </ul>
-      </Link>
+      </TransitionLink>
     </li>
   );
 }

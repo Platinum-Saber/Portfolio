@@ -90,7 +90,7 @@ it for free:
 
 | Technique | Cost | Use for |
 |---|---|---|
-| ~~**View Transitions API**~~ | **not available** | Corrected 2026-08-24: `react@19.2.8` stable does not export `unstable_ViewTransition`, and CSS `@view-transition` only fires on cross-document navigation, which the App Router does not do. Parked in PLAN 8.3 until React ships it stable. |
+| **View Transitions API**, driven by hand | ~2 KB on every route | Route cross-fade and the card → case-study title morph. Corrected twice: on 2026-08-24 it was found *not* free — `react@19.2.8` stable has no `ViewTransition`, and CSS `@view-transition` only fires on cross-document navigation, which the App Router never does. Built 2026-09-23 as a client `TransitionLink` that wraps `router.push` in `document.startViewTransition` itself (PLAN 8.3). Not 0 KB; measured at +2 KB. |
 | **CSS scroll-driven animations** (`animation-timeline: view()` / `scroll()`) | 0 KB | Section reveals, parallax, progress rails, sticky-scrub sequences. Runs off the main thread. |
 | **`IntersectionObserver`** | 0 KB | One-shot state (audio ducking, pausing a canvas). **Not** used as a reveal fallback — see below. |
 | **`position: sticky` + a scrubbed child** | 0 KB | The "camera drifts while you scroll" feel, in 2D. A sticky visual, scrubbed by a scroll timeline over a tall spacer. |
@@ -101,12 +101,25 @@ it for free:
 0. **A reveal is an enhancement, and enhancements may be absent.** A browser without
    `animation-timeline` shows the content with no animation. That is the fallback. Do not put
    a client component on a content route so a decoration can work everywhere.
-1. **One transition vocabulary, defined once.** Pick a single signature and reuse it site-wide:
-   a short mask-wipe along the accent, plus a 1–2 px chromatic offset that settles. Define it as
-   tokens in `globals.css` (`--t-fast: 180ms`, `--t-page: 420ms`, `--ease-out: cubic-bezier(.16,1,.3,1)`)
-   and never hand-roll a duration in a component.
+1. **One transition vocabulary, defined once.** A single signature reused site-wide, built from
+   tokens in `globals.css` (`--t-fast: 180ms`, `--t-page: 420ms`, `--ease-console:
+   cubic-bezier(.16,1,.3,1)`); never hand-roll a duration in a component.
+
+   *Corrected in 8.8.* The easing is `--ease-console`, not `--ease-out`: `--ease-*` is a Tailwind v4
+   `@theme` namespace, and `--ease-out` would have silently redefined every existing `ease-out`
+   utility. And the shipped signature is not the mask-wipe with a chromatic offset proposed here —
+   it is a **sequential handoff**: the old page clears over `--t-fast`, the new one rises 6 px and
+   settles over `--t-page`. The same call the home chapters made (PLAN Decision Log 2026-08-24): two
+   pages legible at once read as a fault. The wipe was never prototyped; revisit only if the
+   handoff reads as too plain on real hardware.
 2. **Transitions carry meaning or they are noise.** Moving *deeper* (index → project) uses the
    forward form; moving back uses its exact inverse. A cross-fade for both is a wasted signal.
+
+   *Not met — recorded rather than hidden (8.8).* One form serves both directions today. Direction
+   is carried by the shared element instead: going deeper, the clicked title grows into the page's
+   heading; going back via `← Projects` it does not return to a card. The browser **Back button does
+   not animate at all** — a `popstate` navigation never passes through `TransitionLink`. Both are
+   the open items if this is revisited.
 3. **Never move the reader's content under them.** Scrub decoration — rails, backgrounds, the
    schematic — never the paragraph being read. Igloo can scrub everything because it has no long-form
    text; we have MDX case studies.
@@ -126,9 +139,16 @@ it for free:
 
 ### 3.3 The shared-element move worth building first
 
-`ProjectCard` → `/projects/[slug]`: give the card's title and thumbnail a stable
-`view-transition-name`, so the card becomes the page header. Highest perceived-quality-per-KB item on
-this list, works with the back button, and degrades to a plain navigation where unsupported.
+`ProjectCard` → `/projects/[slug]`: the card's title becomes the page's `<h1>`. Degrades to a plain
+navigation where unsupported or under reduced motion. Built 2026-09-23 (PLAN 8.3).
+
+*Corrected in 8.8 — the name must NOT be stable.* A fixed `view-transition-name` on every card title
+makes every card on the page a participant: navigating `/` → `/projects` sends the home page's three
+cards — including ones in faded, invisible chapters, because a snapshot ignores its ancestors'
+opacity — flying across the screen into the index. The name is set on the **one clicked element**
+(`data-vt-morph`) and on the landing heading (`data-vt-land`) for the duration of the transition
+only. There is no thumbnail: cards do not have one. And it does not work with the back button (rule
+2 above).
 
 ---
 
@@ -199,12 +219,17 @@ not weather.
 
 ### 5.1 Two tiers
 
-**Tier A — content routes (`/`, `/about`, `/projects`, `/contact`).** Canvas 2D or SVG, self-written,
-under ~4 KB, `position: fixed` behind content, `pointer-events: none`, `aria-hidden`. Particle count
-scales with viewport area and caps hard (≤120 desktop, ≤50 mobile). Pause on
-`document.hidden`, stop entirely under `prefers-reduced-motion`, and never start before the page is
-interactive. If it cannot be done in one small file with no dependency, it does not belong on a
-content route.
+**Tier A — content routes (`/`, `/about`, `/projects`, `/contact`).** Self-written, `position: fixed`
+behind content, `pointer-events: none`, `aria-hidden`, absent entirely under
+`prefers-reduced-motion`. If it cannot be done in one small file with no dependency, it does not
+belong on a content route.
+
+*Corrected in 8.8.* The field shipped as **CSS-animated spans with 0 KB of JavaScript**, not Canvas
+2D or SVG under 4 KB — which made three of this paragraph's rules moot rather than met: there is no
+render loop to pause on `document.hidden` (the browser already throttles CSS animation in a hidden
+tab), no "before interactive" to wait for, and no per-viewport count to compute. Counts are fixed
+per mood (§5.2), and the field is simply absent below 1200 px, where there is no margin to draw in —
+so "≤50 on mobile" became zero.
 
 **Tier B — `/explore`, `/lab`.** three.js `Points` with a custom shader is already affordable there.
 Reuse the existing lighting/material language: unlit, additive, accent-tinted, `sizeAttenuation`
@@ -275,7 +300,7 @@ metadata blocks, `/explore` zone panels, `/lab` hotspot callouts. Anatomy:
 │               ROLE ............. <role>      │
 │               BASE ............. <location>  │
 │               STACK ............ <3 items>   │
-│               STATUS ........... ● <state>   │   ← reuses StatusBadge
+│               STATUS ........... <state>     │   ← plain text, NOT StatusBadge (see below)
 └──────────────────────────────────────────────┘
 ```
 
@@ -297,6 +322,9 @@ Rules:
   accent `#0f7d5c`) rather than a washed-out terminal. Verify both themes on every card.
 - The card is **static HTML** — no canvas, no measurable JS. This is what makes it adoptable on
   content routes at zero budget.
+- *Corrected in 8.8:* STATUS does **not** reuse `StatusBadge`. That component states a *project's*
+  lifecycle (complete / in progress); the operator's availability is a different kind of fact, and a
+  pill that looks identical to a project's would claim they are the same one (PLAN 8.2).
 
 ### 6.5 Home page composition — decided 2026-08-24
 
@@ -345,23 +373,31 @@ failed. The rule the choice of navigation carries with it:
 **Do not duplicate the dossier.** `/` gets the 5-field summary; `/about` gets the full operator card.
 Two cards with overlapping-but-different field sets is worse than one card and a link.
 
-Typography to settle at the same time, since it is the other half of "organised": a single type
-scale in `@theme`, mono reserved for labels/metadata/code, body measure capped at ~68 characters,
-and section spacing on one 8 px rhythm.
+Typography to settle at the same time, since it is the other half of "organised": mono reserved
+for labels/metadata/code, and section spacing on one 8 px rhythm.
+
+*Corrected in 8.8.* Two items that were here did not survive the build. **A custom type scale in
+`@theme`** was deliberately not built in 8.1 — Tailwind's default scale was already the one scale
+in use, and restating it adds a second source of truth. **A ~68-character body measure** was
+declared as a `--measure` token and never adopted: the reading column is `max-w-3xl` everywhere
+and prose fills it. The unused token was deleted in 8.8 rather than left as a promise.
 
 ---
 
 ## 7. Adoption order
 
-Cheapest-first, each independently shippable, none breaching the JS budget:
+Cheapest-first, each independently shippable, none breaching the JS budget. *As of 8.8 this is
+history: items 1–8 are built (item 3 by hand, at +2 KB — §3.1), item 9 is not. Where the build
+diverged, the section the item points to carries the correction.*
 
 1. **Motion + type tokens** in `globals.css` (durations, easings, one scale). Zero visible change,
    unblocks everything else.
 2. **`ConsoleCard` primitive** + the `/` summary card and `/about` operator card (§6.5). Pure CSS,
    biggest organisational payoff.
 3. **View Transitions**: site-wide cross-fade, then the `ProjectCard` → project-page shared element.
-4. **Scroll-driven reveals** on `/projects` and `/about` via `animation-timeline: view()`, with an
-   `IntersectionObserver` fallback and a real reduced-motion branch.
+4. **Scroll-driven reveals** on `/projects` and `/about` via `animation-timeline: view()`, with a
+   real reduced-motion branch. The `IntersectionObserver` fallback once listed here was deliberately
+   not built — §3.2 rule 0: a browser without `animation-timeline` simply shows the content.
 5. **Tier-A particle field** on `/`, `/projects`, `/contact` per §5.2 — one component, a `mood` prop.
 6. **Audio gate** in `/explore` and `/lab` chrome, with the persisted mute preference (§4).
 7. **Interaction sound tied to motion** in `/explore` (speed) and `/lab` (hotspot focus) — last,
@@ -373,15 +409,21 @@ Cheapest-first, each independently shippable, none breaching the JS budget:
 
 ## 8. Guardrails to re-check before each of the above ships
 
-- Per-route JS measured with headless Chromium, one fresh context per route; `/lab` still 1,402 KB
-  and `/lab/ascilam` still 1,395 KB, or the harness is lying.
+- Per-route JS measured with headless Chromium, one fresh context per route. The harness anchors,
+  re-baselined in 8.8 (2026-09-24): `/lab` **1,411 KB** and `/lab/ascilam` **1,397 KB** — if a
+  re-run of an unchanged build does not reproduce them, the harness is lying. (The old anchors,
+  1,402 / 1,395, predate the 8.7 audio toggle; the last commit measures 1,409 / 1,396, and 8.3 adds
+  the remaining 2 KB to every route.)
 - Content routes still under ~475 KB and still free of three.js **in the initial graph** — for `/`,
   measured before the portal is activated, and confirmed that activation is what pulls the chunk.
 - Nothing on the render path fetches from a network — including decoders and fonts.
 - `prefers-reduced-motion` branch verified by hand, not assumed from the global CSS rule.
 - Keyboard path intact through every new control (audio toggle included).
 - Both themes checked; body-text contrast measured with the particle field on.
-- WebGL-disabled and JS-disabled states still show full content.
+- WebGL-disabled and JS-disabled states still show full content. **Run this one, do not assume
+  it:** the 8.8 run found `/lab` blank without WebGL — a hook placed below the no-WebGL early
+  return (added in 8.7) made React throw #300 on hydration. Three other scenes with the same
+  structure were fine, which is exactly why reading the code was not enough.
 
 ---
 

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getAllProjects, getProject, getProjectSlugs } from '@/lib/projects';
 import { StatusBadge } from '@/components/StatusBadge';
+import { TransitionLink } from '@/components/TransitionLink';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -49,13 +49,13 @@ export default async function ProjectPage({ params }: Params) {
         className="scroll-rail fixed inset-x-0 top-0 z-50 h-0.5"
         style={{ backgroundColor: 'var(--accent)' }}
       />
-      <Link
+      <TransitionLink
         href="/projects"
         className="font-mono text-sm hover:underline"
         style={{ color: 'var(--fg-muted)' }}
       >
         ← Projects
-      </Link>
+      </TransitionLink>
 
       <header className="mt-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -74,7 +74,11 @@ export default async function ProjectPage({ params }: Params) {
           <StatusBadge status={project.status} />
         </div>
 
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">
+        {/* 8.3: the landing element for a card title's morph. */}
+        <h1
+          data-vt-land
+          className="mt-3 w-fit text-3xl font-semibold tracking-tight"
+        >
           {project.title}
         </h1>
         <p
@@ -146,12 +150,13 @@ export default async function ProjectPage({ params }: Params) {
           <p className="font-mono text-xs" style={{ color: 'var(--fg-muted)' }}>
             Next
           </p>
-          <Link
+          <TransitionLink
             href={`/projects/${next.slug}`}
-            className="mt-1 block text-lg font-medium hover:underline"
+            data-vt-morph
+            className="mt-1 block w-fit text-lg font-medium hover:underline"
           >
             {next.title}
-          </Link>
+          </TransitionLink>
         </nav>
       )}
     </article>

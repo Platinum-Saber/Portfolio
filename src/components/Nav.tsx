@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { nav, site } from '@/lib/site';
 import { ThemeToggle } from './ThemeToggle';
+import { TransitionLink } from './TransitionLink';
 
 export function Nav() {
   const pathname = usePathname();
@@ -14,15 +15,18 @@ export function Nav() {
       style={{
         borderColor: 'var(--border)',
         backgroundColor: 'color-mix(in srgb, var(--bg) 85%, transparent)',
+        // Phase 8.3: its own transition group, so the bar holds still while
+        // the page beneath it cross-fades.
+        viewTransitionName: 'site-nav',
       }}
     >
       <nav className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-3 px-4 sm:px-5">
-        <Link
+        <TransitionLink
           href="/"
           className="shrink-0 font-mono text-[13px] font-semibold tracking-tight whitespace-nowrap sm:text-sm"
         >
           {site.name}
-        </Link>
+        </TransitionLink>
 
         {/*
           Five destinations do not fit a 390px header at desktop sizing —
@@ -34,8 +38,12 @@ export function Nav() {
           {nav.slice(1).map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
+            // Heavy routes keep a plain <Link>: a view transition freezes
+            // the page until the next route lands (see TransitionLink).
+            const heavy = 'heavy' in item && item.heavy;
+            const L = heavy ? Link : TransitionLink;
             return (
-              <Link
+              <L
                 key={item.href}
                 href={item.href}
                 /*
@@ -45,7 +53,7 @@ export function Nav() {
                   every single page load, for every visitor, which is exactly
                   what removing the hero link fixed in 8.6.
                 */
-                prefetch={'heavy' in item && item.heavy ? false : undefined}
+                prefetch={heavy ? false : undefined}
                 aria-current={active ? 'page' : undefined}
                 className="shrink-0 rounded-md px-1.5 py-1.5 text-[13px] whitespace-nowrap transition-colors sm:px-3 sm:text-sm"
                 style={{
@@ -54,7 +62,7 @@ export function Nav() {
                 }}
               >
                 {item.label}
-              </Link>
+              </L>
             );
           })}
           <div className="ml-1 shrink-0">

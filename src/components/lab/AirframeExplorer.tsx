@@ -63,6 +63,22 @@ export function AirframeExplorer() {
 
   const component = selected ? getComponent(selected) : undefined;
 
+  // A soft tick when a component is selected — §4.5's "sound reinforces
+  // motion" for a scene whose only motion is attention moving between parts.
+  // Selection rather than DOM focus on purpose: tabbing across eight markers
+  // to reach the one you want would fire eight ticks, which is the Geiger
+  // counter the rate limiter in `lib/audio` exists to prevent rather than to
+  // excuse. Every path in — marker click, list button, Enter on a focused
+  // marker — goes through `setSelected`, so this covers the keyboard too.
+  //
+  // Above the early return below, not after it: a hook under a conditional
+  // return runs on the server's 'checking' render and not on the client's
+  // 'unsupported' one, and React throws #300 (fewer hooks) — which blanked
+  // /lab for every visitor without WebGL. Found by the 8.8 guardrail run.
+  useEffect(() => {
+    if (selected) tick();
+  }, [selected]);
+
   if (support === 'unsupported') {
     return (
       <div
@@ -83,17 +99,6 @@ export function AirframeExplorer() {
       </div>
     );
   }
-
-  // A soft tick when a component is selected — §4.5's "sound reinforces
-  // motion" for a scene whose only motion is attention moving between parts.
-  // Selection rather than DOM focus on purpose: tabbing across eight markers
-  // to reach the one you want would fire eight ticks, which is the Geiger
-  // counter the rate limiter in `lib/audio` exists to prevent rather than to
-  // excuse. Every path in — marker click, list button, Enter on a focused
-  // marker — goes through `setSelected`, so this covers the keyboard too.
-  useEffect(() => {
-    if (selected) tick();
-  }, [selected]);
 
   return (
     <div>

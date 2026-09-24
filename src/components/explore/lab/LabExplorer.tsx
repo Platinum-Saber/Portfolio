@@ -280,7 +280,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
         )}
 
         <div
-          className="pointer-events-none absolute top-3 left-3 font-mono text-[11px]"
+          className="pointer-events-none absolute top-3 left-3 z-10 font-mono text-[11px]"
           style={{ color: '#7d8794' }}
         >
           <p>{activeStation ? 'station open' : 'flying'}</p>

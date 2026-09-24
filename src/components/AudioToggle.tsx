@@ -76,6 +76,7 @@ export function AudioToggle({
         // and the context — an await, a transition, a timeout — and the browser
         // stops counting it as a user gesture.
         onClick={() => setState(toggle())}
+        data-audio-toggle
         aria-pressed={armed}
         aria-label={armed ? 'Mute audio' : 'Enable audio'}
         title={armed ? 'Mute audio' : 'Enable audio'}

@@ -350,7 +350,11 @@ export function Explorer({ zones }: { zones: Zone[] }) {
             in fullscreen and top-right carries the jump list — and §4.2 asks
             for one control that is ALWAYS visible, not one that appears with
             the mode that happens to have room for it. */}
-        <div className="pointer-events-none absolute top-3 left-3">
+        {/* z-10: above the "Take control" scrim, which is later in the DOM
+            and otherwise covered this corner — the audio toggle, the one
+            control §4.2 says is ALWAYS reachable, could not be clicked until
+            the visitor had taken control (found on the live site, 2026-09-24). */}
+        <div className="pointer-events-none absolute top-3 left-3 z-10">
           <p className="font-mono text-[11px]" style={{ color: '#7d8794' }}>
             {found} of {total} found
           </p>

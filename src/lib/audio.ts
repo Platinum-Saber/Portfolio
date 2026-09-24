@@ -223,11 +223,23 @@ export function disarm(): void {
   );
 }
 
+/** True only when sound is actually coming out, not merely remembered. */
+function live(): boolean {
+  return readPreference() === 'armed' && ctx !== null && ctx.state === 'running';
+}
+
 export function toggle(): AudioState {
-  const next = readPreference() === 'armed' ? 'muted' : 'armed';
-  if (next === 'armed') arm();
-  else disarm();
-  return next;
+  // A remembered 'armed' from an earlier visit is a PROMISE of sound, not
+  // sound: no context can exist until this visit's first gesture. If that
+  // gesture is a press on this very toggle, the visitor is asking to hear it,
+  // so it arms — flipping the stored preference instead muted a site that had
+  // never made a sound (found on the live site, 2026-09-24).
+  if (!live()) {
+    arm();
+    return 'armed';
+  }
+  disarm();
+  return 'muted';
 }
 
 /**
@@ -247,14 +259,23 @@ export function toggle(): AudioState {
 export function resumeIfArmed(): () => void {
   if (readPreference() !== 'armed' || ctx) return () => {};
 
-  const onGesture = () => arm();
+  // Any gesture arms — except one aimed at the audio toggle itself, which
+  // arms through its own click handler (`toggle`). Letting pointerdown arm
+  // first meant the click that followed saw a live context and muted it.
+  // Not `once`: an ignored toggle press must not use up the listener; `arm()`
+  // removes it via cancelArmGesture.
+  const onGesture = (event: Event) => {
+    const target = event.target as Element | null;
+    if (target?.closest?.('[data-audio-toggle]')) return;
+    arm();
+  };
   armGesture = () => {
     window.removeEventListener('pointerdown', onGesture);
     window.removeEventListener('keydown', onGesture);
     armGesture = null;
   };
-  window.addEventListener('pointerdown', onGesture, { once: true });
-  window.addEventListener('keydown', onGesture, { once: true });
+  window.addEventListener('pointerdown', onGesture);
+  window.addEventListener('keydown', onGesture);
 
   return () => armGesture?.();
 }

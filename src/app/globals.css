@@ -171,9 +171,14 @@
     transform: none;
     pointer-events: auto;
   }
+  /* The exit is a PUSH (9.x mascot): the chapter leaves along the drone's
+     line of travel at the moment it crosses the card (--push-* are computed
+     from the orbit in components/Mascot.tsx). Falls back to the original
+     lift if the variables are ever absent. */
   100% {
     opacity: 0;
-    transform: translateY(-28px);
+    transform: translate(var(--push-x, 0), var(--push-y, -28px))
+      rotate(var(--push-r, 0deg));
     pointer-events: none;
   }
 }
@@ -189,7 +194,8 @@
   }
   100% {
     opacity: 0;
-    transform: translateY(-28px);
+    transform: translate(var(--push-x, 0), var(--push-y, -28px))
+      rotate(var(--push-r, 0deg));
     pointer-events: none;
   }
 }
@@ -212,6 +218,35 @@
 
 .stage-inner > .chapter + .chapter {
   margin-top: 6rem;
+}
+
+/* The mascot (components/Mascot.tsx). Absent unless the stage itself is on:
+   no support, reduced motion or a narrow screen means no drone — and, because
+   the sprite is only named inside the query below, no 57 KB download either. */
+.mascot {
+  display: none;
+}
+
+/* Hovering. Time-based and always running, so the craft is alive while the
+   visitor reads; the scroll-driven orbit carries it on top of this. The sway
+   is slow and off-beat from the bob, so the two never line up into a loop. */
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(1.5deg);
+  }
+}
+@keyframes mascot-sway {
+  0%,
+  100% {
+    translate: -14px 0;
+  }
+  50% {
+    translate: 14px 0;
+  }
 }
 
 @supports (animation-timeline: view()) {
@@ -247,12 +282,74 @@
       animation-range: var(--ch-from) var(--ch-to);
     }
 
-    .chapter:first-child {
+    .chapter:first-of-type {
       animation-name: chapter-open;
     }
 
     .chapter:last-child {
       animation-name: chapter-arrive;
+    }
+
+    /* Chapters sit between the two depths of the mascot's lap: z 0 is the
+       far half (behind the glass), z 3 the near half (in front, pushing). */
+    .chapter {
+      z-index: 1;
+    }
+
+    .mascot {
+      display: block;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      /* Orbit size. The lap is wider than the 48rem reading column, so the
+         craft swings out into the margins at the ends of the ellipse. */
+      --orbit-a: min(44vw, 600px);
+      /* Flat enough that the near side of the lap runs across the lower edge
+         of a centred card: at 27vh the push point sat ~60px BELOW the card,
+         and chapters left without being touched (measured, 2026-09-24). */
+      --orbit-b: min(18vh, 170px);
+    }
+
+    .mascot-orbit {
+      position: absolute;
+      left: 50%;
+      /* The lap's near point (where it pushes) sits on the chapters' vertical
+         centre — ~53% of the stage, because .chapter pads 5.5rem top / 2.5rem
+         bottom and centres its content. Chapters differ in height (a card,
+         prose, three cards) but all share that centre line, so anchoring the
+         push there hits every one. 0.94 = cos(tilt): the near point's height
+         above the orbit centre. The far half then rides up behind the text. */
+      top: calc(53% - var(--orbit-b) * 0.94);
+      width: var(--sprite-w);
+      height: var(--sprite-h);
+      margin: calc(var(--sprite-h) / -2) 0 0 calc(var(--sprite-w) / -2);
+      /* One lap per chapter: the range is the pinned stage, split into
+         --chapters iterations, exactly as the chapters split it. */
+      animation: mascot-orbit linear both;
+      animation-timeline: --stage;
+      animation-range: var(--mascot-from) var(--mascot-to);
+      animation-iteration-count: var(--chapters);
+    }
+
+    .mascot-idle {
+      width: 100%;
+      height: 100%;
+      animation:
+        mascot-bob 3.4s ease-in-out infinite,
+        mascot-sway 7.3s ease-in-out infinite;
+    }
+
+    .mascot-sprite {
+      width: 100%;
+      height: 100%;
+      background-image: url('/images/vt-802-sprite.webp');
+      background-repeat: no-repeat;
+      background-size: var(--sprite-strip) var(--sprite-h);
+      filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+      animation: mascot-heading linear both;
+      animation-timeline: --stage;
+      animation-range: var(--mascot-from) var(--mascot-to);
+      animation-iteration-count: var(--chapters);
     }
 
     /* `pointer-events` is animated in the keyframes above rather than set

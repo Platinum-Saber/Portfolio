@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { Mascot, pushVector } from './Mascot';
 
 /**
  * The guided home sequence — Phase 8.9.
@@ -28,6 +29,18 @@ import type { CSSProperties, ReactNode } from 'react';
 /** Vertical scroll runway per chapter, in vh. Mirrored in `globals.css`. */
 const RUNWAY_VH = 110;
 
+/**
+ * The pinned part of the stage's `cover` timeline, in %. The stage is
+ * `count * RUNWAY_VH` tall and its `cover` timeline also spans one viewport on
+ * each side, so this slice is the only part of the scroll where the stage
+ * fills the screen. Shared by the chapters and the mascot, which must agree
+ * on it to the decimal — the push only lands if they do.
+ */
+function pinRange(count: number): [number, number] {
+  const pinStart = (100 * 100) / (count * RUNWAY_VH + 100);
+  return [pinStart, 100 - pinStart];
+}
+
 export function Stage({
   count,
   children,
@@ -35,12 +48,25 @@ export function Stage({
   count: number;
   children: ReactNode;
 }) {
+  const push = pushVector();
   return (
     <div
       className="stage"
-      style={{ ['--chapters' as string]: count } as CSSProperties}
+      style={
+        {
+          ['--chapters' as string]: count,
+          // Where an outgoing chapter goes: shoved along the mascot's line
+          // of travel at the moment it crosses the card.
+          ['--push-x' as string]: push.x,
+          ['--push-y' as string]: push.y,
+          ['--push-r' as string]: push.r,
+        } as CSSProperties
+      }
     >
-      <div className="stage-inner">{children}</div>
+      <div className="stage-inner">
+        <Mascot range={pinRange(count)} />
+        {children}
+      </div>
     </div>
   );
 }
@@ -57,11 +83,7 @@ export function Chapter({
   label?: string;
   children: ReactNode;
 }) {
-  // The stage is `count * RUNWAY_VH` tall and its `cover` timeline also spans
-  // one viewport on each side, so the pinned phase — the only part of the
-  // scroll where the stage fills the screen — is this slice of the range:
-  const pinStart = (100 * 100) / (count * RUNWAY_VH + 100);
-  const pinEnd = 100 - pinStart;
+  const [pinStart, pinEnd] = pinRange(count);
   const slot = (pinEnd - pinStart) / count;
 
   // The slots ABUT rather than overlap. An overlapping crossfade was tried

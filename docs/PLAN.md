@@ -648,6 +648,37 @@ and the page weighs what it did before.
 
 ---
 
+#### 8.10 — The mascot — ✅ Done (2026-09-24)
+
+*Added at Suhan's request: a VT-802 on `/` that orbits the stage and pushes each chapter away,
+replacing the plain lift-and-fade exit.*
+
+- [x] **A pre-rendered sprite, not a live scene** (Suhan's choice of option B). The real
+      `vt-802.glb`, rendered headless in /explore's lighting rig at 24 headings 15° apart, one
+      transparent strip: `public/images/vt-802-sprite.webp`, **57 KB**. `/` stays three.js-free
+- [x] `components/Mascot.tsx` — three layers, each owning one motion: **scroll** flies a
+      tilted ellipse, one lap per chapter; **time** bobs and sways it so it idles when nobody
+      scrolls; **scroll** again picks the heading frame matching its direction of travel.
+      Keyframes computed at build time into a static `<style>` — **0 KB of JS**, `/` measured
+      at 467 KB before and after
+- [x] Depth: the near half of each lap is in front of the cards (larger, z 3), the far half
+      behind the glass (smaller, dimmer, z 0) — the "sways behind the panel" while reading
+- [x] The push: each lap crosses the chapter at 88% of its slot, where the exit animation
+      already runs; the chapter now leaves *along the drone's line of travel* (`--push-*`,
+      derived from the same orbit maths) with a slight tilt, instead of lifting straight up
+- [x] **The push lands on every chapter:** the lap's near point is anchored to the chapters'
+      shared vertical centre, since they differ in height but not in centre line. Measured
+      at 1024×768, 1280×720, 1440×900 and 1920×1080: the drone is 100% over the outgoing content
+      at all four handoffs. (A fixed ellipse missed three of four; an earlier "pass" was a
+      measurement taken mid-smooth-scroll — `behavior: 'instant'` is required in any scroll test here)
+- [x] Same guard as the stage: below 900 px, under reduced motion or without
+      `animation-timeline`, no mascot **and no sprite download** (the image is only named
+      inside that media query). `aria-hidden`. Particle dust unchanged
+- [ ] The rotors do not turn — the model is one merged mesh (see `DroneModel.tsx`). Fixing it
+      upstream would also let the sprite show prop blur
+- [ ] Look at it on real hardware: sprite sharpness is 1.65× at 100 CSS px, a touch soft on a
+      3× phone — though phones never see it
+
 #### 8.7 — Audio — ✅ Done (2026-09-03)
 
 *IRIS K's etiquette, not its volume. `/explore` and `/lab` only — content routes stay silent.*
@@ -934,6 +965,7 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date — decision — why.
 
+- **2026-09-24** — **The home mascot is a sprite on a CSS orbit, anchored to the chapters' centre line.** A live VT-802 on `/` would have cost ~1.4 MB and broken the no-3D-on-the-homepage rule, so it is the real model pre-rendered at 24 headings (57 KB). Motion stays scroll-driven like the rest of the stage — an auto-flying drone that shoved cards away on a timer would take the reading pace from the visitor. The push only reads as physical if the drone actually touches the card, and a fixed ellipse missed three chapters of four because they differ in height; they share a vertical centre, so the lap's near point is pinned to it.
 - **2026-09-24** — **Audio toggle: a remembered 'armed' is a promise, not sound.** Reported as "no sound on the deployment". Measured on the live site the synthesis was fine (context running, −21 dBFS RMS at the output), so the silence was downstream — browser or OS. The investigation found two real bugs anyway: the "Take control" scrim covered the toggle, so it could not be pressed before flying; and on a return visit the first press on the toggle *muted* a site that had not yet made a sound (the arm-on-next-gesture listener armed on pointerdown, then the click toggled it off). `toggle()` now arms whenever sound is not actually live, the gesture listener ignores presses on the toggle itself, and the top-left chrome sits above the scrim.
 - **2026-09-24** — **Audio parks when the visitor leaves the 3D routes.** The site navigates client-side, so the audio module and its AudioContext outlived the scene: exiting `/explore` left the ambient bed playing on `/`, breaking DESIGN-LANGUAGE §4.3 ("content routes stay silent"). `park()` fades and suspends without touching the preference, and is called from `AudioToggle`'s unmount — the toggle is mounted on exactly the audio routes, so its lifetime *is* the audio scope and no route list has to be maintained. Returning to a scene resumes at once (the page already has user activation); a tab regaining visibility on a content page no longer resumes anything. Verified: −22.7 dB on `/explore`, −180 dB (silence, context suspended) on `/` and `/projects`, sound back on return.
 - **2026-09-24** — **Hosting moved to Cloudflare Workers, with the static-assets cache and no runtime rendering.** Suhan's call. The first deploy reported success and 500'd on every page: with no `wrangler.jsonc` in the repo, Workers Builds generated a default setup per build that had no incremental cache, so the Worker re-rendered every prebuilt page and hit `readFileSync` (the OG portrait, then the MDX content) with no filesystem. Fix: commit the config, serve prerendered output via `staticAssetsIncrementalCache` + cache interception, `dynamicParams = false` on case studies, and move the OG read inside its handler. Verified in local workerd before touching the repo. No R2/KV/D1 — nothing revalidates at runtime, so there is nothing to store.

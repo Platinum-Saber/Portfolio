@@ -6,13 +6,20 @@ const LABELS: Record<ProjectStatus, string> = {
   archived: 'Archived',
 };
 
+const TONE: Record<ProjectStatus, string> = {
+  'in-progress': 'glass-status glass-status-progress',
+  complete: 'glass-status glass-status-done',
+  archived: '',
+};
+
 export function StatusBadge({ status }: { status: ProjectStatus }) {
-  const isActive = status === 'in-progress';
+  const tone = TONE[status];
   return (
     <span
-      // 9.0d: a glass tag; a live project's is tinted with the accent.
-      className={`glass glass-chip px-2 py-0.5 font-mono text-[11px] ${isActive ? 'glass-accent' : ''}`}
-      style={isActive ? undefined : { color: 'var(--fg-muted)' }}
+      // A glass tag tinted by status: yellow in progress, green complete,
+      // archived stays muted.
+      className={`glass glass-chip px-2 py-0.5 font-mono text-[11px] ${tone}`}
+      style={tone ? undefined : { color: 'var(--fg-muted)' }}
     >
       {LABELS[status]}
     </span>

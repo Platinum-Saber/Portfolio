@@ -139,7 +139,7 @@ These are settled. Changing one means updating this file and noting why in the D
   - [x] Financial market data backend (Redis/Kafka/Spring Boot)
   - [x] ASCILAM collaborative multi-robot SLAM
   - [x] 4-bit Nano Processor (VHDL)
-  - [x] Kobuki + Webots mobile robot control
+  - [x] Kobuki + Webots mobile robot control (IESL RoboGames 2024, team Sentinels - finalist)
   - [ ] Review the set and cut any that don't earn their place
 - [x] Each project page: problem → approach → what you built → result → stack → links (repo/demo/video)
 - [x] **CV as a PDF** → `public/suhan-waduge-cv.pdf`, `site.cv` set (2026-08-24). Served 200, 115,706 bytes, linked from `/about`

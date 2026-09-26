@@ -36,6 +36,11 @@
 
   --accent: #0f7d5c;
   --accent-soft: rgba(15, 125, 92, 0.1);
+
+  /* Project status tags (StatusBadge): in progress = yellow, complete = green.
+     The light-theme values are darkened so the text still reads on a pale page. */
+  --status-progress: #8a6500;
+  --status-done: #1a7f37;
 }
 
 [data-theme='dark'] {
@@ -46,6 +51,8 @@
   --border: #232830;
   --accent: #3ddba0;
   --accent-soft: rgba(61, 219, 160, 0.12);
+  --status-progress: #f5c542;
+  --status-done: #4ade80;
 }
 
 @utility no-scrollbar {
@@ -742,6 +749,8 @@
    correctly inside it with no second code path. */
 .hud {
   --fg: #e8eaed;
+  --status-progress: #f5c542;
+  --status-done: #4ade80;
   --fg-muted: #aab2bd;
   --border: rgba(170, 178, 189, 0.2);
   --accent: #3ddba0;
@@ -997,6 +1006,20 @@ body::before {
     --glass-rim-lo: color-mix(in srgb, var(--accent) 22%, transparent);
     color: var(--accent);
   }
+
+  /* Status tags: the same tinted glass as .glass-accent, in the status colour. */
+  .glass-status {
+    --glass-tint: color-mix(in srgb, var(--status-c) 16%, transparent);
+    --glass-rim-hi: color-mix(in srgb, var(--status-c) 55%, white);
+    --glass-rim-lo: color-mix(in srgb, var(--status-c) 22%, transparent);
+    color: var(--status-c);
+  }
+  .glass-status-progress {
+    --status-c: var(--status-progress);
+  }
+  .glass-status-done {
+    --status-c: var(--status-done);
+  }
 }
 
 .glass-blur {
@@ -1207,4 +1230,10 @@ body::before {
   max-width: 20rem;
   display: block;
   background-color: var(--bg-subtle);
+}
+
+/* A landscape screen recording (simulation footage) needs the column width,
+   not the portrait-phone cap above. Opt in with className="is-landscape". */
+.prose-site :where(figure) video.is-landscape {
+  max-width: 100%;
 }

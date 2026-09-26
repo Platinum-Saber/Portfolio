@@ -1,33 +1,148 @@
 ---
-title: Mobile Robot Control - Kobuki & Webots
-summary: Vision-guided control of a Kobuki mobile base on a Raspberry Pi with Kinect RGB-D input and OpenCV, alongside a Webots simulation environment for testing behaviours before hardware.
+title: 'Sentinels at IESL RoboGames 2024: Webots to Kobuki'
+summary: Three rounds of IESL RoboGames 2024 as team Sentinels - two maze tasks in Webots simulation, then a hardware final on a Kobuki base with a Kinect camera and a Raspberry Pi 5, sorting coloured cubes onto matching tiles. University category finalist.
 order: 7
 year: '2025'
 status: complete
 domain: Robotics
 repo: https://github.com/Platinum-Saber/robo_games
-stack: ['Python', 'OpenCV', 'Webots', 'Raspberry Pi', 'Kobuki', 'Kinect']
+stack:
+  [
+    'Python',
+    'Webots',
+    'OpenCV',
+    'Raspberry Pi 5',
+    'Kobuki',
+    'Kinect',
+    'Serial protocol',
+  ]
 ---
 
-## The problem
+## The competition
 
-Getting a mobile robot to react to what it sees, and being able to iterate on that
-behaviour without needing the hardware powered up and in front of you every time.
+**IESL RoboGames 2024** is run by the Institution of Engineers Sri Lanka with the Department
+of Computer Science & Engineering at the University of Moratuwa. We entered the
+**University category** as **Sentinels**, a team of three: Himeth Walgampaya, Pulasthi
+Udugamasooriya and me. It had three rounds: two in simulation, then a
+final on real robots. Of the 29 university teams that got through the first round, 12 made
+the final, and **we were one of them**.
 
-## Two halves
+## Round 1 - Completion (Webots)
 
-**Real hardware.** Control code for a **Kobuki** mobile base driven from a **Raspberry Pi**,
-with a **Kinect** supplying RGB and depth streams and **OpenCV** doing the perception -
-object detection, obstacle avoidance and vision-driven navigation.
+An **e-puck** in a 2.5 m maze we built to the organisers' spec. The robot had to visit
+coloured walls in a fixed order (red, yellow, pink, brown, green) **from any starting
+position**, then stop. Any team that completed the task went through.
 
-**Simulation.** A **Webots** environment for developing and testing algorithms against
-physics without hardware in the loop. Deliberately kept as a general robotics playground
-rather than a digital twin of the Kobuki - the goal was fast iteration on behaviours, and a
-faithful twin would have cost more to build than it saved.
+<figure>
+  <video
+    className="is-landscape"
+    controls
+    muted
+    playsInline
+    preload="none"
+    poster="/images/robogames-round1-poster.webp"
+    width="854"
+    height="480"
+  >
+    <source src="/video/robogames-round1.mp4" type="video/mp4" />
+    Your browser cannot play this video.
+  </video>
+  <figcaption>Our round 1 run, sped up 9×: the e-puck works through the maze to each coloured wall in order and stops at green. Inset: the robot's camera.</figcaption>
+</figure>
+
+## Round 2 - Elimination (Webots)
+
+A harder brief: **no pre-built robots**, so we built our own inside a 0.25 m box. The maze
+was 5 m square, and the faculty was on fire. Three fire pits took marks off on entry and
+every two seconds after that. Three survivors had to be rescued by staying in their cell for
+three seconds, and then the robot had to get back out. A dry run was allowed for mapping,
+the robot could not look over walls, and ties were decided on time. This round cut the field
+down to the **12 finalists**.
+
+<figure>
+  <video
+    className="is-landscape"
+    controls
+    muted
+    playsInline
+    preload="none"
+    poster="/images/robogames-round2-poster.webp"
+    width="854"
+    height="480"
+  >
+    <source src="/video/robogames-round2.mp4" type="video/mp4" />
+    Your browser cannot play this video.
+  </video>
+  <figcaption>Round 2, sped up 2×: our scratch-built robot in the burning maze, with a fire pit's red, orange and yellow zones in view. Insets: the robot's camera views.</figcaption>
+</figure>
+
+## The final - Kobuki, Kinect, Raspberry Pi 5
+
+This time it was a real robot: a **Kobuki** base with a **Kinect** for vision and a
+**Raspberry Pi 5** running everything. The task was about colour. The robot had to find
+coloured cubes, trap each one between flaps on its front, find the floor tile of the same
+colour and push the cube onto it.
+
+<figure>
+  <img
+    src="/images/robogames-kobuki.webp"
+    width="480"
+    height="720"
+    alt="A Kobuki-based Quanser QBot 2 with a Raspberry Pi 5 in an orange case mounted on top, wiring and a buck converter below, and a hand holding a blue cube beside it"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>The robot: a Kobuki-based QBot 2 with the Raspberry Pi 5 on top, at the organisers' Kobuki workshop on 1 March 2025. Photo: Gamith Chanuka Photography.</figcaption>
+</figure>
+
+**Perception.** OpenCV on the Kinect's colour stream. Each colour has an HSV threshold (red
+needs two, because its hue wraps around zero), with contour filtering to remove noise. One
+cheap geometric rule tells cubes from tiles: a roughly square blob is a cube, and a wide,
+flat blob low in the frame is a tile. A separate calibration script re-tunes the thresholds
+under the venue's lighting, which never matches the lab's.
+
+**Control.** A five-state machine: search box, approach, search tile, push, retreat. The
+robot turns in small steps to centre the target and creeps forward until the target's width
+in pixels says it is inside the flaps. If a colour stays hidden for 20 s, the robot skips it
+and comes back to it later. Pushes are capped, so a missed tile cannot turn into pushing
+forever.
+
+**Talking to the base.** No ROS. The Pi writes raw **Kobuki serial packets** (header, then a
+base-control payload) straight down the USB link. That leaves less to install on the Pi and
+less to break on competition day.
+
+<figure>
+  <img
+    src="/images/robogames-workshop-1200.webp"
+    srcSet="/images/robogames-workshop-700.webp 700w, /images/robogames-workshop-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="800"
+    alt="A team member holding up a water bottle in front of a laptop that shows a live camera feed with detection boxes drawn on it"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>Testing the vision pipeline at the workshop by holding objects up to the camera. Photo: Gamith Chanuka Photography.</figcaption>
+</figure>
+
+<figure>
+  <img
+    src="/images/robogames-team-1200.webp"
+    srcSet="/images/robogames-team-700.webp 700w, /images/robogames-team-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="800"
+    alt="The three members of team Sentinels standing together, arms around each other, in the competition hall"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>Team Sentinels: Himeth Walgampaya, Pulasthi Udugamasooriya and me. Photo: Gamith Chanuka Photography.</figcaption>
+</figure>
 
 ## What I took from it
 
-The gap between the two halves is the actual lesson. Behaviour that is clean in Webots meets
-motor deadband, sensor noise and latency on the Kobuki, and the discipline is deciding which
-of those to model and which to simply handle robustly on hardware. Modelling everything is a
-trap; modelling nothing means simulation buys you nothing.
+Moving from simulation to hardware is the real lesson. In Webots, colours are exact, wheels
+don't slip and the camera has no lag. On the Kobuki, each of those becomes a problem, and
+you have to choose which ones to model and which ones to just handle robustly. A lot of the
+final came down to the unglamorous parts: colour calibration on site, small motion steps you
+can trust, and timeouts so the robot always makes progress.

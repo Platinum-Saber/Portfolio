@@ -72,7 +72,7 @@ const PROJECT_LABELS: Record<string, string> = {
   'fpga-sobel-edge-detection': 'FPGA Sobel',
   'nano-processor-vhdl': 'Nano processor',
   'market-data-backend': 'Market data',
-  'kobuki-webots-robotics': 'Kobuki',
+  'kobuki-webots-robotics': 'RoboGames',
   'robokeeper-goalkeeper-robot': 'RoboKeeper',
   'nutri-mithu': 'Nutri-Mithu',
   'medibox-smart-pill-box': 'MediBox',

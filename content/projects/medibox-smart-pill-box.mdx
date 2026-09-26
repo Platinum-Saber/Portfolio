@@ -1,6 +1,6 @@
 ---
 title: 'MediBox: A Smart Medicine Box'
-summary: An ESP32 pill box that keeps its own time from the internet, rings for each dose, and watches the temperature and humidity its contents are stored at.
+summary: An ESP32 pill box that sets its clock from the internet, rings two dose alarms with a snooze, and warns when a DHT22 sensor sees storage temperature or humidity go out of range.
 order: 11
 year: '2025'
 status: complete
@@ -20,7 +20,7 @@ stack:
 
 ## The idea
 
-A pill box that remembers doses for you is only useful if it is right about the time - and a
+A pill box that remembers doses for you is only useful if it is right about the time. A
 microcontroller has no idea what time it is when you switch it on. **MediBox** gets that from
 the internet, keeps two alarms, and, because a lot of medicine is fussier about storage than
 people realise, also watches the conditions inside the box.
@@ -42,9 +42,8 @@ one.
 warns when either leaves the band medicine wants - the display names which one, and the LED
 comes on.
 
-**Fits on four buttons.** Everything - set the time, set or disable either alarm, review or
-delete alarms, change the time zone - runs through a menu on a small **OLED** driven by OK,
-Cancel, Up and Down. No app, no phone, nothing to pair.
+**Fits on four buttons.** A menu on a small **OLED**, driven by OK, Cancel, Up and Down,
+handles everything: the time, both alarms, reviewing or deleting them, and the time zone. No app, no phone, nothing to pair.
 
 ## How it is built
 

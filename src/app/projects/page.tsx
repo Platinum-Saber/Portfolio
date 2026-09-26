@@ -6,7 +6,7 @@ import { ParticleField } from '@/components/ParticleField';
 export const metadata: Metadata = {
   title: 'Projects',
   description:
-    'Robotics, embedded systems and backend engineering projects - autonomous drones, multi-robot SLAM, FPGA design and low-latency market data.',
+    'Embedded systems, robotics and software projects - FPGA design in Verilog and VHDL, ESP32 firmware, multi-robot SLAM, an autonomous drone and real-time market data.',
 };
 
 export default function ProjectsPage() {
@@ -24,9 +24,10 @@ export default function ProjectsPage() {
         className="mt-3 max-w-2xl leading-relaxed"
         style={{ color: 'var(--fg-muted)' }}
       >
-        Ordered roughly by how much of my attention they currently hold.
-        Robotics and embedded work leads; the backend work is there because
-        production systems taught me things coursework couldn&apos;t.
+        Ordered by how much of my attention they currently hold. The embedded
+        and robotics projects share most of their hardware; the software
+        projects are where production systems taught me what coursework
+        couldn&apos;t.
       </p>
 
       {domains.map((domain) => (

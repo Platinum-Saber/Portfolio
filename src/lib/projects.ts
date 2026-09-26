@@ -9,7 +9,7 @@ export type ProjectStatus = 'in-progress' | 'complete' | 'archived';
 export type ProjectFrontmatter = {
   title: string;
   summary: string;
-  /** Lower numbers surface first. Robotics and embedded work leads. */
+  /** Lower numbers surface first. Embedded and robotics work leads. */
   order: number;
   year: string;
   status: ProjectStatus;

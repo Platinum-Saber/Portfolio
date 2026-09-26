@@ -47,27 +47,26 @@ export default function AboutPage() {
         style={{ color: 'var(--fg-muted)' }}
       >
         <p>
-          I&apos;m {site.fullName}, an engineering undergraduate at the
-          University of Moratuwa, based in {site.location}. My work is in
-          robotics and embedded systems - building machines that perceive
-          something about the world and act on it.
+          I&apos;m {site.fullName}, an embedded systems engineer and
+          undergraduate at the University of Moratuwa, based in {site.location}.
+          I build the hardware layer first - FPGA logic, microcontroller
+          firmware, sensor interfaces - then the robots and software that run on
+          it.
         </p>
         <p>
-          Most of what I do sits across a boundary. On one side, ROS 2 and
-          Jetson-class compute: multi-robot mapping, sensor fusion, autonomous
-          navigation. On the other, the hardware underneath - processors and
-          image pipelines written in Verilog and VHDL and synthesised onto an
-          FPGA. Working both sides has made me suspicious of abstractions I
-          haven&apos;t looked underneath at least once.
+          On the hardware side I have built a 4-bit processor in VHDL and a
+          Sobel edge detector in Verilog that outputs one pixel per clock. Above
+          that sits robotics: LiDAR scouts that share one map over micro-ROS,
+          and a Jetson Orin Nano at the centre of my final year drone. Working
+          both layers has made me suspicious of abstractions I haven&apos;t
+          looked underneath at least once.
         </p>
         <p>
-          Alongside that I spent six months as an intern software engineer at
-          GTN Technologies, on the backend team behind a global trading platform
-          - Java and Spring Boot services, Kafka messaging and Redis, all in
-          service of keeping live market data accurate. It&apos;s a different
-          discipline from robotics, and a useful one: it taught me to measure
-          before optimising and to distrust my instincts about where time
-          actually goes.
+          I also write production software. For six months I was an intern
+          software engineer at GTN Technologies, building Java and Spring Boot
+          services on Kafka and Redis that keep live market data accurate for a
+          global trading platform. It taught me to measure before optimising and
+          to distrust my instincts about where time actually goes.
         </p>
         <p>
           My coursework spans embedded systems, robotics, machine learning, HCI

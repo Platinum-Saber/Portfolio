@@ -27,12 +27,12 @@ export const SUMMARY: OperatorField[] = [
   { label: 'Role', value: site.tagline },
   { label: 'Education', value: site.education },
   { label: 'Base', value: site.location },
-  { label: 'Stack', value: 'ROS 2 · Verilog/VHDL · C++/Python' },
+  { label: 'Stack', value: 'Verilog/VHDL · C++/Python · ROS 2' },
   { label: 'Status', value: site.availability },
 ];
 
 export const EXTENDED: OperatorField[] = [
-  { label: 'Focus', value: 'Robotics · embedded systems · perception' },
+  { label: 'Focus', value: 'Embedded systems · robotics · perception' },
   {
     label: 'Experience',
     value: 'Intern Software Engineer · GTN Technologies · Nov 2025 – May 2026',

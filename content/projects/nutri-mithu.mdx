@@ -1,6 +1,6 @@
 ---
 title: 'Nutri-Mithu: Portion Control for Rice and Curry'
-summary: A nutrition tracker built for Sri Lankan meals - a food database, an app that turns biodata into portion sizes, and a lunch box with volume guides instead of measuring cups. Brainstorm 2025 finalist.
+summary: 'A nutrition tracker for Sri Lankan rice and curry: a Flutter app turns biodata into portion sizes, and a lunch box with volume guides replaces measuring cups. Brainstorm 2025 finalist.'
 order: 5
 year: '2025'
 status: complete
@@ -23,8 +23,8 @@ stack:
 ## The problem
 
 A doctor tells a patient to eat a cup of rice and half a cup of curry. The patient goes home
-to a plate of rice and curry and no measuring cups, and even with them, measuring every curry
-at every meal is not something anyone keeps up. Meanwhile the apps that track calories are
+to a plate of rice and curry and no measuring cups. Even with them, nobody keeps up
+measuring every curry at every meal. Meanwhile the apps that track calories are
 built around foods that are not on the plate: there is no reliable table for a Sri Lankan
 rice and curry meal.
 
@@ -50,9 +50,11 @@ standard nutrition guidelines before any of it reached an app.
 </figure>
 
 **The app.** A **Flutter** app where you pick what is actually on your plate - rice, carrot,
-beans, fish - and it returns **portion sizes computed for you** from your own biodata,
-rather than generic ones. Accounts run through **Firebase Auth**, the diary is local
-**SQLite** so the history works offline, and a **FastAPI** service in front of a hosted
+beans, fish. It returns **portion sizes computed for you** from your own biodata, rather
+than generic ones.
+
+Accounts run through **Firebase Auth**, and the diary is local **SQLite**, so the history
+works offline. A **FastAPI** service in front of a hosted
 **medical** language model answers nutrition questions in the terms they are asked in.
 
 **The meal box.** The part that makes the advice survive contact with a kitchen. It looks
@@ -75,8 +77,9 @@ costs nothing.
 
 **The scale, earlier.** Before the box, the same idea was tried in hardware: an **ESP32**
 reading a load cell through an **HX711**, showing weight on an OLED and streaming it to the
-app over **Bluetooth Low Energy**. It works, and the firmware is in the repo. It also asks
-someone to own a gadget, charge it and use it at every meal - and a passive box made of
+app over **Bluetooth Low Energy**. It works, and the firmware is in the repo.
+
+It also asks someone to own a gadget, charge it and use it at every meal. A passive box made of
 plastic dividers does the same job with nothing to fail. Replacing our own electronics with
 a moulded tray was the best decision the project made.
 

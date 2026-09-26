@@ -1,6 +1,6 @@
 ---
 title: Real-Time Sobel Edge Detection on FPGA
-summary: A camera-to-display edge detection pipeline in Verilog on a Basys 3 - OV7670 capture, a streaming Sobel core producing one pixel per clock, and live 640×480 VGA output, verified bit-exact against a NumPy model.
+summary: A camera-to-VGA edge detection pipeline in Verilog on a Basys 3, with a streaming Sobel core that outputs one pixel per clock at 640×480, verified bit-exact against a NumPy model.
 order: 3
 year: '2026'
 status: complete
@@ -61,8 +61,7 @@ complete 3×3 window, and the Sobel core produces a new output **every clock** o
 pipeline is full - three stages, three clocks of latency.
 
 The ×2 kernel weights are wired shifts, so the core is nothing but adders: **53 LUTs, 94
-flip-flops and zero DSP slices**. Magnitude is `|Gx| + |Gy|` rather than a true square
-root - it over-estimates diagonal edges by up to ~41 %, but costs three adders instead of a
+flip-flops and zero DSP slices**. Magnitude is `|Gx| + |Gy|` rather than a true square root. It over-estimates diagonal edges by up to ~41 %, but costs three adders instead of a
 multiplier and a square root, and the threshold absorbs the difference.
 
 The single easiest thing to get wrong is the line buffer's latency. Its output is
@@ -72,15 +71,15 @@ testbench checks every one of the nine taps instead of eyeballing a picture.
 
 ## Three clocks that don't agree
 
-The board's 100 MHz oscillator drives an MMCM for a 25 MHz pixel clock; the camera returns
+The board's 100 MHz oscillator drives an MMCM (the FPGA's clock manager) for a 25 MHz pixel clock; the camera returns
 its own 12.5 MHz pixel clock. Those never line up, so the only crossings are two dual-clock
 frame-buffer BRAMs - structurally safe, write port on one clock and read port on the other -
 plus two-flop synchronisers for reset and the threshold. The constraints declare the clock
 trees asynchronous so the tools don't try to time paths between them.
 
-Getting the camera clock onto the chip at all took some digging: the only pin available for
+Getting the camera clock onto the chip at all took some digging. The only pin available for
 it is the wrong half of a clock-capable pair, so Vivado refuses to place the design without
-an explicit routing exception - and that exception has to live in an implementation-only
+an explicit routing exception. That exception has to live in an implementation-only
 constraints file, because the net it names does not exist until synthesis creates it.
 
 ## Runs without a camera
@@ -128,10 +127,13 @@ card's circle-drawing logic, not in the image processing.
 ## Starting point
 
 The idea and the OV7670 register approach come from Angelo Jacobo's ULX3S Sobel design, but
-this is a re-implementation for a different architecture rather than a port - Xilinx
-instead of Lattice, on-board VGA instead of HDMI, on-chip RAM instead of external SDRAM, a
-single streaming pipeline instead of a split-kernel state machine, and a full testbench
-suite where the reference had hardware testing only.
+this is a re-implementation for a different architecture rather than a port:
+
+- Xilinx instead of Lattice
+- On-board VGA instead of HDMI
+- On-chip RAM instead of external SDRAM
+- A single streaming pipeline instead of a split-kernel state machine
+- A full testbench suite, where the reference had hardware testing only
 
 ## The same operator, on a GPU
 
@@ -142,8 +144,8 @@ comparison is the point.
 Almost nothing carries over. On the FPGA there is no image: pixels arrive one per clock and
 a 3×3 neighbourhood only exists because block RAM is holding the previous two rows. That
 line buffer, plus reconciling the clock domains around it, _is_ the design. On a GPU the
-frame is already in memory and every output pixel reads whatever it likes, so the hard part
-simply isn't there - and instead every pixel is computed at once, which the FPGA cannot do.
+frame is already in memory and every output pixel reads whatever it likes, so the hard part simply isn't there. Instead, every pixel is computed at once, which the
+FPGA cannot do.
 
 Sobel in Verilog on an FPGA, in C on a CPU, and in GLSL on a GPU are three genuinely
 different engineering problems wearing the same fifteen multiply-accumulates. That is most

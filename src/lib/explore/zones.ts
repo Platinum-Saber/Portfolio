@@ -101,7 +101,7 @@ export function buildZones(
       label: 'About',
       body: [
         `${personal.fullName} - ${personal.tagline.toLowerCase()}, based in ${personal.location}.`,
-        'Engineering undergraduate at the University of Moratuwa. Most of what I do sits across a boundary: ROS 2 and Jetson-class compute on one side, processors and image pipelines written in Verilog and VHDL on the other.',
+        'Engineering undergraduate at the University of Moratuwa. I start at the hardware - Verilog and VHDL on FPGAs, firmware on ESP32s - and build robots and software on top of it.',
         'Working both sides has made me suspicious of abstractions I have not looked underneath at least once.',
       ],
       href: '/about',
@@ -125,7 +125,7 @@ export function buildZones(
       short: 'Contact',
       label: 'Contact',
       body: [
-        'Open to internships, research collaborations and interesting robotics problems.',
+        'Open to graduate roles, internships and research collaborations in embedded systems and robotics.',
         `Email reaches me fastest: ${personal.email}.`,
       ],
       href: '/contact',

@@ -7,9 +7,9 @@ export const site = {
   // deployment URL, which kept pointing previews at Vercel after the move.
   url: 'https://sansikawaduge.dev',
   title: 'Sansika Waduge',
-  tagline: 'Robotics and embedded systems engineer',
+  tagline: 'Embedded systems and robotics engineer',
   description:
-    'Undergraduate engineer at the University of Moratuwa building autonomous robots, multi-robot SLAM systems, and FPGA hardware. ROS 2, Jetson, Verilog/VHDL, C++ and Python.',
+    'Embedded systems engineer at the University of Moratuwa. FPGA design in Verilog and VHDL, ESP32 and Raspberry Pi firmware, and autonomous robots on ROS 2 and Jetson.',
   location: 'Colombo, Sri Lanka',
   // Console card fields - Phase 8.2. A field with no value renders no row at
   // all, so anything unknown stays null rather than becoming a plausible guess.

@@ -5,7 +5,7 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: `Get in touch with ${site.fullName} - robotics and embedded systems engineer based in ${site.location}.`,
+  description: `Get in touch with ${site.fullName} - ${site.tagline.toLowerCase()} based in ${site.location}.`,
 };
 
 const LINKS = [
@@ -34,8 +34,8 @@ export default function ContactPage() {
         className="mt-3 max-w-xl leading-relaxed"
         style={{ color: 'var(--fg-muted)' }}
       >
-        Open to internships, research collaborations and interesting robotics
-        problems. Email is the fastest way to reach me.
+        Open to graduate roles, internships and research collaborations in
+        embedded systems and robotics. Email is the fastest way to reach me.
       </p>
 
       <div className="mt-9 max-w-xl">

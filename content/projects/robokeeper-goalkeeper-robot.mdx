@@ -1,6 +1,6 @@
 ---
 title: 'RoboKeeper: A Goalkeeper Robot'
-summary: A depth camera spots an incoming ball, an Extended Kalman Filter predicts where it will cross the goal line, and a servo swings the keeper there - built for the IESL Techno 2025 exhibition.
+summary: A depth camera spots an incoming shot, an Extended Kalman Filter predicts where it will cross the goal line, and a servo swings the keeper there. Team build for IESL Techno 2025.
 order: 4
 year: '2025'
 status: complete
@@ -23,7 +23,7 @@ stack:
 ## The problem
 
 Someone kicks a ball at a goal. A robot keeper has a fraction of a second to decide where
-to be - and it cannot wait to see where the ball arrives, because by then it is too late to
+to be. It cannot wait to see where the ball arrives, because by then it is too late to
 move. It has to watch the first part of the flight and **predict the rest**.
 
 A team project for the **IESL Techno 2025** exhibition, built at the University of Moratuwa
@@ -43,22 +43,22 @@ Astra Pro  colour + depth
 ```
 
 **Seeing the ball.** An **Orbbec Astra Pro** RGB-D camera sits above the crossbar, behind
-the goal and centred on it, looking down the pitch at the kicker - high enough that the
-keeper never blocks its view of the ball. Each colour
+the goal and centred on it, looking down the pitch at the kicker. It sits high enough that the keeper never blocks its
+view of the ball. Each colour
 frame is paired with its depth frame, so a ball found in the image also has a distance -
 together, a position in three dimensions. The first detector used **HSV colour
-thresholding** and contours to find the red ball; the final one uses a custom-trained
+thresholding** and contours to find the red ball. The final one uses a custom-trained
 **YOLOv8** model, which does not depend on the ball's colour surviving the room's lighting.
 
 **Two gates, not a stream.** Rather than tracking the ball continuously, the detector
-waits for it to pass two distances from the camera: it remembers the ball's position at the
+waits for it to pass two distances from the camera. It remembers the ball's position at the
 far gate, and when the ball reaches the near gate it publishes the pair as one trajectory.
 Two well-chosen points are enough for the filter to work with, and far cheaper than
 following every frame.
 
-**Predicting the rest.** An **Extended Kalman Filter** with a six-value state - position
-and velocity in three axes - takes those measurements, with **gravity built into its motion
-model**, so it predicts an arc rather than a straight line. It then steps the filter
+**Predicting the rest.** An **Extended Kalman Filter** (EKF) with a six-value state -
+position and velocity in three axes - takes those measurements. Its motion model includes
+**gravity**, so it predicts an arc rather than a straight line. It then steps the filter
 forward until the ball reaches the plane of the goal, converts the predicted crossing point
 into a keeper angle, and publishes it.
 
@@ -101,10 +101,15 @@ filter.
 ## My part
 
 I brought the camera up. The **Astra Pro** is an older model that the current Orbbec ROS 2
-driver only half supports, and getting it working on ROS 2 Jazzy and Ubuntu 24.04 took
-some digging: the right driver branch, running it as a USB 2.0 device, a depth format
-(`Y11`) the defaults don't expect, frame sync switched off because the model doesn't support
-it, and a fix for camera-info messages that publish `NaN`s. I wrote that up as the team's
+driver only half supports. Getting it working on ROS 2 Jazzy and Ubuntu 24.04 took some
+digging:
+
+- The right driver branch
+- Running it as a USB 2.0 device
+- A depth format (`Y11`) the defaults don't expect
+- Frame sync switched off, because the model doesn't support it
+- A fix for camera-info messages that publish `NaN`s
+ I wrote that up as the team's
 setup guide and packaged it as a one-command bring-up launch.
 
 On top of that I wrote the first **red-ball detector**: HSV thresholding on the colour

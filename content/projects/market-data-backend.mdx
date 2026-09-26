@@ -1,6 +1,6 @@
 ---
 title: Real-Time Market Data Systems
-summary: Internship at GTN Technologies - backend services and tools that keep live stock-market data accurate for a global trading platform.
+summary: Six-month internship at GTN Technologies building Java and Spring Boot services on Kafka and Redis that keep live market data accurate, including a running average trade price for thousands of stocks.
 order: 8
 year: 'Nov 2025 - May 2026'
 status: complete
@@ -22,11 +22,11 @@ stack:
 
 Six-month internship as an **Intern Software Engineer** on the Market Backend team at
 **GTN Technologies**, Colombo. The team builds the servers behind a trading and investment
-platform used by brokerages and fintech apps across several continents: prices arrive from
+platform used by brokerages and fintech apps across several continents. Prices arrive from
 stock exchanges around the world, and those servers check them, process them and deliver
 them to the apps people trade from.
 
-In that setting a wrong or late number is not a cosmetic bug - it is what an investor sees
+In that setting a wrong or late number is not a cosmetic bug. It is what an investor sees
 when they decide to buy or sell. Most of my work was about making sure the data is right,
 and being able to prove it.
 
@@ -36,8 +36,8 @@ architecture details stay with the company.
 ## A testing tool for live price feeds
 
 Trading apps receive prices over a long-lived WebSocket connection rather than by
-refreshing a page. I built a full-stack tool - **Spring Boot** backend, **React** frontend -
-that lets QA engineers and developers run structured checks against that connection:
+refreshing a page. I built a full-stack tool - **Spring Boot** backend, **React** frontend - for QA engineers
+and developers. It runs structured checks against that connection:
 logging in, subscribing to instruments, and confirming every message type arrives in the
 right shape.
 
@@ -50,9 +50,9 @@ right shape.
 ## One set of data-quality rules, shared
 
 Several internal monitoring dashboards each needed to answer the same questions: *is this
-exchange open right now, and has this price gone stale?* I extracted that logic into a
-reusable **Java / Spring Boot library** - exchange calendars, market hours, staleness
-detection - and integrated it into two of those dashboards.
+exchange open right now, and has this price gone stale?* I extracted that logic into a reusable **Java / Spring Boot library** covering exchange
+calendars, market hours and staleness detection, then integrated it into two of those
+dashboards.
 
 Before switching one over, I ran the old and new versions side by side on live market data
 and compared their verdicts. Along the way the dashboards gained a live market-status view,
@@ -63,8 +63,9 @@ clearing dependency security warnings.
 ## Live trading statistics at scale
 
 The largest project was a service that maintains a **running average trade price** for
-thousands of stocks at once - weighted by how many shares changed hands, and updated the
-moment each trade happens (in trading this is called VWAP). It needs to be fast and exactly
+thousands of stocks at once. It is weighted by how many shares changed hands and updated
+the moment each trade happens - in trading this is called VWAP, the volume-weighted
+average price. It needs to be fast and exactly
 right, because other systems quote it directly.
 
 - Prototyped the calculation inside **Redis** using **Lua** scripts, which run atomically
@@ -91,5 +92,5 @@ right, because other systems quote it directly.
 
 Industrial software has to be correct, observable and maintainable at a level coursework
 rarely asks for. The habit I kept is measuring before deciding: the benchmark, not intuition,
-picked the design - and a side-by-side comparison, not a passing test suite, is what made
+picked the design. A side-by-side comparison, not a passing test suite, is what made
 anyone trust the new service.

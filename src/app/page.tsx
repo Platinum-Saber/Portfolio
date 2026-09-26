@@ -108,17 +108,19 @@ export default function HomePage() {
         <Chapter index={1} count={5} label="What I build">
           <div className="max-w-2xl space-y-5 text-lg leading-relaxed">
             <p style={{ color: 'var(--fg)' }}>
-              I build robots and the hardware they run on. Currently an
-              undergraduate at the University of Moratuwa, working on an
-              autonomous drone platform for my final year project and a
-              multi-robot SLAM system that gets two scouts to agree on one map.
+              I&apos;m an embedded systems engineer first. My work starts at the
+              hardware - Verilog and VHDL on FPGAs, firmware on ESP32s and
+              Raspberry Pis, sensors that have to be read on time. Currently an
+              undergraduate at the University of Moratuwa.
             </p>
             <p style={{ color: 'var(--fg-muted)' }}>
-              My work sits where embedded systems meet perception - ROS 2 and
-              Jetson on one side, Verilog and VHDL on an FPGA on the other. I
-              like the problems that only appear once the thing is real: clock
-              domains that disagree, frames that drift, mass budgets that
-              arbitrate every argument.
+              Robotics builds on that hardware: an autonomous drone on a Jetson
+              Orin Nano for my final year project, LiDAR scouts that share one
+              map over micro-ROS, a goalkeeper that predicts where the ball will
+              cross the line. I also write the software around it - real-time
+              market data services, dashboards, databases. I like the problems
+              that only appear once the thing is real: clock domains that
+              disagree, frames that drift.
             </p>
           </div>
         </Chapter>

@@ -1,6 +1,6 @@
 ---
 title: 'ASCILAM: Collaborative Multi-Robot SLAM'
-summary: Two low-cost LiDAR scout robots explore a space together, streaming scans and odometry over micro-ROS to a Raspberry Pi coordinator that builds one live, dynamic occupancy map.
+summary: Two low-cost LiDAR scouts stream scans and odometry over micro-ROS to a Raspberry Pi coordinator that merges them into one live occupancy map. Two scouts explored faster than one.
 order: 2
 year: '2025'
 status: complete
@@ -26,8 +26,7 @@ stack:
 ## The problem
 
 One robot mapping a space is a solved problem, but it is slow and leaves gaps in anything
-large. Several robots mapping the _same_ space and agreeing on what they found is not
-solved - every scout's position estimate drifts on its own, and a shared map is only as good
+large. Several robots mapping the _same_ space and agreeing on what they found is not solved. Every scout's position estimate drifts on its own, and a shared map is only as good
 as the worst of them.
 
 Most multi-robot SLAM work also assumes things a cheap robot doesn't have: precise
@@ -56,8 +55,7 @@ with a **custom robot** built around two microcontrollers, each doing one job:
   over **DDS-XRCE**, the DDS profile built for extremely resource-constrained devices,
   carried on UDP over Wi-Fi.
 
-**Coordinator.** A **Raspberry Pi 4** running Ubuntu MATE 20.04 and **ROS 2 Foxy** hosts
-everything else: one micro-ROS agent per scout, the mapping node that builds the global
+**Coordinator.** A **Raspberry Pi 4** running Ubuntu MATE 20.04 and **ROS 2 Foxy** hosts everything else. That means one micro-ROS agent per scout, the mapping node that builds the global
 occupancy grid, the exploration coordinator, a controller per scout, and the Wi-Fi access
 point the scouts join.
 
@@ -75,7 +73,7 @@ declared free after several observations. A wall that is seen again and again st
 person who walked through the room fades out of the map.
 
 **Frontier exploration.** The coordinator finds _frontiers_ - the boundary between explored
-free space and the unknown - clusters nearby frontier cells into targets, and sends each
+free space and the unknown - and clusters nearby frontier cells into targets. It sends each
 scout to the nearest one that keeps it at least **1.5 m** from the other scout's goal. A
 separate safety loop checks the scouts' separation five times a second and stops both if
 they get too close.
@@ -93,15 +91,15 @@ Tested indoors in corridors and rooms with obstacles.
   odometry, which drifts from the truth, and merging two maps inherits both errors. The
   gyro blend corrects heading, but nothing corrects position once a wheel slips.
 
-That last result is the honest shape of the problem, and it points at the next step: better
+That last result is the honest shape of the problem. It points at the next step: better
 per-scout localisation, or aligning the scouts' maps against each other rather than trusting where
 each one thinks it is. The approach suits warehouse automation, security patrols, search
 and rescue and building management - anywhere a few cheap robots beat one expensive one.
 
 ## Watch it fail, then work
 
-I built [an interactive simulation of this exact problem](/lab/ascilam) - two scouts sweeping
-an arena, their odometry drifting apart in real time, and four views of the result: each
+I built [an interactive simulation of this exact problem](/lab/ascilam): two scouts sweep an
+arena while their odometry drifts apart in real time. It shows four views of the result: each
 scout's own map, the two overlaid with no correction, and the fused version. You can take
 control of a scout and map wherever you drive it.
 

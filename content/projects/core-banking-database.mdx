@@ -1,6 +1,6 @@
 ---
 title: 'Core Banking System: Database First'
-summary: A proof-of-concept core banking system for a fictional private bank - a MySQL schema where the rules live in the database, with stored procedures, triggers, scheduled events and branch-level views, and a minimal React and Express app on top. Third-semester databases project, team of five.
+summary: A core banking proof of concept where the rules live in MySQL - 25 tables, stored procedures, triggers and scheduled events - with a React and Express app on top. Third-semester project, team of five.
 order: 10
 year: '2024'
 status: complete
@@ -26,12 +26,14 @@ system. Our job was the first phase: branches, accounts, internal transfers, fix
 and loans. The course was clear about what mattered most: **the database**. The UI only had
 to be enough for QA testers to exercise it.
 
-The rules came with the brief. Savings accounts pay 10-13% depending on the customer's age
-band, with a minimum balance for each. Current accounts pay nothing. A fixed deposit pays
-interest every 30 days into a linked savings account. Loans made at a branch need a
-manager's approval. Online loans are instant, but only for customers with a fixed deposit
-and only up to 60% of it. Managers need reports on branch transactions and late loan
-payments.
+The rules came with the brief:
+
+- Savings accounts pay 10-13% depending on the customer's age band, with a minimum balance
+  for each; current accounts pay nothing
+- A fixed deposit pays interest every 30 days into a linked savings account
+- Branch loans need a manager's approval; online loans are instant, but only for customers
+  with a fixed deposit and only up to 60% of it
+- Managers need reports on branch transactions and late loan payments
 
 ## The schema
 
@@ -39,7 +41,9 @@ Twenty-five tables, grouped around accounts, users, transactions and loans. Cust
 either **individuals** or **organisations**, and both inherit from a shared `customer`
 table. Accounts work the same way: a `savings_account` or `checking_account` row extends a
 base `account`, so balances, branches and status sit in one place and each account type
-only carries what is specific to it. Every money movement is a row in `transaction`, with a
+only carries what is specific to it.
+
+Every money movement is a row in `transaction`, with a
 `deposit`, `withdrawal` or `transfer` row recording the branch or the beneficiary.
 
 <figure>
@@ -74,9 +78,8 @@ installments, a **trigger** creates the matching payment record with its due dat
 late adds a penalty from a `penalty_types` table.
 
 **Time-based work runs as events.** MySQL's event scheduler runs the jobs that would
-otherwise need a cron server: fixed-deposit interest every day for deposits on a 30-day
-boundary, savings interest every 30 days, and a daily pass that marks overdue installments
-as unpaid.
+otherwise need a cron server. It pays fixed-deposit interest on each 30-day boundary and
+savings interest every 30 days, and a daily pass marks overdue installments as unpaid.
 
 **Reports are views.** Managers see branch transactions and late loan payments through views,
 so a report is a `SELECT` against a view rather than SQL rebuilt in the app. Indexes cover
@@ -88,7 +91,9 @@ change.
 
 A **React** and **Material UI** front end talks to an **Express** API. Login uses bcrypt
 password hashes, short-lived **JWT** access tokens and refresh tokens stored in the
-database. The user's role decides which app they get. Customers see their accounts,
+database.
+
+The user's role decides which app they get. Customers see their accounts,
 history, transfers and loans. Employees open accounts and register customers. Managers also
 approve or reject loans and read the branch reports.
 
@@ -127,7 +132,9 @@ Suraja Hasarinda and me.
 
 Putting the rules in the database changes how you think about bugs. If a transfer can only
 happen inside a procedure that wraps the debit, credit and log in one transaction, a
-half-finished transfer cannot happen, whatever the app does. Looking back, the next step
+half-finished transfer cannot happen, whatever the app does.
+
+Looking back, the next step
 would be row locks (`SELECT ... FOR UPDATE`) on the balance checks. Without them, two
 withdrawals arriving at the same moment could both pass the check before either one
 updates the balance.

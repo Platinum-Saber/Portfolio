@@ -1,6 +1,6 @@
 ---
 title: 'Procurement Intelligence for ACL Cables'
-summary: A decision-support dashboard for Sri Lanka's largest cable maker - live USD/LKR, LME copper and aluminium, flood and drought risk, and news sentiment from a FinBERT model retuned to read the news as a buyer would. Built by a team of five and demoed to ACL.
+summary: A procurement dashboard for ACL Cables tracking USD/LKR, LME copper and aluminium, flood and drought risk, and news scored by a FinBERT model retuned to read like a buyer. Team of five, demoed to ACL.
 order: 9
 year: '2026'
 status: complete
@@ -27,8 +27,7 @@ stack:
 Singapore and Vietnam. Every order is exposed to the USD/LKR rate, to metal prices on the
 London Metal Exchange, to trouble in supplier countries and to monsoon flooding at home. The
 company's own 2024/25 Annual Report lists exchange-rate, country, operational and climate
-risk on its risk register, and every one of them was being handled by people checking
-things by hand.
+risk on its risk register, and people were tracking every one of them by hand.
 
 This was our sixth-semester professional portfolio project at the University of Moratuwa: a
 real company, a real brief, and a report written for their procurement and risk team. We
@@ -60,9 +59,9 @@ team configures. The AI part is a signal to look into, and the UI says so.
 ## What it does
 
 **Collectors on a schedule.** Six jobs run inside the FastAPI process under **APScheduler**
-rather than on a separate queue: USD/LKR every 20 minutes, copper and aluminium futures
-every hour, weather for 13 locations every hour, news every three hours, sentiment scoring
-every two hours, and a 15-minute pass over the alert rules. Readings land in
+rather than on a separate queue. They fetch USD/LKR every 20 minutes, and copper and
+aluminium futures and weather for 13 locations every hour. News arrives every three hours,
+sentiment scoring runs every two, and the alert rules are checked every 15 minutes. Readings land in
 **TimescaleDB** hypertables, which is what made a year of backtesting come back in seconds.
 
 **Landed cost, not raw price.** A 2% fall in copper on the LME means nothing if the rupee
@@ -122,7 +121,9 @@ matter: a new mine opening is good for a buyer, and the flip turned it into bad 
 So we retrained the model's final layer on buyer-labelled examples: 200 hand-written edge
 cases across the five topics, plus real articles labelled from a buyer's point of view. The
 110M-parameter encoder stayed frozen and only the classifier trained, about 2,300 weights.
-With a few hundred examples, anything bigger would just memorise them. It reached **58%**
+With a few hundred examples, anything bigger would just memorise them.
+
+It reached **58%**
 on a held-out set, against 51.5% for always guessing the most common label. That is not a
 number to act on alone, which is exactly why the dashboard presents sentiment as a signal
 rather than advice.
@@ -130,7 +131,7 @@ rather than advice.
 ## Taking it to ACL
 
 We deployed the stack with **Docker Compose** on a small VPS behind a **Cloudflare Tunnel**,
-so no ports were open to the internet, and walked ACL's Group CIO and their sales and
+so no ports were open to the internet. We then walked ACL's Group CIO and their sales and
 business development managers through the working system at the head office. They told us
 two things. They had no automated risk or procurement monitoring yet, and managing FX
 exposure on raw materials was the most pressing problem they had. That confirmed that the

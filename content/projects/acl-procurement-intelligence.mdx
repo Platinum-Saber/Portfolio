@@ -1,0 +1,160 @@
+---
+title: 'Procurement Intelligence for ACL Cables'
+summary: A decision-support dashboard for Sri Lanka's largest cable maker - live USD/LKR, LME copper and aluminium, flood and drought risk, and news sentiment from a FinBERT model retuned to read the news as a buyer would. Built by a team of five and demoed to ACL.
+order: 9
+year: '2026'
+status: complete
+domain: Data / AI
+repo: https://github.com/Platinum-Saber/intelligence-dashboard
+stack:
+  [
+    'Python',
+    'FastAPI',
+    'APScheduler',
+    'FinBERT / PyTorch',
+    'PostgreSQL + TimescaleDB',
+    'React / TypeScript',
+    'Recharts',
+    'Leaflet',
+    'Docker',
+    'Cloudflare Tunnel',
+  ]
+---
+
+## The problem
+
+**ACL Cables PLC** imports most of its copper, aluminium and XLPE from the UAE, China,
+Singapore and Vietnam. Every order is exposed to the USD/LKR rate, to metal prices on the
+London Metal Exchange, to trouble in supplier countries and to monsoon flooding at home. The
+company's own 2024/25 Annual Report lists exchange-rate, country, operational and climate
+risk on its risk register, and every one of them was being handled by people checking
+things by hand.
+
+This was our sixth-semester professional portfolio project at the University of Moratuwa: a
+real company, a real brief, and a report written for their procurement and risk team. We
+took the Annual Report as the requirements document. If a proposed feature could not be
+traced to a section of it, it did not go in.
+
+## Honest framing first
+
+The original idea was a system that would "predict" currency moves. We dropped that early.
+USD/LKR is a thin, intervention-prone market, and nobody forecasts it reliably from news
+headlines. What we built instead is an **intelligence and alerting tool**: it brings the
+four forces together, labels every number with its source and age, and raises alerts the
+team configures. The AI part is a signal to look into, and the UI says so.
+
+<figure>
+  <img
+    src="/images/acl-dashboard-1200.webp"
+    srcSet="/images/acl-dashboard-700.webp 700w, /images/acl-dashboard-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="864"
+    alt="The dashboard home page: cards for USD/LKR, LME copper, LME aluminium, high-risk locations and news count, above charts for the exchange rate, copper price, historical landed cost of 50 tonnes of copper, and a seven-day news sentiment bar per topic"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>The home page: exchange rate with the central bank's reference rate overlaid, metal prices, what 50 t of copper would have cost to land on each day, and news sentiment by topic.</figcaption>
+</figure>
+
+## What it does
+
+**Collectors on a schedule.** Six jobs run inside the FastAPI process under **APScheduler**
+rather than on a separate queue: USD/LKR every 20 minutes, copper and aluminium futures
+every hour, weather for 13 locations every hour, news every three hours, sentiment scoring
+every two hours, and a 15-minute pass over the alert rules. Readings land in
+**TimescaleDB** hypertables, which is what made a year of backtesting come back in seconds.
+
+**Landed cost, not raw price.** A 2% fall in copper on the LME means nothing if the rupee
+fell 3% the same day. The alert engine and the calculator work on what an order would
+actually cost in rupees: tonnes × LME price × USD/LKR.
+
+**Weather that knows Sri Lanka.** Open-Meteo data for all nine provinces and four supplier
+ports becomes flood, drought and heatwave risk. The flood thresholds and the monsoon
+baseline had to be tuned for a tropical island. The defaults in most open-source tools
+assume European weather.
+
+<figure>
+  <img
+    src="/images/acl-map-news-1200.webp"
+    srcSet="/images/acl-map-news-700.webp 700w, /images/acl-map-news-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="854"
+    alt="A Leaflet map of Sri Lanka with a coloured risk marker in each province and a list of supplier ports with rainfall and risk level, next to a news feed filtered to aluminium with a sentiment label on each headline"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>Flood risk by province and at the supplier ports, beside the news feed with a buyer-perspective sentiment label on every headline.</figcaption>
+</figure>
+
+**Alerts you can test before you trust them.** Rules can be simple thresholds or composite
+conditions across FX, metals and weather, each with its own email recipients. A composite
+rule has to see every signal at the same moment, so each evaluation first saves a snapshot
+of all the latest readings and then checks the rule against that snapshot. A backtest page
+replays any rule set over past data, so the team can see how noisy a rule would have been
+before they switch it on.
+
+<figure>
+  <img
+    src="/images/acl-backtest-1200.webp"
+    srcSet="/images/acl-backtest-700.webp 700w, /images/acl-backtest-1200.webp 1200w"
+    sizes="(min-width: 768px) 700px, 100vw"
+    width="1200"
+    height="1086"
+    alt="The backtest page over 30 days: 58 alert fires in total, a bar chart of fires per day, and a table showing how often each rule would have triggered"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>Backtesting six rules over 30 days. A flood rule that fires on 63% of days is a rule that needs a higher threshold.</figcaption>
+</figure>
+
+**Climate reporting.** Weather events are also logged in a form that can be exported for
+**SLFRS S2** climate disclosures, which ACL has to start reporting against.
+
+## Teaching FinBERT to think like a buyer
+
+**FinBERT** is trained to read the news the way an investor does. "Copper prices surge" is
+good news to an investor. To someone who has to buy copper next month, it is bad news. The
+first version simply flipped the label for metal topics. That broke on the cases that
+matter: a new mine opening is good for a buyer, and the flip turned it into bad news.
+
+So we retrained the model's final layer on buyer-labelled examples: 200 hand-written edge
+cases across the five topics, plus real articles labelled from a buyer's point of view. The
+110M-parameter encoder stayed frozen and only the classifier trained, about 2,300 weights.
+With a few hundred examples, anything bigger would just memorise them. It reached **58%**
+on a held-out set, against 51.5% for always guessing the most common label. That is not a
+number to act on alone, which is exactly why the dashboard presents sentiment as a signal
+rather than advice.
+
+## Taking it to ACL
+
+We deployed the stack with **Docker Compose** on a small VPS behind a **Cloudflare Tunnel**,
+so no ports were open to the internet, and walked ACL's Group CIO and their sales and
+business development managers through the working system at the head office. They told us
+two things. They had no automated risk or procurement monitoring yet, and managing FX
+exposure on raw materials was the most pressing problem they had. That confirmed that the
+FX view is the centre of the tool.
+
+<figure>
+  <img
+    src="/images/acl-visit.webp"
+    width="480"
+    height="640"
+    alt="Two members of the team standing with an ACL Cables representative in front of a staircase below the ACL Cables sign in the company's lobby"
+    loading="lazy"
+    decoding="async"
+  />
+  <figcaption>At ACL Cables' head office after the demo.</figcaption>
+</figure>
+
+Team **NextVision**: Savinu Anusara, Isurika Gunasekara, Sasmitha Jayasinghe, Lakshitha
+Kavinda and me.
+
+## What I took from it
+
+Using the client's own Annual Report as the spec settled most arguments before they
+started. The harder lessons were about definitions. We lost time because "neutral" meant
+"irrelevant" to one labeller and "mixed" to another, and the labels had to be reconciled
+before training. Next time I would agree the labelling rules and check that labellers agree
+before collecting data at scale.

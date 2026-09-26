@@ -57,6 +57,8 @@ const PROJECT_SITES: Record<string, [number, number, number]> = {
   'robokeeper-goalkeeper-robot': [-24, 7, -44],
   'nutri-mithu': [26, 12, -42],
   'medibox-smart-pill-box': [20, 5, 40],
+  'acl-procurement-intelligence': [-24, 10, 40],
+  'core-banking-database': [-46, 6, -2],
 };
 
 const FALLBACK_SITE: [number, number, number] = [18, 14, 34];
@@ -76,6 +78,8 @@ const PROJECT_LABELS: Record<string, string> = {
   'robokeeper-goalkeeper-robot': 'RoboKeeper',
   'nutri-mithu': 'Nutri-Mithu',
   'medibox-smart-pill-box': 'MediBox',
+  'acl-procurement-intelligence': 'ACL dashboard',
+  'core-banking-database': 'Banking DB',
 };
 
 export function buildZones(

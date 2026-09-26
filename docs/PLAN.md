@@ -140,6 +140,8 @@ These are settled. Changing one means updating this file and noting why in the D
   - [x] ASCILAM collaborative multi-robot SLAM
   - [x] 4-bit Nano Processor (VHDL)
   - [x] Kobuki + Webots mobile robot control (IESL RoboGames 2024, team Sentinels - finalist)
+  - [x] ACL Cables procurement intelligence dashboard (6th-semester professional portfolio, team NextVision)
+  - [x] Core banking system database (3rd-semester databases project, team Cybernetica5)
   - [ ] Review the set and cut any that don't earn their place
 - [x] Each project page: problem → approach → what you built → result → stack → links (repo/demo/video)
 - [x] **CV as a PDF** → `public/suhan-waduge-cv.pdf`, `site.cv` set (2026-08-24). Served 200, 115,706 bytes, linked from `/about`

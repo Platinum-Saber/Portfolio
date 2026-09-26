@@ -717,11 +717,17 @@
   /* Pointer-light size (9.0b): the specular pool on the face, and the glint
      along the rim. The one knob for "how big is the light". */
   --glass-light-r: 130px;
-  --glass-shadow-sm: 0 1px 2px rgba(23, 25, 28, 0.07), 0 6px 14px -8px rgba(23, 25, 28, 0.25);
-  --glass-shadow-sm-lift: 0 2px 4px rgba(23, 25, 28, 0.08), 0 10px 20px -8px rgba(23, 25, 28, 0.3);
+  --glass-shadow-sm:
+    0 1px 2px rgba(23, 25, 28, 0.07), 0 6px 14px -8px rgba(23, 25, 28, 0.25);
+  --glass-shadow-sm-lift:
+    0 2px 4px rgba(23, 25, 28, 0.08), 0 10px 20px -8px rgba(23, 25, 28, 0.3);
   /* The click gleam's band. Accent-tinted on paper: a white band on a white
      pane would be invisible. */
-  --glass-gleam: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.6));
+  --glass-gleam: color-mix(
+    in srgb,
+    var(--accent) 22%,
+    rgba(255, 255, 255, 0.6)
+  );
   --glass-rim-r: 90px;
   --ambient-a: color-mix(in srgb, var(--accent) 11%, transparent);
   --ambient-b: color-mix(in srgb, var(--fg-muted) 9%, transparent);
@@ -778,8 +784,16 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(60vmax 45vmax at 8% -6%, var(--ambient-a), transparent 70%),
-    radial-gradient(55vmax 50vmax at 104% 38%, var(--ambient-b), transparent 70%),
-    radial-gradient(50vmax 40vmax at 30% 112%, var(--ambient-a), transparent 70%);
+    radial-gradient(
+      55vmax 50vmax at 104% 38%,
+      var(--ambient-b),
+      transparent 70%
+    ),
+    radial-gradient(
+      50vmax 40vmax at 30% 112%,
+      var(--ambient-a),
+      transparent 70%
+    );
 }
 
 /* The pointer light (9.0b). `--glint` is registered so it can TRANSITION -
@@ -858,7 +872,11 @@ body::before {
     background:
       radial-gradient(
         circle var(--glass-rim-r) at var(--gx) var(--gy),
-        color-mix(in srgb, var(--glass-rim-spec) calc(var(--glint) * 100%), transparent),
+        color-mix(
+          in srgb,
+          var(--glass-rim-spec) calc(var(--glint) * 100%),
+          transparent
+        ),
         transparent 70%
       ),
       linear-gradient(
@@ -890,7 +908,11 @@ body::before {
     background:
       radial-gradient(
         circle var(--glass-light-r) at var(--gx) var(--gy),
-        color-mix(in srgb, var(--glass-spec) calc(var(--glint) * 100%), transparent),
+        color-mix(
+          in srgb,
+          var(--glass-spec) calc(var(--glint) * 100%),
+          transparent
+        ),
         transparent 65%
       ),
       linear-gradient(172deg, var(--glass-sheen), transparent 42%);
@@ -913,7 +935,11 @@ body::before {
       ),
       radial-gradient(
         circle var(--glass-light-r) at var(--gx) var(--gy),
-        color-mix(in srgb, var(--glass-spec) calc(var(--glint) * 100%), transparent),
+        color-mix(
+          in srgb,
+          var(--glass-spec) calc(var(--glint) * 100%),
+          transparent
+        ),
         transparent 65%
       ),
       linear-gradient(172deg, var(--glass-sheen), transparent 42%);
@@ -1040,7 +1066,9 @@ body::before {
   backdrop-filter: blur(14px) url(#liquid-glass) saturate(165%);
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
   .glass-blur {
     --glass-tint: color-mix(in srgb, var(--bg) 88%, transparent);
   }
@@ -1236,4 +1264,211 @@ body::before {
    not the portrait-phone cap above. Opt in with className="is-landscape". */
 .prose-site :where(figure) video.is-landscape {
   max-width: 100%;
+}
+
+/* ── Splash and loading - logo animations ───────────────────────────────────
+   #ps-splash (components/Splash.tsx) exists on every page but only shows
+   while <html data-splash> is set, which SPLASH_SCRIPT does once per tab
+   session before first paint. Timings here must match that script: the
+   logo assembles over ~1.1 s, holds, and the overlay fades at 1.4 s.
+   A deliberate exception to DESIGN-LANGUAGE rule 5 - Decision Log
+   2026-09-26. */
+#ps-splash {
+  display: none;
+}
+html[data-splash] #ps-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background-color: var(--bg);
+  transition:
+    opacity 400ms var(--ease-console),
+    visibility 400ms;
+}
+html[data-splash='out'] #ps-splash {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+#ps-splash .psl-name {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+}
+/* End state - what reduced motion sees, and where the keyframes land. */
+#ps-splash .psl-upper {
+  transform: translate(-12px, -12px);
+}
+#ps-splash .psl-lower {
+  transform: translate(12px, 12px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #ps-splash .psl-ring {
+    stroke-dasharray: 1508;
+    stroke-dashoffset: 1508;
+    animation: psl-draw 500ms cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  }
+  #ps-splash .psl-chip {
+    opacity: 0;
+    transform: scale(0.88);
+    transform-origin: 256px 256px;
+    animation: psl-chip-in 400ms var(--ease-console) 150ms forwards;
+  }
+  #ps-splash .psl-hilt {
+    opacity: 0;
+    animation: psl-fade-in 200ms ease-out 420ms forwards;
+  }
+  #ps-splash .psl-blade {
+    stroke-dasharray: 320;
+    stroke-dashoffset: 320;
+    animation: psl-draw 300ms cubic-bezier(0.5, 0, 0.1, 1) 480ms forwards;
+  }
+  #ps-splash .psl-upper {
+    animation: psl-split-up 300ms var(--ease-console) 760ms both;
+  }
+  #ps-splash .psl-lower {
+    animation: psl-split-down 300ms var(--ease-console) 760ms both;
+  }
+  #ps-splash .psl-name {
+    opacity: 0;
+    animation: psl-rise 400ms var(--ease-console) 700ms forwards;
+  }
+}
+
+@keyframes psl-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes psl-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes psl-chip-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes psl-split-up {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-12px, -12px);
+  }
+}
+@keyframes psl-split-down {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(12px, 12px);
+  }
+}
+@keyframes psl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Slow-navigation overlay (components/NavigationLoader.tsx). Mounted when an
+   internal link is followed, invisible for its first 500 ms, so only a slow
+   navigation ever shows it. The logo then loops a cut: the blade
+   draws from the hilt, the package parts, the blade exits through the tip
+   and the halves close again. The <Logo animated> geometry is on a 64 grid
+   (blade length 41). */
+.ps-loader {
+  opacity: 0;
+  animation: psl-fade-in 300ms ease-out 500ms forwards;
+}
+.ps-nav-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--bg) 78%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps-logo-anim {
+    animation: psl-glow 1.6s ease-in-out infinite;
+  }
+  .ps-logo-anim .psl-blade {
+    stroke-dasharray: 41 41;
+    animation: psl-swing 1.6s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+  }
+  .ps-logo-anim .psl-upper {
+    animation: psl-part-up 1.6s var(--ease-console) infinite;
+  }
+  .ps-logo-anim .psl-lower {
+    animation: psl-part-down 1.6s var(--ease-console) infinite;
+  }
+}
+@keyframes psl-swing {
+  0%,
+  10% {
+    stroke-dashoffset: 41;
+  }
+  40%,
+  75% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -41;
+  }
+}
+@keyframes psl-part-up {
+  0%,
+  30% {
+    transform: translate(0, 0);
+  }
+  50%,
+  78% {
+    transform: translate(-2.6px, -2.6px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes psl-part-down {
+  0%,
+  30% {
+    transform: translate(0, 0);
+  }
+  50%,
+  78% {
+    transform: translate(2.6px, 2.6px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes psl-glow {
+  0%,
+  30%,
+  100% {
+    filter: drop-shadow(0 0 0 rgb(61 219 160 / 0));
+  }
+  55% {
+    filter: drop-shadow(0 0 8px rgb(61 219 160 / 0.45));
+  }
 }

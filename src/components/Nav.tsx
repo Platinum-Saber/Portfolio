@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { nav, site } from '@/lib/site';
+import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { TransitionLink } from './TransitionLink';
 
@@ -25,8 +26,9 @@ export function Nav() {
       <nav className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-3 px-4 sm:px-5">
         <TransitionLink
           href="/"
-          className="shrink-0 font-mono text-[13px] font-semibold tracking-tight whitespace-nowrap sm:text-sm"
+          className="inline-flex shrink-0 items-center gap-2 font-mono text-[13px] font-semibold tracking-tight whitespace-nowrap sm:text-sm"
         >
+          <Logo size={30} className="shrink-0" />
           {site.name}
         </TransitionLink>
 

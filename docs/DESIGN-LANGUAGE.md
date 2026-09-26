@@ -128,6 +128,8 @@ it for free:
 5. **First paint is content.** No preloader on a content route. `/explore` and `/lab` keep their
    loaders because they genuinely have something to load; a preloader in front of an MDX page is a
    lie about the payload.
+   *Exception (2026-09-26, Decision Log):* a ~1.4 s logo splash on the first load of a tab session,
+   JavaScript-only and skipped for crawlers. Slow navigations show a logo loader only after 500 ms.
 6. **Reduced motion is a real branch, not a speed setting.** Under `prefers-reduced-motion`,
    transitions become instant state changes and scrubbed sequences render at their end state - do not
    just shorten durations to 0.01 ms and call it handled (the current blanket rule in `globals.css`

@@ -3,6 +3,8 @@ import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
 import { ViewTransitionSettle } from '@/components/ViewTransitionSettle';
 import { GlassLight } from '@/components/GlassLight';
+import { Splash, SPLASH_SCRIPT } from '@/components/Splash';
+import { NavigationLoader } from '@/components/NavigationLoader';
 import { site } from '@/lib/site';
 import './globals.css';
 
@@ -55,8 +57,10 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_SCRIPT }} />
       </head>
       <body className="font-sans antialiased">
+        <Splash />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:px-3 focus:py-2"
@@ -69,6 +73,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <NavigationLoader />
         <ViewTransitionSettle />
         <GlassLight />
       </body>

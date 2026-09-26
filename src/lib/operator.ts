@@ -27,7 +27,7 @@ export const SUMMARY: OperatorField[] = [
   { label: 'Role', value: site.tagline },
   { label: 'Education', value: site.education },
   { label: 'Base', value: site.location },
-  { label: 'Stack', value: 'Verilog/VHDL · C++/Python · ROS 2' },
+  { label: 'Stack', value: 'C++/Python · Java/Spring Boot · ROS 2 · Verilog/VHDL ' },
   { label: 'Status', value: site.availability },
 ];
 
@@ -37,5 +37,5 @@ export const EXTENDED: OperatorField[] = [
     label: 'Experience',
     value: 'Intern Software Engineer · GTN Technologies · Nov 2025 – May 2026',
   },
-  { label: 'Elsewhere', value: 'Computer graphics · computer vision · CTFs' },
+  { label: 'Interests', value: 'Computer graphics · computer vision · CTFs' },
 ];

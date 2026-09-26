@@ -108,19 +108,18 @@ export default function HomePage() {
         <Chapter index={1} count={5} label="What I build">
           <div className="max-w-2xl space-y-5 text-lg leading-relaxed">
             <p style={{ color: 'var(--fg)' }}>
-              I&apos;m an embedded systems engineer first. My work starts at the
-              hardware - Verilog and VHDL on FPGAs, firmware on ESP32s and
-              Raspberry Pis, sensors that have to be read on time. Currently an
-              undergraduate at the University of Moratuwa.
+              I build systems that cross the boundary between code and hardware:
+              FPGA pipelines in Verilog/VHDL, ESP32 and Raspberry Pi firmware,
+              sensor-driven devices, and robots running ROS 2. I&apos;m drawn to
+              problems where timing, perception, data movement, and control have
+              to work together.
             </p>
             <p style={{ color: 'var(--fg-muted)' }}>
-              Robotics builds on that hardware: an autonomous drone on a Jetson
-              Orin Nano for my final year project, LiDAR scouts that share one
-              map over micro-ROS, a goalkeeper that predicts where the ball will
-              cross the line. I also write the software around it - real-time
-              market data services, dashboards, databases. I like the problems
-              that only appear once the thing is real: clock domains that
-              disagree, frames that drift.
+              My projects range from a Jetson Orin Nano drone and collaborative
+              LiDAR mapping to a real-time FPGA Sobel edge detector, predictive
+              goalkeeper, IoT medicine box, and market-data services in
+              Java/Spring Boot. I also build full-stack applications, moving
+              comfortably from device to backend.
             </p>
           </div>
         </Chapter>

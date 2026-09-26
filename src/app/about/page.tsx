@@ -35,7 +35,7 @@ export default function AboutPage() {
           portrait={<Portrait size={128} />}
         >
           {[...IDENTITY, ...SUMMARY, ...EXTENDED].map((field) => (
-            <ConsoleField key={field.label} label={field.label}>
+            <ConsoleField key={field.label} label={field.label} mono>
               {field.value}
             </ConsoleField>
           ))}
@@ -47,19 +47,18 @@ export default function AboutPage() {
         style={{ color: 'var(--fg-muted)' }}
       >
         <p>
-          I&apos;m {site.fullName}, an embedded systems engineer and
-          undergraduate at the University of Moratuwa, based in {site.location}.
-          I build the hardware layer first - FPGA logic, microcontroller
-          firmware, sensor interfaces - then the robots and software that run on
-          it.
+          I&apos;m {site.fullName}, a Computer Science and Engineering
+          undergraduate at the University of Moratuwa specializing in Integrated
+          Computer Engineering. I&apos;m interested in building systems end to
+          end, from embedded hardware and firmware to robotics, backend
+          services, and user-facing applications.
         </p>
         <p>
-          On the hardware side I have built a 4-bit processor in VHDL and a
-          Sobel edge detector in Verilog that outputs one pixel per clock. Above
-          that sits robotics: LiDAR scouts that share one map over micro-ROS,
-          and a Jetson Orin Nano at the centre of my final year drone. Working
-          both layers has made me suspicious of abstractions I haven&apos;t
-          looked underneath at least once.
+          My hardware work includes a 4-bit processor and real-time Sobel edge
+          detector on FPGA, plus ESP32 and Raspberry Pi systems for IoT and
+          robotics. In ASCILAM, two LiDAR scouts use micro-ROS to stream data to
+          a Raspberry Pi coordinator; my current final-year project puts an Orin
+          Nano and depth camera at the centre of an autonomous drone.
         </p>
         <p>
           I also write production software. For six months I was an intern
@@ -70,8 +69,10 @@ export default function AboutPage() {
         </p>
         <p>
           My coursework spans embedded systems, robotics, machine learning, HCI
-          and software engineering. Outside it I spend time on computer
-          graphics, computer vision and CTF-style security problems.
+          and software engineering. Alongside systems engineering, I&apos;ve
+          built Flutter mobile apps, React/Express web systems, and data/AI
+          tools with FastAPI, FinBERT and TimescaleDB. Outside it I spend time
+          on computer graphics, computer vision and CTF-style security problems.
         </p>
       </div>
 

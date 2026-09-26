@@ -97,7 +97,7 @@ export function FlightSticks({
   onRight: (axes: Axes) => void;
 }) {
   return (
-    <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-end justify-between">
+    <div className="pointer-events-none absolute inset-x-3 bottom-3 z-50 flex items-end justify-between">
       <div className="pointer-events-auto">
         <Stick label="Left stick" hint="throttle · yaw" onChange={onLeft} />
       </div>

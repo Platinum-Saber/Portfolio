@@ -319,7 +319,7 @@ export function LabExplorer({ zones }: { zones: Zone[] }) {
           a regression dressed as a feature.
         */}
         {immersive && (
-          <div className="pointer-events-auto absolute top-3 right-3 flex flex-wrap justify-end gap-2">
+          <div className="pointer-events-auto absolute top-3 right-3 z-50 flex flex-wrap justify-end gap-2">
             {STATIONS.map((station) => (
               <button
                 key={station.id}

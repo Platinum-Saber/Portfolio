@@ -223,6 +223,7 @@ function StationScreen({
       accent={AMBER}
       title={zone.short}
       meta="station"
+      scroll
       className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden"
       lead={
         <>

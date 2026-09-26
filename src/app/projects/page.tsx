@@ -20,15 +20,6 @@ export default function ProjectsPage() {
       <ParticleField mood="index" />
 
       <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
-      <p
-        className="mt-3 max-w-2xl leading-relaxed"
-        style={{ color: 'var(--fg-muted)' }}
-      >
-        Ordered by how much of my attention they currently hold. The embedded
-        and robotics projects share most of their hardware; the software
-        projects are where production systems taught me what coursework
-        couldn&apos;t.
-      </p>
 
       {domains.map((domain) => (
         <section key={domain} className="mt-12">

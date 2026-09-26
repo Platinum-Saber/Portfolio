@@ -62,6 +62,38 @@
   }
 }
 
+/* A hairline scrollbar for the HUD cards: thin, translucent, no end arrows.
+   Chromium ignores every ::-webkit-scrollbar rule once scrollbar-width or
+   scrollbar-color is set on the element, and its standard "thin" bar still
+   draws arrow buttons on Windows - so the standard properties go only to
+   browsers without the pseudo-elements (Firefox, which has no arrows). */
+@utility thin-scrollbar {
+  &::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+  }
+  &::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -1471,4 +1503,37 @@ html[data-splash='out'] #ps-splash {
   55% {
     filter: drop-shadow(0 0 8px rgb(61 219 160 / 0.45));
   }
+}
+
+/* CMU Typewriter Text Light (Computer Modern Unicode, SIL OFL 1.1 - licence in
+   public/fonts/CMU-TYPEWRITER-OFL.txt). Self-hosted and subset to Latin-1 plus
+   the punctuation the site uses (· – ’ …), 32 KB. Used for every card, tag
+   and button (below) and the /about dossier, so every page fetches it. */
+@font-face {
+  font-family: 'CMU Typewriter Text';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/cmu-typewriter-light.woff2') format('woff2');
+}
+.font-dossier {
+  font-family: 'CMU Typewriter Text', var(--font-mono);
+}
+
+/* Cards, tags and buttons all set in CMU Typewriter Text Light. Every one of
+   them is made of the glass material - cards are .glass, tags .glass-chip,
+   buttons .glass-btn - so the rule follows the material rather than each
+   component. `.glass *` reaches the text inside (titles, summaries, field
+   labels, the font-mono year and chrome), and because this sheet is
+   unlayered it outranks Tailwind's font-mono utility without !important.
+   Plain <button>s that are not glass (HUD controls, form actions) are
+   included too. The title bar is excluded: only the current page's link
+   is glass there, and it would be the one item in a different face. */
+.glass,
+.glass *,
+button {
+  font-family: 'CMU Typewriter Text', var(--font-mono);
+}
+header nav .glass {
+  font-family: inherit;
 }

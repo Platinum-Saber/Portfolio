@@ -32,6 +32,7 @@ export function ConsoleCard({
   footer,
   tone = 'site',
   accent,
+  scroll = false,
   className = '',
 }: {
   /** Read aloud. Says what this card is: 'OPERATOR', 'ZONE', 'COMPONENT'. */
@@ -49,22 +50,15 @@ export function ConsoleCard({
   tone?: 'site' | 'hud';
   /** Overrides `--accent` for this card only (a zone's own colour). */
   accent?: string;
+  /** Pin the header and scroll everything under it when the caller's
+      max-height is shorter than the content. Without it a capped card just
+      clips (the /explore panels cut their stack line off mid-word). */
+  scroll?: boolean;
   /** Sizing from the caller - width, max-height. Never colour. */
   className?: string;
 }) {
-  return (
-    <div
-      className={`glass ${tone === 'hud' ? 'hud glass-blur' : ''} ${className}`}
-      style={accent ? ({ '--accent': accent } as CSSProperties) : undefined}
-    >
-      <div
-        className="flex items-center justify-between gap-3 border-b px-3 py-2 font-mono text-[11px] tracking-widest uppercase"
-        style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
-      >
-        <span style={{ color: 'var(--accent)' }}>{title}</span>
-        {meta && <span aria-hidden="true">{meta}</span>}
-      </div>
-
+  const body = (
+    <>
       {lead && <div className="px-3 pt-3 sm:px-4 sm:pt-4">{lead}</div>}
 
       {(portrait || children) && (
@@ -83,6 +77,33 @@ export function ConsoleCard({
           {footer}
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div
+      className={`glass ${tone === 'hud' ? 'hud glass-blur' : ''} ${scroll ? 'flex flex-col' : ''} ${className}`}
+      style={accent ? ({ '--accent': accent } as CSSProperties) : undefined}
+    >
+      <div
+        className="flex items-center justify-between gap-3 border-b px-3 py-2 font-mono text-[11px] tracking-widest uppercase"
+        style={{ borderColor: 'var(--border)', color: 'var(--fg-muted)' }}
+      >
+        <span style={{ color: 'var(--accent)' }}>{title}</span>
+        {meta && <span aria-hidden="true">{meta}</span>}
+      </div>
+
+      {scroll ? (
+        // pointer-events-auto: the /explore panel's <Html> wrapper turns
+        // pointer events off so the caption never swallows a click, and a
+        // region that cannot receive the wheel cannot be scrolled.
+        // overscroll-contain: reaching the end must not scroll the page.
+        <div className="thin-scrollbar pointer-events-auto min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {body}
+        </div>
+      ) : (
+        body
+      )}
     </div>
   );
 }
@@ -97,9 +118,13 @@ export function ConsoleCard({
 export function ConsoleField({
   label,
   children,
+  mono = false,
 }: {
   label: string;
   children?: ReactNode;
+  /** Set the row in CMU Typewriter Text Light (`.font-dossier`), label and
+      value both - the /about dossier. */
+  mono?: boolean;
 }) {
   if (children === null || children === undefined || children === false) {
     return null;
@@ -109,13 +134,13 @@ export function ConsoleField({
     // Below `sm` the row stacks: label over value.
     <div className="sm:flex sm:items-baseline sm:gap-2">
       <dt
-        className="shrink-0 font-mono text-[11px] tracking-wider uppercase sm:w-28"
+        className={`shrink-0 tracking-wider uppercase sm:w-28 ${mono ? 'font-dossier text-[12px]' : 'font-mono text-[11px]'}`}
         style={{ color: 'var(--fg-muted)' }}
       >
         {label}
       </dt>
       <dd
-        className="mt-0.5 min-w-0 flex-1 text-sm sm:mt-0"
+        className={`mt-0.5 min-w-0 flex-1 sm:mt-0 ${mono ? 'font-dossier text-[15px]' : 'text-sm'}`}
         style={{ color: 'var(--fg)' }}
       >
         {children}

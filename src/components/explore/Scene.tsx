@@ -238,6 +238,7 @@ function Rig({
             accent={zoneColor(active.kind)}
             title={active.short}
             meta={active.kind}
+            scroll
             className="max-h-[300px] w-[min(72vw,21rem)] overflow-hidden"
             lead={
               <>

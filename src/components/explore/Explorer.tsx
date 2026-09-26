@@ -396,7 +396,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
           The copy below stays mounted but hidden, so focus never jumps.
         */}
         {immersive && (
-          <div className="absolute top-3 right-3 flex items-start gap-2">
+          <div className="absolute top-3 right-3 z-50 flex items-start gap-2">
             {/* Zones in two even rows; exit sits apart in the corner. */}
             <div
               className="grid gap-2"

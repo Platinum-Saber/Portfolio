@@ -1,12 +1,97 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Vector3 } from 'three';
 import { safeCanvasEvents } from '@/lib/safeCanvasEvents';
 import { Grid, OrbitControls } from '@react-three/drei';
-import { DRONE_COMPONENTS } from '@/lib/drone';
-import { Airframe } from './Airframe';
+import { DRONE_COMPONENTS, getComponent } from '@/lib/drone';
+import { AirframeModel } from './AirframeModel';
 import { Hotspot } from './Hotspot';
+
+/** How far the camera sits from a selected component. */
+const FOCUS_DISTANCE = 0.32;
+
+/**
+ * Moves the orbit onto the selected component: the target slides to the
+ * part's measured position and the camera closes to FOCUS_DISTANCE, keeping
+ * whatever angle the visitor was looking from. Deselecting slides back to the
+ * whole airframe at the opening distance.
+ *
+ * It eases once and lets go. The moment the visitor grabs the controls the
+ * move is dropped, so it never fights a drag - and orbiting afterwards pivots
+ * round the selected part, which is the point of focusing on it.
+ *
+ * The camera and controls are reached through useFrame's state, not held from
+ * a hook, so the only things mutated are what three hands the frame callback.
+ */
+function Focus({
+  selected,
+  home,
+  instant,
+}: {
+  selected: string | null;
+  home: number;
+  instant: boolean;
+}) {
+  const invalidate = useThree((state) => state.invalidate);
+  const controls = useThree((state) => state.controls);
+  const goal = useRef<{ target: Vector3; distance: number } | null>(null);
+  const first = useRef(true);
+
+  useEffect(() => {
+    // Not on mount: the opening framing is Scene's, and autoRotate owns it.
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const component = selected ? getComponent(selected) : undefined;
+    goal.current = {
+      target: new Vector3(
+        ...(component?.focus?.target ?? component?.position ?? [0, 0, 0]),
+      ),
+      distance: component
+        ? (component.focus?.distance ?? FOCUS_DISTANCE)
+        : home,
+    };
+    invalidate();
+  }, [selected, home, invalidate]);
+
+  useEffect(() => {
+    if (!controls) return;
+    const release = () => {
+      goal.current = null;
+    };
+    const dispatcher = controls as unknown as {
+      addEventListener: (type: string, fn: () => void) => void;
+      removeEventListener: (type: string, fn: () => void) => void;
+    };
+    dispatcher.addEventListener('start', release);
+    return () => dispatcher.removeEventListener('start', release);
+  }, [controls]);
+
+  useFrame((state, delta) => {
+    const g = goal.current;
+    const orbit = state.controls as unknown as
+      | { target: Vector3; update: () => void }
+      | null;
+    if (!g || !orbit) return;
+    const k = instant ? 1 : 1 - Math.exp(-delta * 6);
+    const offset = state.camera.position.clone().sub(orbit.target);
+    orbit.target.lerp(g.target, k);
+    const length = offset.length();
+    offset.setLength(length + (g.distance - length) * k);
+    state.camera.position.copy(orbit.target).add(offset);
+    orbit.update();
+    const settled =
+      orbit.target.distanceTo(g.target) < 1e-4 &&
+      Math.abs(offset.length() - g.distance) < 1e-4;
+    if (settled) goal.current = null;
+    else invalidate();
+  });
+
+  return null;
+}
 
 /**
  * Render loop policy - this is most of what keeps /lab inside the budget:
@@ -65,11 +150,12 @@ export function Scene({
 
   // Narrow viewports get a closer camera - the same framing that reads well at
   // 1100px leaves the airframe tiny at 390px. Set once, then the visitor's own
-  // zoom takes over.
+  // zoom takes over. Closer than the procedural airframe needed: the real quad
+  // is 33 cm across its guards, where the primitives spanned ~50 cm of props.
   const [start] = useState<[number, number, number]>(() =>
     typeof window !== 'undefined' && window.innerWidth < 640
-      ? [0.42, 0.28, 0.42]
-      : [0.54, 0.36, 0.54],
+      ? [0.34, 0.23, 0.34]
+      : [0.42, 0.28, 0.42],
   );
 
   return (
@@ -102,11 +188,15 @@ export function Scene({
           sectionColor="#1c2128"
           fadeDistance={1.15}
           fadeStrength={2}
-          position={[0, -0.11, 0]}
+          position={[0, -0.075, 0]}
           infiniteGrid
         />
 
-        <Airframe spin={animating} />
+        <AirframeModel
+          spin={animating}
+          selected={selected}
+          instant={reducedMotion}
+        />
 
         {DRONE_COMPONENTS.map((component, index) => (
           <Hotspot
@@ -114,20 +204,27 @@ export function Scene({
             component={component}
             index={index}
             active={selected === component.id}
+            dimmed={selected !== null && selected !== component.id}
             onSelect={onSelect}
           />
         ))}
 
         <OrbitControls
           enablePan={false}
-          target={[0, 0.02, 0]}
-          minDistance={0.4}
-          maxDistance={1.4}
+          target={[0, 0, 0]}
+          minDistance={0.3}
+          maxDistance={1.1}
           minPolarAngle={0.2}
           maxPolarAngle={Math.PI / 2.05}
           autoRotate={animating && !hasInteracted && selected === null}
           autoRotateSpeed={0.6}
           makeDefault
+        />
+
+        <Focus
+          selected={selected}
+          home={Math.hypot(...start)}
+          instant={reducedMotion}
         />
       </Canvas>
 

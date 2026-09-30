@@ -9,11 +9,11 @@ import { NEUTRAL, type FlightInput } from '@/lib/explore/flight';
 import { LabDrone } from '@/lib/explore/labFlight';
 import { STATIONS, findStation, type Station } from '@/lib/explore/lab';
 import type { Zone } from '@/lib/explore/zones';
-import { DroneModel } from '../DroneModel';
 import { Lighting } from '../Lighting';
 import { ConsoleCard } from '../../ConsoleCard';
 import { clampedPosition } from '../panelPosition';
 import { RoomModel, RoomShell, StationOutline } from './RoomModel';
+import { LabCraft } from './LabCraft';
 
 export type JumpRequest = { id: string; nonce: number };
 
@@ -161,9 +161,7 @@ function Rig({
       ))}
 
       <group ref={body}>
-        <group scale={CRAFT_SPAN / 2.4}>
-          <DroneModel spin={!reducedMotion} />
-        </group>
+        <LabCraft span={CRAFT_SPAN} spin={!reducedMotion} />
       </group>
 
       {station && (

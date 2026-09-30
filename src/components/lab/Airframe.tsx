@@ -7,8 +7,12 @@ import * as THREE from 'three';
 
 /**
  * A procedural X-quadrotor, generated from primitives rather than loaded from
- * a mesh file. Two reasons: it costs a few KB instead of megabytes, and it can
- * be edited as code as the real build changes.
+ * a mesh file.
+ *
+ * It was the whole airframe until the real CAD arrived (2026-09-30); it is now
+ * the Suspense fallback in `AirframeModel.tsx` - what shows while
+ * fyp-drone.glb is in flight, and for good if that fetch never lands. The
+ * explorer is never allowed to open on an empty grid.
  *
  * Roughly to scale in metres. Read it as a schematic, not a render.
  */
@@ -128,8 +132,15 @@ function Block({
   );
 }
 
-/** Depth camera frustum - shows what the Gemini 336 actually sees. */
-function CameraFrustum() {
+/**
+ * Depth camera frustum - shows what the Gemini 336 actually sees. Opens along
+ * +Z from `position`, which should be the lens face.
+ */
+export function CameraFrustum({
+  position = [0, 0.02, 0.13],
+}: {
+  position?: [number, number, number];
+}) {
   const geometry = useMemo(() => {
     // H 90° x V 65°, drawn to 0.6 m for legibility rather than the full range.
     const depth = 0.6;
@@ -151,7 +162,7 @@ function CameraFrustum() {
   }, []);
 
   return (
-    <lineSegments geometry={geometry} position={[0, 0.02, 0.13]}>
+    <lineSegments geometry={geometry} position={position}>
       <lineBasicMaterial color={ACCENT} transparent opacity={0.16} />
     </lineSegments>
   );

@@ -79,6 +79,7 @@ let parked = false;
 let parkTimer: number | null = null;
 
 const listeners = new Set<(state: AudioState) => void>();
+const volumeListeners = new Set<() => void>();
 
 /* -------------------------------------------------------------------------
    Preference
@@ -143,6 +144,7 @@ export function setVolume(next: number): void {
   } catch {
     // Unpersisted, but still applied for this page view.
   }
+  for (const listener of volumeListeners) listener();
   if (ctx && master && readPreference() === 'armed') {
     ramp(master.gain, MASTER * clamped, 0.12);
   }
@@ -153,6 +155,18 @@ export function subscribe(listener: (state: AudioState) => void): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
+  };
+}
+
+/**
+ * Volume's counterpart to `subscribe`, in the shape useSyncExternalStore
+ * wants: told THAT the volume changed; `readVolume` says to what. Without it
+ * the slider had to copy the stored value into state inside an effect.
+ */
+export function subscribeVolume(listener: () => void): () => void {
+  volumeListeners.add(listener);
+  return () => {
+    volumeListeners.delete(listener);
   };
 }
 

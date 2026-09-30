@@ -32,23 +32,22 @@ policy onboard, so the aircraft doesn't depend on a radio link to stay alive.
 **Airframe.** I originally planned a 3D-printed frame and abandoned it after working the
 numbers: for the stiffness required it came out both **too heavy and too weak** compared to
 carbon fibre. The design moved to **laser-cut carbon fibre sheet** for the primary
-structure, keeping 3D printing for non-structural mounts and sensor brackets, where its
-geometric freedom actually pays for itself.
+structure, keeping 3D printing for non-structural parts - the **Nylon 12 prop ducts**,
+mounts and sensor brackets - where its geometric freedom actually pays for itself.
 
-**Propulsion.** Built around AIR 2216/KV920 motors, sized against the mass budget the
-carbon frame and the Orin Nano impose.
+**Propulsion.** Four **2205 motors** on 5 in three-blade props inside the ducts, on a
+222 mm diagonal, sized against the mass budget the carbon frame and the Orin Nano impose.
 
 ## Explore the airframe
 
 I built an [interactive schematic of this aircraft](/lab) - orbit it, and select any
 component to see its specs, what it's wired to, and whether it actually exists yet. The
-geometry is generated procedurally in code rather than loaded from a mesh file, so it stays
-honest as the build changes.
+geometry is the aircraft's own CAD, and each marker sits on the part it names.
 
 ## Where it stands
 
-In progress. The frame design and the compute and sensing selection are settled; the
-current work is propulsion sizing and integration.
+In progress. The full airframe is modelled in CAD, and the compute and sensing selection
+is settled; the current work is sourcing propulsion and integration.
 
 ## What I took from it
 

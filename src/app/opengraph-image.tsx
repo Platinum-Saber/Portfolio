@@ -53,6 +53,10 @@ export default function OpengraphImage() {
         {site.location.toUpperCase()}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 44 }}>
+        {/* ImageResponse renders this JSX with Satori, not React DOM: there is
+            no browser, no LCP and no image optimiser, and next/image does not
+            work here. A plain <img> is the documented way. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={PORTRAIT}
           alt=""

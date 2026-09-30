@@ -1,7 +1,13 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { NEUTRAL, type FlightInput } from '@/lib/explore/flight';
@@ -19,6 +25,12 @@ import type { JumpRequest, Telemetry } from './Scene';
 import { AudioToggle } from '../AudioToggle';
 import { engine, engineOff } from '@/lib/audio';
 import { MAX_SPEED } from '@/lib/explore/flight';
+
+/** The URL does not change under a mounted page, so there is nothing to subscribe to. */
+const NO_SUBSCRIPTION = () => () => {};
+const readFlyParam = () =>
+  new URLSearchParams(window.location.search).get('fly') === '1';
+const NOT_ON_SERVER = () => false;
 
 const Scene = dynamic(() => import('./Scene').then((m) => m.Scene), {
   ssr: false,
@@ -197,12 +209,21 @@ export function Explorer({ zones }: { zones: Zone[] }) {
    * refusal as the fixed-overlay case, so the visitor gets a full-viewport
    * canvas either way - which is the part that matters.
    */
+  const arrivedFlying = useSyncExternalStore(
+    NO_SUBSCRIPTION,
+    readFlyParam,
+    NOT_ON_SERVER,
+  );
   useEffect(() => {
-    if (support !== 'ok') return;
-    if (new URLSearchParams(window.location.search).get('fly') !== '1') return;
+    if (support !== 'ok' || !arrivedFlying) return;
     deepLinked.current = true;
-    takeControl();
-  }, [support, takeControl]);
+    // One frame later rather than in the effect body: taking control sets
+    // state, and doing that synchronously inside an effect costs a second
+    // render pass before paint. The navigation's activation outlives a frame,
+    // so the fullscreen request is no more likely to be refused.
+    const id = requestAnimationFrame(takeControl);
+    return () => cancelAnimationFrame(id);
+  }, [support, arrivedFlying, takeControl]);
 
   /**
    * Leaving the world returns a deep-linked visitor to where they were.
@@ -473,7 +494,7 @@ export function Explorer({ zones }: { zones: Zone[] }) {
             alt {telemetry.altitude.toFixed(1)} m · {telemetry.speed.toFixed(1)}{' '}
             m/s · hdg {telemetry.heading.toFixed(0).padStart(3, '0')}
             <br />
-            {deepLinked.current ? 'esc to go back' : 'esc to leave fullscreen'}
+            {arrivedFlying ? 'esc to go back' : 'esc to leave fullscreen'}
           </p>
         )}
 

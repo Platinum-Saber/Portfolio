@@ -37,10 +37,9 @@ export default function LabPage() {
         className="mt-3 max-w-2xl text-sm leading-relaxed"
         style={{ color: 'var(--fg-muted)' }}
       >
-        The geometry is generated procedurally from primitives rather than
-        loaded from a mesh file - it costs a few kilobytes instead of megabytes,
-        and it stays editable as code while the real build changes. Read it as a
-        schematic, not a render.
+        The geometry is the aircraft&apos;s own CAD, cut from 1.6 million
+        triangles to 47,500 and drawn as edges only. Each marker sits on the
+        centre of the part it names. Read it as a schematic, not a render.
       </p>
 
       <div className="mt-9">

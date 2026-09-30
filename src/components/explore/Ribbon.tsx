@@ -110,19 +110,23 @@ export function Ribbon({ guide }: { guide: Guide }) {
     }
     mesh.visible = true;
 
+    // Geometry and material are reached through the ref, not the memos that
+    // made them: mutating a memoised value after render is what the React
+    // Compiler forbids, and a ref is exactly the handle for "the three object
+    // that ended up in the scene".
     if (built.current !== guide.version) {
       built.current = guide.version;
-      const attribute = geometry.getAttribute('position') as BufferAttribute;
+      const attribute = mesh.geometry.getAttribute('position') as BufferAttribute;
       const samples = guide.curve.getSpacedPoints(COUNT - 1);
       samples.forEach((p, i) => attribute.setXYZ(i, p.x, p.y, p.z));
       attribute.needsUpdate = true;
-      geometry.computeBoundingSphere();
+      mesh.geometry.computeBoundingSphere();
     }
 
     // World-size points: ~0.5 m across, in device pixels.
     const fov = 'fov' in state.camera ? (state.camera.fov as number) : 55;
     const pixels = state.size.height * state.viewport.dpr;
-    const u = material.uniforms;
+    const u = (mesh.material as ShaderMaterial).uniforms;
     u.uScale.value = (0.5 * pixels) / (2 * Math.tan((fov * Math.PI) / 360));
     u.uTime.value += Math.min(delta, 0.05);
     u.uDrawn.value = guide.drawn;

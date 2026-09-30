@@ -27,7 +27,7 @@ const YAW_RATE = 1.5;
 const RESPONSE = 0.22;
 
 /**
- * The craft as a sphere, in metres. The VT-802 renders at 0.4 m across in
+ * The craft as a sphere, in metres. The FYP quad renders at 0.4 m across in
  * here, so this is a little generous - deliberately. A collision radius
  * slightly larger than the visible craft means you stop just before touching
  * something, which reads as careful piloting; slightly smaller means you visibly

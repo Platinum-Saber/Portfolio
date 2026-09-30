@@ -138,6 +138,43 @@ const ASSETS = [
     textureSize: 1024,
   },
   {
+    src: 'assets/raw/fyp-drone.glb',
+    out: 'public/models/fyp-drone.glb',
+    profile: 'pbr',
+    /**
+     * The FYP quad, flown in /explore/lab. Its raw source is not a download but
+     * a Fusion export run through scripts/obj-to-glb.mjs, which already
+     * decimated it - it has to, because the CAD normals must be dropped before
+     * meshopt can collapse anything (see that script's header). So the budget
+     * is its own count and this step is a no-op for geometry; it is here for
+     * quantize and meshopt compression like everything else.
+     */
+    targetTriangles: 47706,
+    textureSize: 1024,
+    /**
+     * The four props are named nodes carrying a `spinPivot`, and must survive
+     * `join` as separate nodes or there is nothing for PbrModel to turn. The
+     * source's `part-*` nodes are NOT kept here: flown in the lab nobody
+     * selects a component, and keeping them would multiply the draw calls by
+     * the number of components.
+     */
+    keepNodes: /^rotor-/,
+  },
+  {
+    src: 'assets/raw/fyp-drone.glb',
+    out: 'public/models/fyp-drone-parts.glb',
+    /**
+     * The same quad for /lab's Airframe Explorer, where it is drawn as a
+     * schematic and each component can be lit up on its own. So: no
+     * appearance (schematic), and the `part-*` nodes survive as separate
+     * meshes - one per component, 11 in all with the rotors. Budget is the
+     * source's own count, as for the flown copy.
+     */
+    profile: 'schematic',
+    targetTriangles: 47706,
+    keepNodes: /^(rotor|part)-/,
+  },
+  {
     src: 'assets/raw/city.glb',
     out: 'public/models/city.glb',
     /**
@@ -263,13 +300,24 @@ async function build(io, asset) {
   if (textured) keepMaterials(document);
   else stripAppearance(document);
 
+  // `keepNodes`: named nodes matching it stay separate through `join`; every
+  // other node loses its name so `join` may merge it. Names are cleared rather
+  // than filtered because a kept node's own primitives should still merge.
+  if (asset.keepNodes) {
+    for (const node of document.getRoot().listNodes()) {
+      if (asset.keepNodes.test(node.getName())) continue;
+      node.setName('');
+      node.getMesh()?.setName('');
+    }
+  }
+
   await document.transform(
     // flatten + join first: the sources arrive as deep node hierarchies of
     // small primitives, and the simplifier works per-primitive. Merging first
     // means it optimises across the whole airframe instead of many times in
     // isolation, which is what lets the budget go this low.
     ...(merge
-      ? [flatten(), dedup(), joinMeshes({ keepNamed: false })]
+      ? [flatten(), dedup(), joinMeshes({ keepNamed: Boolean(asset.keepNodes) })]
       : [dedup()]),
     // Generated meshes are unwelded - vertices are duplicated per triangle, so
     // the simplifier sees no shared edges and can collapse nothing at all.

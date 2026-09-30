@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { OVERLAY_BUTTON, overlayButtonStyle } from './explore/useImmersive';
 import {
   type AudioState,
@@ -10,8 +10,12 @@ import {
   resumeIfArmed,
   setVolume,
   subscribe,
+  subscribeVolume,
   toggle,
 } from '@/lib/audio';
+
+const MUTED = (): AudioState => 'muted';
+const DEFAULT_LEVEL = () => 0.5;
 
 /**
  * `AUDIO ▸ ARMED / MUTED` - the one audio control, per DESIGN-LANGUAGE §4.2.
@@ -23,7 +27,9 @@ import {
  *
  * Why it starts at `muted` and corrects on mount: the preference lives in
  * `localStorage`, which the server cannot read, so rendering the stored value
- * directly would be a hydration mismatch. Unlike the theme toggle - which
+ * directly would be a hydration mismatch. useSyncExternalStore does exactly
+ * that correction - `muted` for the server snapshot and hydration, the stored
+ * value right after - without a setState-in-effect render cascade. Unlike the theme toggle - which
  * dodges this by keeping its state in a DOM attribute an inline script sets
  * before paint - audio cannot be resolved before paint, because there is
  * nothing to resolve until a gesture happens. Muted-then-correct is right in a
@@ -41,20 +47,17 @@ export function AudioToggle({
 }: {
   variant?: 'overlay' | 'inline';
 }) {
-  const [state, setState] = useState<AudioState>('muted');
-  // Mirrors the same reasoning as `state`: the stored value is unreadable on
-  // the server, so render the default and correct on mount.
-  const [level, setLevel] = useState(0.5);
+  // The preference and volume live in lib/audio (backed by localStorage), so
+  // they are read as external stores: every mounted toggle agrees, including
+  // across a client-side route change, and the server renders the defaults.
+  const state = useSyncExternalStore(subscribe, readPreference, MUTED);
+  const level = useSyncExternalStore(subscribeVolume, readVolume, DEFAULT_LEVEL);
 
   useEffect(() => {
-    setState(readPreference());
-    setLevel(readVolume());
-    const unsubscribe = subscribe(setState);
     // Carries an `armed` preference in from a previous visit or route without
     // autoplaying - it waits for the next gesture. No-op when muted.
     const cancel = resumeIfArmed();
     return () => {
-      unsubscribe();
       cancel();
       // Leaving the scene: silence it (preference kept). The toggle lives on
       // exactly the audio routes, so its unmount is the edge of the scope.
@@ -66,9 +69,7 @@ export function AudioToggle({
   const overlay = variant === 'overlay';
 
   function onVolume(event: React.ChangeEvent<HTMLInputElement>) {
-    const next = Number(event.target.value);
-    setLevel(next);
-    setVolume(next);
+    setVolume(Number(event.target.value));
   }
 
   return (
@@ -79,7 +80,7 @@ export function AudioToggle({
         // the AudioContext legal to construct. Anything async between the click
         // and the context - an await, a transition, a timeout - and the browser
         // stops counting it as a user gesture.
-        onClick={() => setState(toggle())}
+        onClick={() => toggle()}
         data-audio-toggle
         aria-pressed={armed}
         aria-label={armed ? 'Mute audio' : 'Enable audio'}

@@ -235,7 +235,15 @@ function Simulation({
   reducedMotion: boolean;
 }) {
   const sim = useMemo(() => createKeeperSim(), []);
-  simRef.current = sim;
+  // Handed to the parent (its Reset button) after commit, not during render:
+  // a render may be thrown away, and a ref written from one would then point
+  // at a sim that never mounted.
+  useEffect(() => {
+    simRef.current = sim;
+    return () => {
+      if (simRef.current === sim) simRef.current = null;
+    };
+  }, [simRef, sim]);
 
   const ball = useRef<Mesh>(null);
   const arm = useRef<Group>(null);

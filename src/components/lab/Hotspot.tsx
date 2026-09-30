@@ -17,11 +17,14 @@ export function Hotspot({
   component,
   index,
   active,
+  dimmed = false,
   onSelect,
 }: {
   component: DroneComponent;
   index: number;
   active: boolean;
+  /** Another component is selected: step back so the selected one leads. */
+  dimmed?: boolean;
   onSelect: (id: string) => void;
 }) {
   const leader = useMemo(() => {
@@ -39,7 +42,7 @@ export function Hotspot({
         <lineBasicMaterial
           color="#3ddba0"
           transparent
-          opacity={active ? 0.7 : 0.28}
+          opacity={active ? 0.7 : dimmed ? 0.1 : 0.28}
         />
       </line>
 
@@ -49,7 +52,7 @@ export function Hotspot({
         <meshBasicMaterial
           color="#3ddba0"
           transparent
-          opacity={active ? 1 : 0.6}
+          opacity={active ? 1 : dimmed ? 0.2 : 0.6}
         />
       </mesh>
 
@@ -60,7 +63,7 @@ export function Hotspot({
             onClick={() => onSelect(component.id)}
             aria-label={`${component.name} - ${component.short}`}
             aria-pressed={active}
-            className="grid size-7 cursor-pointer place-items-center rounded-full border font-mono text-[11px] transition-transform hover:scale-110"
+            className="grid size-7 cursor-pointer place-items-center rounded-full border font-mono text-[11px] transition-[transform,opacity] hover:scale-110 hover:opacity-100"
             style={{
               borderColor: active
                 ? 'var(--accent)'
@@ -69,6 +72,7 @@ export function Hotspot({
                 ? 'var(--accent)'
                 : 'rgba(14, 17, 20, 0.85)',
               color: active ? '#0e1114' : 'var(--accent)',
+              opacity: dimmed ? 0.45 : 1,
               boxShadow: active
                 ? '0 0 0 5px color-mix(in srgb, var(--accent) 20%, transparent)'
                 : 'none',

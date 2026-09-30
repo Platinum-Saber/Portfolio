@@ -9,7 +9,7 @@
         "textureBytes": 50267987
       },
       "after": {
-        "bytes": 2754572,
+        "bytes": 2754568,
         "triangles": 91213,
         "textureBytes": 1403482
       }
@@ -26,6 +26,34 @@
         "bytes": 419328,
         "triangles": 18146,
         "textureBytes": 95440
+      }
+    },
+    {
+      "name": "public/models/fyp-drone.glb",
+      "profile": "pbr",
+      "before": {
+        "bytes": 2618256,
+        "triangles": 47706,
+        "textureBytes": 0
+      },
+      "after": {
+        "bytes": 756600,
+        "triangles": 47706,
+        "textureBytes": 0
+      }
+    },
+    {
+      "name": "public/models/fyp-drone-parts.glb",
+      "profile": "schematic",
+      "before": {
+        "bytes": 2618256,
+        "triangles": 47706,
+        "textureBytes": 0
+      },
+      "after": {
+        "bytes": 219512,
+        "triangles": 47706,
+        "textureBytes": 0
       }
     },
     {

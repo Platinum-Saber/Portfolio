@@ -10,6 +10,12 @@ const config = [
       'node_modules/**',
       'out/**',
       'next-env.d.ts',
+      // Cloudflare / OpenNext build output - generated bundles, thousands of
+      // findings that are not ours. Same list as .gitignore.
+      '.open-next/**',
+      '.wrangler/**',
+      // Local scratch, gitignored.
+      '_to_delete/**',
       // Deno runtime, linted by `deno lint` if at all.
       'supabase/functions/**',
     ],

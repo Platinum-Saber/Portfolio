@@ -11,8 +11,7 @@ const ACCENT = '#3ddba0';
  * The procedural quadrotor this world flew with before a real mesh existed.
  *
  * It is still here, and still worth its few KB, because it is what shows while
- * a craft's GLB is in flight - `vt-802.glb` outdoors, `fyp-drone.glb` in the
- * lab - and what shows for good if that fetch never lands. A flight sim with
+ * the craft's GLB (`fyp-drone.glb`, in both scenes) is in flight - and what shows for good if that fetch never lands. A flight sim with
  * no aircraft is a worse failure than a plain one, so the craft is never
  * allowed to be missing.
  *

@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 
 /**
- * The home-page mascot - the VT-802, the craft you fly in /explore.
+ * The home-page mascot - the VT-802. It was the craft you fly in /explore until
+ * 2026-10-01, when /explore switched to the FYP quad; the sprite was not re-rendered.
  *
  * A pre-rendered sprite, not a live scene: `/` may not load three.js (the
  * locked "nothing 3D in the homepage's initial graph" rule, and ~1.4 MB it

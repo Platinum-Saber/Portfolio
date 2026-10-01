@@ -2,11 +2,12 @@
 
 **Owner:** Suhan · **Repo:** `D:\Projects\Portfolio`
 **Architecture rationale:** see [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-**Started:** 2026-08-21 · **Last updated:** 2026-09-03
+**Started:** 2026-08-21 · **Last updated:** 2026-10-01
 
 > **Where the docs live.** Every markdown document except `README.md` is in `docs/` - this file,
-> [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`DESIGN-LANGUAGE.md`](./DESIGN-LANGUAGE.md) and
-> [`PHASE-5-SUPABASE.md`](./PHASE-5-SUPABASE.md). The repo root is for things a tool reads;
+> [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`DESIGN-LANGUAGE.md`](./DESIGN-LANGUAGE.md),
+> [`PHASE-5-SUPABASE.md`](./PHASE-5-SUPABASE.md), [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md)
+> and source notes under `research/`. The repo root is for things a tool reads;
 > `README.md` stays there because GitHub renders it as the landing page. Moved 2026-09-03.
 
 > **How to use this file.** Each phase is independently completable and ends in something deployed and working. Tick boxes as you go, update the status table, and append to the Decision Log whenever you make a call that a future session would otherwise have to re-litigate. To resume after a break, read §1 and §2, then jump to the first phase not marked ✅.
@@ -17,54 +18,56 @@
 
 | # | Phase | Outcome when done | Status |
 |---|---|---|---|
-| 0 | Foundations | Repo + Vercel deploy pipeline live | ✅ Done |
-| 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 In progress |
-| 2 | 3D layer | Three interactive scenes + the explorable world | 🟡 Device test passed; scout CAD outstanding |
+| 0 | Foundations | Repo + push-to-deploy pipeline live | ✅ Done - on Vercel; moved to Cloudflare Workers 2026-09-24 |
+| 1 | Content core | Readable, fast, non-3D portfolio online | 🟡 Two items left - cut weak projects, read it end to end on a phone |
+| 2 | 3D layer | Three interactive scenes + the explorable world | 🟡 Device test passed; real FYP CAD in `/lab` and `/explore/lab` (2026-09-30); scout CAD outstanding |
 | 3 | Asset pipeline | Optimised GLB built in CI | ✅ Done |
 | 4 | In-browser demo | One live CV/graphics demo, client-side | ✅ Done |
-| 5 | Supabase | Contact form, RLS, degrades gracefully | 🟢 Form live, notifications live. Preview/Dev env vars, the bad-key test and probe cleanup remain |
-| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Not started - **unblocked 2026-09-24** (Phase 8 done) |
+| 5 | Supabase | Contact form, RLS, degrades gracefully | 🟢 Form live, notifications live. Probe cleanup, the bad-key test (now in local workerd) and a recorded live check since the Cloudflare move remain |
+| 6 | Polish & launch | Domain, a11y, perf gates, SEO | ⬜ Domain bought; everything else not started - **unblocked 2026-09-24** (Phase 8 done) |
 | 7 | ~~*Optional* - AWS artifact~~ | - | ❌ Dropped (2026-09-23) |
 | 8 | Design architecture | One visual language across every route | ✅ Done (2026-09-24) - 8.1–8.9 all shipped; 8.3 hand-rolled |
-| 9 | Diegetic world | Zone info delivered inside the scene, not over it | 🟡 In progress - 9.0 glass and 9.2 guided flight done; 9.1 one item open |
+| 9 | Diegetic world | Zone info delivered inside the scene, not over it | 🟡 In progress - 9.0 glass and 9.2 guided flight (`/explore`) done; 9.1 one item open; 9.3–9.4 not started |
 
 Legend: ⬜ Not started · 🟡 In progress · ✅ Done · ⏸️ Parked
 
-**The lab, as of 2026-08-22.** Four interactive pieces, each on its own route so three.js
-is never loaded by a content page:
+**The lab, as of 2026-10-01.** Six interactive pieces, each on its own route so three.js is
+never loaded by a content page. JS is the last harness measurement (§6); model bytes are the
+built files in `public/models/`.
 
-| Route | What | Uncompressed JS |
-|---|---|---|
-| `/lab` | Airframe Explorer - the FYP quadrotor as a schematic | 1,402 KB |
-| `/lab/sobel` | Sobel edge detection as a WebGL2 shader, live on camera | 475 KB (no three.js) |
-| `/lab/ascilam` | Collaborative SLAM arena - two scouts, drift, fusion | 1,395 KB |
-| `/explore` | The whole portfolio as a world you fly through | 1,469 KB + 437 KB models |
-| `/explore/lab` | The portfolio as a room, with an interactive console | 1,468 KB + 3,100 KB models |
-| `/lab/keeper` | Goalkeeper interception - two sightings, an EKF, one servo | 1,376 KB |
+| Route | What | Uncompressed JS | Models |
+|---|---|---|---|
+| `/lab` | Airframe Explorer - the FYP quad from its own CAD, as a schematic with selectable parts | 1,411 KB\* | 214 KB (`fyp-drone-parts.glb`) |
+| `/lab/sobel` | Sobel edge detection as a WebGL2 shader, live on camera | 477 KB (no three.js) | - |
+| `/lab/ascilam` | Collaborative SLAM arena - two scouts, drift, fusion | 1,397 KB | - |
+| `/lab/keeper` | Goalkeeper interception - two sightings, an EKF, one servo | 1,376 KB | - |
+| `/explore` | The whole portfolio as a world you fly through, in the real FYP quad | 1,487 KB | 766 KB (`fyp-drone` + `city`) |
+| `/explore/lab` | The portfolio as a room with a console, flown in the real FYP quad | 1,476 KB\* | 3,429 KB (`lab` + `fyp-drone`) |
 
-Content routes are unchanged at 462–475 KB. `/` gained only a link.
+\* Measured 2026-09-24, before the 2026-09-30 CAD commit added `AirframeModel`, `LabCraft` and
+part selection. Re-run the harness before quoting these. **`/explore/lab` is ≈4.9 MB against the
+5 MB budget** - there is no room for another asset in that scene.
 
-**Currently working on:** Phase 3 landed on 2026-08-23, out of order, because the first
-real meshes arrived. `assets/raw/` → `npm run assets:build` → `public/models/`, wired to CI.
-Both models are placed in `/explore`: the VT-802 is the craft you fly, in full PBR with a
-generated environment map, and the quadcopter is parked scenery in the schematic language.
-The world has a ground - a stylised city plate under the procedural skyline - and there is
-now a second scene on the route: `/explore/lab`, an interior you fly a small drone around,
-with a console that lists and opens every project. `/lab` is untouched and stays procedural
-(see the Decision Log for why). Phase 5 code is written and its failure paths are tested. What
-is left there is account work only - running the SQL, setting two env vars in Vercel, deploying
-the notification function, adding two GitHub secrets. Step-by-step in
-[`PHASE-5-SUPABASE.md`](./PHASE-5-SUPABASE.md).
+Content routes: 464 KB (2026-09-24), no three.js. `/` pulls no GLB.
 
-**Next up: Phase 8 - Design architecture** (8.1 started 2026-08-24), added 2026-08-24 after a study of three
-reference sites. The site is functional but does not read as one thing: `/explore` and `/lab`
-speak a console language the content routes do not. Phase 8 closes that gap and runs *before*
-Phase 6, since gating a design that has not been built yet is worthless. Rules in
-[`DESIGN-LANGUAGE.md`](./DESIGN-LANGUAGE.md).
+**Where things stand (2026-10-01).** Phases 0, 3, 4 and 8 are done; Phase 7 is dropped. The site
+moved from Vercel to **Cloudflare Workers** on 2026-09-24 ([`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md))
+and lives at `sansikawaduge.dev`. Since then: every project write-up rewritten, ACL and core
+banking added and the RoboGames write-up expanded (2026-09-26); a first-visit splash, a slow-navigation
+loader and CMU Typewriter for cards, tags and buttons (2026-09-26); and **the real FYP drone CAD**
+(2026-09-30) - `/lab` draws it with selectable parts, `/explore/lab` and (since 2026-10-01) `/explore` fly it with spinning props,
+and `src/lib/drone.ts` plus the drone write-up now follow its measurements. Decision Log, 2026-09-30.
 
-**The Android pass passed on 2026-08-24**, which closes Phase 4 and unblocks Phase 9. What is
-left from earlier phases is the scout CAD swap-in (Phase 2) and the Supabase account work
-(Phase 5).
+**Next up, in order:**
+
+1. **Phase 9** - close 9.1 (readout covers the jump buttons), then 9.3 (one kiosk at one zone, fly
+   it, then decide the arena) and 9.4 (zone text as real DOM on the screens). Kiosks go in
+   `/explore`; `/explore/lab` has no payload headroom.
+2. **Phase 6** - the launch gate: accessibility, a bundle-size/Lighthouse gate, cross-browser incl.
+   iOS Safari, link-preview cards, CV and LinkedIn.
+3. **Leftovers** - Phase 5 hygiene (probe rows, bad-key test in local workerd, record a live
+   submission), the Phase 2 scout CAD, Phase 0/1 phone read-through, and the real-device checks
+   owed by 8.10, 9.0 and 9.2 (do them in one sitting on the mid-range Android).
 
 **Resolved 2026-08-24:** both addresses are real - `sansikawaduge@` is the professional one
 and `sansikasuhan5@` the personal one. The site now uses the professional address everywhere
@@ -91,7 +94,7 @@ These are settled. Changing one means updating this file and noting why in the D
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Hosting | ~~Vercel (Hobby)~~ **Cloudflare Workers** (free), via OpenNext - since 2026-09-24 | Static-first unchanged: prerendered pages are served as Worker assets, only `/api/contact` executes. Runbook: [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md). The Vercel Hobby non-commercial clause no longer binds the site. |
+| Hosting | ~~Vercel (Hobby)~~ **Cloudflare Workers**, via OpenNext - since 2026-09-24. Workers Paid ($5/mo) bought for September 2026 after the prefetch storm; Free vs Paid is open in Phase 6 | Static-first unchanged: prerendered pages are served as Worker assets, only `/api/contact` executes. Runbook: [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md). The Vercel Hobby non-commercial clause no longer binds the site. |
 | Framework | **Next.js (App Router), static export where possible** | SSG gives real HTML for SEO/ATS scraping; good R3F support. *Reversible in Phase 0 only* - Vite + a prerender step is the alternative. |
 | 3D | react-three-fiber + drei | Same three.js engine, declarative, `<Suspense>` asset loading. |
 | Content source | MDX/JSON committed in repo | Zero runtime DB dependency on the render path. Cannot break. |
@@ -118,8 +121,8 @@ These are settled. Changing one means updating this file and noting why in the D
 - [x] `git init`, push to GitHub (public - it's a portfolio artifact in itself)
 - [x] Scaffold Next.js + TypeScript + Tailwind
 - [x] Add ESLint + Prettier
-- [x] Connect repo to Vercel, confirm push-to-deploy works
-- [ ] Verify the preview URL loads from a phone
+- [x] Connect repo to Vercel, confirm push-to-deploy works *(moved to Cloudflare Workers Builds on 2026-09-24 - same push-to-deploy; [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md))*
+- [ ] Verify the site loads from a phone - now `sansikawaduge.dev`
 - [x] Commit `ARCHITECTURE.md` and `PLAN.md` to the repo
 
 **Done when:** a trivial change pushed to `main` is live on `*.vercel.app` within ~2 minutes.
@@ -163,9 +166,13 @@ specs, what it's wired to, and its honest build status. Wireframe/instrument sty
 site accent. Reached from the drone project write-up, not from the main nav, so the reading
 path stays clean.
 
-**Geometry:** generated procedurally from primitives in `src/components/lab/Airframe.tsx`,
-not loaded from a mesh file. Costs kilobytes rather than megabytes, needs no asset pipeline,
-and stays editable as code as the real build changes.
+**Geometry: the build's own CAD, since 2026-09-30.** `src/components/lab/AirframeModel.tsx`
+renders `fyp-drone-parts.glb` - built from the Fusion export `Drone_5_2205` - through
+`SchematicModel`. The six markers in `src/lib/drone.ts` are part centres measured from the CAD,
+and selecting one lights that part's geometry, fades the rest and flies the camera to it. The
+procedural `Airframe.tsx` is kept as the Suspense fallback. It was procedural until then because
+no CAD of *this* build existed (Decision Log 2026-08-21, 2026-08-23); once one did, the reason
+was gone. **When the CAD changes, re-measure the marker positions and the specs together.**
 
 - [x] Decide the concept - Airframe Explorer, documented above
 - [x] Install `three`, `@react-three/fiber`, `@react-three/drei`
@@ -181,7 +188,11 @@ and stays editable as code as the real build changes.
       passed" is a verdict, and a number is evidence.*
 - [ ] Drop the real scout CAD in when it is exported - swap-in point documented in
       `ScoutModel.tsx`. The pipeline is live now: add it to `ASSETS` in
-      `scripts/build-assets.mjs` and render it through `SchematicModel`, as `/explore` does
+      `scripts/build-assets.mjs` and render it through `SchematicModel`, as `/lab` now does
+- [x] **The real FYP CAD in `/lab` and `/explore/lab`** (2026-09-30). Converter
+      `scripts/obj-to-glb.mjs` (run once by hand; the 229 MB OBJ stays out of git), part map
+      `scripts/fyp-drone.parts.mjs`, one raw source and two builds - `fyp-drone.glb` (PBR, flown
+      in the room) and `fyp-drone-parts.glb` (schematic, `/lab`)
 
 **On the model looking like bare lines:** that is the intended styling, not a missing
 texture. Every mesh is `meshBasicMaterial` at 18–35% opacity with a drei `<Edges>` overlay
@@ -276,7 +287,7 @@ steps, each with a way to check it worked.
 - [x] **RLS on. Insert-only for `anon`. No select.** Grants revoked and handed back
       *column-level* (`name, email, message, source`) so `id` and `created_at` cannot be
       forged either
-- [x] Form submission via Vercel Function - `src/app/api/contact/route.ts`, plain `fetch`
+- [x] Form submission via a server route - `src/app/api/contact/route.ts` (a Vercel Function until 2026-09-24, now the Cloudflare Worker), plain `fetch`
       to PostgREST, no `@supabase/supabase-js`
 - [x] Spam mitigation - honeypot, minimum fill time, in-memory sliding window on a hashed
       IP. Limits documented honestly in the runbook
@@ -315,12 +326,19 @@ steps, each with a way to check it worked.
       own, and neither `.env.local` nor Vercel's environment variables reach a runner
 - [x] **The two Vercel env vars, Production (2026-09-04)** - end-to-end proven: a message
       sent through the deployed form landed in `contacts`. The form is live
-- [ ] Add the same two variables to **Preview and Development** - needed before the
-      bad-key test, which otherwise fails for want of any configuration at all
+- [x] **Worker secrets on Cloudflare (2026-09-24)** - `SUPABASE_URL`, `SUPABASE_ANON_KEY` in
+      the Worker's top-level Variables and Secrets, not the Build panel (the trap that cost a
+      503 that day). Verified in local workerd. [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md) §Secrets
+- [ ] ~~Add the same two variables to Preview and Development~~ - **obsolete since the Cloudflare
+      move.** One Worker, one set of runtime secrets; locally they come from `.dev.vars`
+- [ ] Record one live submission on `sansikawaduge.dev` since the move - the end-to-end proof
+      above was on Vercel. One request is enough; test locally first
 - [x] Discord webhook created, notify function deployed with its two secrets, database
       webhook wired at timeout 5000 (2026-09-04) - a submission now reaches the channel
       within seconds of hitting the table
-- [ ] Repeat the bad-key test once on a real preview deployment
+- [ ] Run the bad-key test **in local workerd**: wrong `SUPABASE_ANON_KEY` in `.dev.vars`,
+      `npm run preview`, submit. Not on the live Worker - a dashboard or `wrangler secret put`
+      change deploys to production at once and would break the real form. Runbook §5
 
 > Neither this container nor the desktop sandbox can reach `*.supabase.co`. Everything
 > known about the live project came from Suhan running `npm run verify:supabase` and
@@ -328,8 +346,8 @@ steps, each with a way to check it worked.
 
 **Done when:** the form works, *and* the site is still perfect with Supabase fully down.
 First half met 2026-09-04 - stored and notified, end to end. Second half is verified against a
-stubbed PostgREST and an unconfigured deployment but **not yet on a real preview**, which is the
-one remaining item that actually proves the claim.
+stubbed PostgREST and an unconfigured deployment but **not yet in the Worker runtime** (local
+workerd counts - it is the same runtime), which is the one remaining item that proves the claim.
 
 ---
 
@@ -343,7 +361,11 @@ one remaining item that actually proves the claim.
 - [ ] Cross-browser: Chrome, Firefox, Safari (incl. iOS Safari - the usual WebGL offender)
 - [ ] OpenGraph/Twitter cards render correctly when the link is pasted into LinkedIn/WhatsApp
 - [ ] Privacy: no analytics that needs a cookie banner, or use a cookieless one
-- [ ] Confirm Vercel Hobby non-commercial framing is respected
+- [ ] ~~Confirm Vercel Hobby non-commercial framing is respected~~ - obsolete: off Vercel since 2026-09-24
+- [x] Custom domain attached - in `wrangler.jsonc` `routes`, so a deploy cannot detach it
+- [ ] Workers plan: Paid ($5/mo) was bought for September 2026 after the prefetch storm. The storm
+      is fixed (cache interception off), so decide whether to drop back to Free - §2 says $0/mo
+- [ ] Delete the Vercel project, then `vercel.json` ([`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md) §Leftovers)
 - [ ] Update CV and LinkedIn with the new URL
 
 **Done when:** the URL is on your CV.
@@ -677,7 +699,9 @@ replacing the plain lift-and-fade exit.*
       `animation-timeline`, no mascot **and no sprite download** (the image is only named
       inside that media query). `aria-hidden`. Particle dust unchanged
 - [ ] The rotors do not turn - the model is one merged mesh (see `DroneModel.tsx`). Fixing it
-      upstream would also let the sprite show prop blur
+      upstream would also let the sprite show prop blur. **The fix is proven on the FYP quad
+      (2026-09-30):** props as named nodes with a `spinPivot` in extras, `keepNamed` on the
+      join. The VT-802 needs the same re-export
 - [ ] Look at it on real hardware: sprite sharpness is 1.65× at 100 CSS px, a touch soft on a
       3× phone - though phones never see it
 
@@ -967,9 +991,11 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date - decision - why.
 
+- **2026-10-01** - **/explore flies the FYP quad too; the VT-802 is retired from the scenes.** Suhan's call: both worlds now fly the airframe actually being built. `DroneModel.tsx` renders the same `fyp-drone.glb` as `/explore/lab`, at the VT-802's 2.4 m span (the real quad is 0.33 m, but the 120-unit world, chase camera, zone radii and the procedural fallback were all tuned around a craft that size), with **no rotation** - `obj-to-glb.mjs` already exports it nose along −Z - and the props spinning. `/explore` models 437 → 766 KB, comfortably inside budget, and a visitor who goes on to `/explore/lab` finds the GLB already cached. **The home mascot stays the VT-802** (Suhan, explicitly): its sprite is a separate pre-rendered image and was not re-rendered. `vt-802.glb` keeps its pipeline entry but has no caller in a scene now. **The home portal poster was re-shot the same day** (it still showed the VT-802): `next start` + headless Chromium/SwiftShader on `/explore`, every DOM overlay over the canvas hidden, full canvas captured via CDP with the clip offset by the page scroll, cropped 1314×470 from y=138 and encoded at WebP q72.
+
 - **2026-09-30** - **Selecting a component on /lab lights that part's own geometry, fades the rest and flies the camera to it.** Needs the CAD split into components, which the Fusion export does not name (Body1, Body1:2 ...), so `scripts/fyp-drone.parts.mjs` sorts bodies by position and material; the converter tags vertices with `_PART` through weld and simplify (decimation unchanged) and splits into `part-<id>` nodes after. One raw source, two builds: `fyp-drone.glb` (PBR, the lab room) clears the part names so `join` merges them - still 13 draw calls; `fyp-drone-parts.glb` (schematic, /lab) keeps them - 11 meshes, **214 KB**, so /lab now downloads a third of what it did an hour earlier. New `keepNodes` regex per asset in build-assets.mjs replaces `keepNamed`. Lit part: brighter fill, full edges with depth test off so a part inside the frame (the flight controller) still reads; faded parts stop writing depth so they cannot hide it. No real blur - a post-processing pass would add bundle weight to fade a schematic that already fades well. Camera: eases to the part and lets go the moment the visitor drags; the frame and motors span the craft, so they carry a `focus` target/distance in drone.ts instead of zooming onto one arm. Reduced motion snaps both.
 - **2026-09-30** - **The CAD is the reference for the drone, and the copy follows it.** Suhan confirmed the Fusion model (`Drone_5_2205`) is correct and accurate. Where src/lib/drone.ts and the project write-up disagreed with it, they were changed to match: propulsion is **2205 motors on 5 in three-blade props in printed Nylon 12 ducts** (not AIR 2216/KV920; RS2205 2300 KV is the shortlisted part), motor spacing 172 × 141 mm, the battery pack is placed (102 × 34 × 33 mm, top, aft - status Undecided → Designed, capacity still open), and a 30 × 30 mm flight-controller stack is reserved under the bottom plate. Every dimension quoted was measured from the CAD, not estimated. When the CAD changes, re-measure the marker `position`s and these specs together.
-- **2026-09-30** - **/lab's Airframe Explorer draws the real CAD, reversing the 2026-08-23 "keep the procedural airframe" call.** That call rejected a mesh because a stock drone would make every callout point at a stranger's airframe; this is the airframe being built, so the reason is gone. Same fyp-drone.glb as the lab room, through `SchematicModel` (unlit fill + 30° edges), so the page keeps its instrument language; props spin via the same `spinPivot` mechanism. Rendered at scale 1 (span = the built bbox, 0.3314 m) and turned π about Y to keep this page's nose-on-+Z convention, so the six `position`s in src/lib/drone.ts are measured part centres from the CAD, not placements. The procedural `Airframe` is now the Suspense fallback. Camera pulled in (the quad is 33 cm; the primitives spanned ~50 cm). /lab gains ~746 KB of model. Also: `.open-next/`, `.wrangler/` and `_to_delete/` added to ESLint ignores - the Cloudflare build output had been linted since the hosting move, burying real findings under ~17k generated ones.
+- **2026-09-30** - **/lab's Airframe Explorer draws the real CAD, reversing the 2026-08-23 "keep the procedural airframe" call.** That call rejected a mesh because a stock drone would make every callout point at a stranger's airframe; this is the airframe being built, so the reason is gone. Same fyp-drone.glb as the lab room, through `SchematicModel` (unlit fill + 30° edges), so the page keeps its instrument language; props spin via the same `spinPivot` mechanism. Rendered at scale 1 (span = the built bbox, 0.3314 m) and turned π about Y to keep this page's nose-on-+Z convention, so the six `position`s in src/lib/drone.ts are measured part centres from the CAD, not placements. The procedural `Airframe` is now the Suspense fallback. Camera pulled in (the quad is 33 cm; the primitives spanned ~50 cm). /lab gains ~746 KB of model *(superseded the same day: `/lab` loads the parts build, `fyp-drone-parts.glb`, 214 KB - see the entry above)*. Also: `.open-next/`, `.wrangler/` and `_to_delete/` added to ESLint ignores - the Cloudflare build output had been linted since the hosting move, burying real findings under ~17k generated ones.
 - **2026-09-30** - **/explore/lab flies the real FYP quad; /explore keeps the VT-802.** Suhan supplied the Fusion export (OBJ/MTL - Autodesk writes no glTF): 229 MB, 1.62 M triangles, 2,280 bodies, 83 appearances. `scripts/obj-to-glb.mjs` converts it once by hand into `assets/raw/fyp-drone.glb` (2.5 MB); the OBJ stays out of git. Four calls in it that are not obvious: (1) **CAD normals are dropped before simplifying and rebuilt after with a 35° crease** - kept, they are attribute seams meshopt will not collapse across, and the quad floored at ~290k triangles at any budget; without them it reaches the target with no visible change. (2) **Error 0.006, not higher** - at 0.015 the lattice prop guards tore into ragged strips. (3) **Appearances merged by colour and area** (83 → 9 + props), because each survives the pipeline as a draw call. (4) **Flipped about the nose axis** - the model's +Z is down in flight (Suhan). The props are named nodes with a `spinPivot` in extras and `keepNamed: true` on the pipeline's join, so they are the first modelled rotors on the site that turn; the pivot must travel as data because `quantize` moves every node's origin to its bbox centre, 1.5 cm off the shaft. Built: 746 KB, 47,502 triangles (the pipeline's simplify is a no-op by design), 13 draw calls. Lab 3D payload 3,100 → ~3,436 KB of models (≈4.9 MB with JS - under the 5 MB line, barely; raising `SIMPLIFY_ERROR` past ~0.008 to buy room tears the guards); ~139k triangles on screen with the room. vt-802's preload moved out of LoadedModel.tsx into DroneModel.tsx so the lab no longer downloads a craft it does not show.
 - **2026-09-26** - **A first-visit splash, overriding DESIGN-LANGUAGE rule 5 on purpose.** Suhan's call, made knowing the rule. The Chip Cut logo assembles (ring draws, package fades in, blade slashes, halves part, name rises) and the overlay fades at 1.4 s. It runs once per browser-tab session: an inline <head> script (`SPLASH_SCRIPT` in `components/Splash.tsx`) checks sessionStorage and sets `data-splash` on <html> before first paint, so there is no flash and no hydration dependency. With JavaScript off, for crawlers, and on every later load in the tab, it never appears; under reduced motion the finished logo shows for 0.7 s instead of animating. The page underneath renders normally, so the content is in the DOM from the start. **Slow navigations get a separate overlay** (`components/NavigationLoader.tsx`), not `app/loading.tsx`: every content route is static and prefetched, so the App Router either swaps instantly or, when the payload is late (cold Worker, slow network, dev compile), holds the old page with no feedback - measured, a route loading boundary never rendered. The overlay watches the internal link click instead, stays invisible for 500 ms, never takes pointer events and gives up after 12 s.
 - **2026-09-24** - **OpenNext cache interception is off: it caused a prefetch storm.** 654,500 Worker requests in a day (Free limit 100,000) from 248 page views. Interception answered Next 16's per-segment prefetches with whole-page payloads, so the router re-requested every in-view link ~15×/s per open tab. Off, the Next handler serves the same prebuilt cache correctly: an idle tab dropped from ~3,500 requests/min to 29 total, measured in local workerd. Rule going forward (Suhan's): test locally first, keep calls to the deployed site to a minimum.
@@ -1059,7 +1085,7 @@ Append here whenever a non-obvious call gets made. Format: date - decision - why
 - **2026-08-21** - System font stack instead of `next/font` + Inter. Saves a network round trip and eliminates font-driven layout shift, against a strict performance budget. `src/app/layout.tsx` documents the switch back.
 - **2026-08-21** - Theme state lives in the DOM (`data-theme` attribute), not React state. A synchronous inline script sets it before first paint; the toggle reads and writes the attribute and CSS picks the icon. No flash, no hydration mismatch, no mount effect.
 - **2026-08-21** - 3D scene is an **interactive drone schematic on its own `/lab` page**, linked from the drone write-up rather than sitting in the nav. Content pages stay pure text and fast; three.js loads on one route only.
-- **2026-08-21** - Airframe geometry is **procedural, not a CAD import**. The intended source (Stanford MSL TrajBridge) turned out to have no CAD at all - it's a PX4↔ROS 2 bridge. The hardware CAD lives in `StanfordMSL/msl_quad`, is SolidWorks-only (`.SLDPRT`/`.SLDASM`) for every structural part, and describes an F330 frame with an Odroid XU4 - not this build. Procedural geometry is smaller, needs no conversion, no licence question, and is honestly *this* aircraft.
+- **2026-08-21** - *(Superseded 2026-09-30, once the build's own Fusion CAD existed.)* Airframe geometry is **procedural, not a CAD import**. The intended source (Stanford MSL TrajBridge) turned out to have no CAD at all - it's a PX4↔ROS 2 bridge. The hardware CAD lives in `StanfordMSL/msl_quad`, is SolidWorks-only (`.SLDPRT`/`.SLDASM`) for every structural part, and describes an F330 frame with an Odroid XU4 - not this build. Procedural geometry is smaller, needs no conversion, no licence question, and is honestly *this* aircraft.
 - **2026-08-21** - Auto-rotation stops permanently on first pointer interaction. Found while testing: a slowly drifting model makes the hotspots genuinely hard to hit, especially on touch.
 - **2026-08-21** - Hotspot markers use fixed screen size (no `distanceFactor`) with leader lines back to the component. Perspective-scaled markers shrank to untappable sizes and piled up on each other.
 - **2026-08-22** - The contact API route uses the **anon key, not the service role key**, and talks to PostgREST with plain `fetch`. The anon key plus insert-only RLS is exactly the authority the endpoint needs; a service role key would let it read every message ever sent, for no benefit. `@supabase/supabase-js` would have added ~100 KB to the function bundle to save four lines.
@@ -1073,7 +1099,7 @@ Append here whenever a non-obvious call gets made. Format: date - decision - why
 - **2026-08-22** - The ASCILAM visualisation shows **2D scans accumulating into an occupancy grid**, not a point cloud. The scouts carry RPLiDAR A1 / STL-19P - 2D sensors - and the coordinator fuses occupancy grids. A 3D point cloud would have looked better to a general viewer and implied hardware that does not exist. The log-odds grid at 5 cm is what the real system actually produces.
 - **2026-08-22** - The SLAM arena models **odometry drift explicitly**, and each scout files its scans at its *believed* pose. That one detail generates the whole demonstration: self-consistent-but-wrong local maps, two ghosts that refuse to align when overlaid, and a fused map that means something. Drift is seeded, not random - the unaligned view is a teaching illustration and must not occasionally come out looking nearly correct.
 - **2026-08-23** - Phase 3 **unparked and completed**, still out of order, because two real `.glb` files arrived. The parked note said "unpark the moment a real `.glb` needs to ship"; it did, so it was.
-- **2026-08-23** - **`/lab` keeps its procedural airframe.** The obvious move was to swap the new quadcopter mesh in, and it was wrong. `Airframe.tsx` is a dimensioned model of *this* build - the Jetson block is 100 × 79 mm because that is the Orin Nano carrier, and there is a frustum drawn at the Gemini 336's real 90° × 65° FOV. The six hotspots in `drone.ts` sit at those component coordinates. The new mesh is a generated ducted hobby quad with prop guards and a strapped LiPo; nothing on it corresponds to any of that, so "NVIDIA Jetson Orin Nano 8GB" would point at a stranger's airframe. Same reasoning as the 2026-08-21 CAD-import decision: the procedural one is honestly this aircraft.
+- **2026-08-23** - *(Superseded 2026-09-30 - see that day's entry.)* **`/lab` keeps its procedural airframe.** The obvious move was to swap the new quadcopter mesh in, and it was wrong. `Airframe.tsx` is a dimensioned model of *this* build - the Jetson block is 100 × 79 mm because that is the Orin Nano carrier, and there is a frustum drawn at the Gemini 336's real 90° × 65° FOV. The six hotspots in `drone.ts` sit at those component coordinates. The new mesh is a generated ducted hobby quad with prop guards and a strapped LiPo; nothing on it corresponds to any of that, so "NVIDIA Jetson Orin Nano 8GB" would point at a stranger's airframe. Same reasoning as the 2026-08-21 CAD-import decision: the procedural one is honestly this aircraft.
 - **2026-08-23** - ~~Both models render schematic, not textured~~ - **revised the same day.** The rule now applies to *scenery only*: the world stays unlit fill plus edges, and the craft you fly is the single PBR object in it. That contrast turns out to do the work the uniform version was trying to do - the one real thing in a drawing of a place is exactly where a visitor's eye should go, and the craft is what they are steering. Scenery still gets textures deleted, which is still where its 99.9% reduction comes from.
 - **2026-08-23** - The **VT-802 flies, the quadcopter parks** - the reverse of the first arrangement. The VT-802 has an asymmetric silhouette that reads as a heading from behind, hull markings worth seeing up close, and separately-authored materials; the ducted quad is four-way symmetric and needed a bolted-on nose cone to be flyable at all. Putting the more legible craft under the visitor's hands and the simpler one on the ground was the right way round.
 - **2026-08-23** - The craft is **PBR with a generated environment map**, and those are one decision, not two. Metal reflects its surroundings and emits nothing of its own, so a metallic material with no environment renders very nearly black however many lamps you point at it. `RoomEnvironment` prefiltered through `PMREMGenerator` is procedural geometry - code, not a downloaded HDR - so it costs zero bytes on the wire and cannot fail to load, which matters on a site whose architecture is "nothing on the render path can break". The two directional lights on top are for *shape*, not brightness: the environment alone lights the hull evenly, which is legible but flat and makes attitude hard to read while flying.
@@ -1172,6 +1198,12 @@ _Record asset sizes, Lighthouse scores, and fps measurements here as you go - be
 | 2026-09-24 | **Per-route JS after 8.8** (8.3 + 8.8, fresh build) | `/` 464 · `/projects` 464 · case studies 464 · `/about` 464 · `/contact` 464 · `/lab` **1,411** · `/lab/sobel` 477 · `/lab/ascilam` **1,397** · `/lab/keeper` 1,376 · `/explore` 1,478 + 437 models · `/explore/lab` 1,476 + 3,100 models KB |
 | 2026-09-24 | Same harness, last commit (before 8.3/8.8) | content 462 · `/lab` 1,409 · `/lab/ascilam` 1,396 · `/lab/keeper` 1,374 - so 8.3 costs **+2 KB on every route** |
 | 2026-09-24 | Emitted CSS after 8.3 + 8.8 | 48,651 B; `--measure` and `--color-*` confirmed absent, `--t-page` / `--ease-console` present |
+| 2026-09-30 | `Drone_5_2205` Fusion export → `assets/raw/fyp-drone.glb` (`obj-to-glb.mjs`) | 229 MB OBJ, 1.62 M triangles, 2,280 bodies, 83 appearances → **2.5 MB** |
+| 2026-09-30 | `fyp-drone.glb`, `pbr` profile (`/explore/lab`) | **739 KB**, 47,706 triangles, 13 draw calls |
+| 2026-09-30 | `fyp-drone-parts.glb`, `schematic` profile (`/lab`) | **214 KB**, 11 part meshes |
+| 2026-09-30 | `/explore/lab` models | lab 2,690 KB + fyp-drone 739 KB = **3,429 KB**; ≈4.9 MB with JS, against 5 MB |
+| 2026-10-01 | Portal poster re-shot with the FYP quad | 1200 px WebP **10,070 B** · 700 px WebP **4,378 B** |
+| 2026-10-01 | `/explore` models after the craft swap | fyp-drone 739 KB + city 27 KB = **766 KB** (was 437 KB with the VT-802) |
 | 2026-08-23 | Environment candidates rejected on measurement | `a_metaverse_bar` floors at 400k tris / 7.1 MB; `sci_fi_hallway` 402 MB source, over GitHub's 100 MB file limit; `scifi_room_interior` 170–262 KB but an interior |
 
 Measured by loading each route from `next start` in headless Chromium and summing JS

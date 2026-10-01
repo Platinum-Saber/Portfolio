@@ -1,7 +1,7 @@
 # Portfolio - Suhan Waduge
 
-Personal portfolio site. Robotics and embedded systems work, with a 3D interactive layer
-planned on top of a static-first core.
+Personal portfolio site - robotics and embedded systems work, with an interactive 3D layer
+(`/lab`, `/explore`) on top of a static-first core. Live at <https://sansikawaduge.dev>.
 
 ## Documentation
 
@@ -22,9 +22,10 @@ Everything except this file lives in [`docs/`](./docs).
 | Framework | Next.js (App Router), fully prerendered |
 | Styling | Tailwind CSS v4, CSS custom properties for theming |
 | Content | MDX files in `content/projects/`, parsed with `gray-matter` |
-| Hosting | Vercel |
-| 3D *(phase 2)* | react-three-fiber + drei |
-| Database *(phase 5)* | Supabase - contact form only, never on the render path |
+| Hosting | Cloudflare Workers via OpenNext (moved from Vercel 2026-09-24) |
+| 3D | react-three-fiber + drei, three.js confined to `/lab` and `/explore` routes |
+| 3D assets | `assets/raw/` → `npm run assets:build` (gltf-transform, meshopt, WebP) → `public/models/` |
+| Database | Supabase - contact form only, never on the render path |
 
 ## Local development
 
@@ -32,6 +33,8 @@ Everything except this file lives in [`docs/`](./docs).
 npm install
 npm run dev      # http://localhost:3000
 npm run build    # production build
+npm run preview  # build + run in local workerd - the real Worker runtime
+npm run assets:build   # rebuild public/models from assets/raw
 npm run lint
 ```
 
@@ -62,9 +65,10 @@ generated from the file - nothing else to register.
 ## Notable decisions
 
 - **No `output: 'export'`.** Every page is statically prerendered anyway, but keeping the
-  default output leaves room for the Vercel Function the phase 5 contact form needs.
-- **System font stack, not a webfont.** Zero network requests and no layout shift, which
-  matters against the performance budget. `src/app/layout.tsx` documents how to switch.
+  default output leaves room for the one server route, `/api/contact`, which runs in the Worker.
+- **System font stack for reading, one self-hosted face for chrome.** Body text uses the
+  system stack - zero requests, no layout shift. Cards, tags and buttons use CMU Typewriter
+  Text Light, self-hosted and subset (`public/fonts/`, SIL OFL), since 2026-09-26.
 - **Theme in the DOM, not React state.** A synchronous inline script sets `data-theme`
   before first paint; the toggle reads and writes that attribute. No flash, no hydration
   mismatch.

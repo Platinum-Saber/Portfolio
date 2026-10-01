@@ -92,6 +92,13 @@ then silence) with it off; `next start` makes the same 29.
 leave it idle for a minute, and count requests in the wrangler log. Tens is right; thousands
 is this bug.
 
+## Plan
+
+Workers Free (100,000 requests/day) at launch. The prefetch storm took day one to 654,500, so
+**Workers Paid** ($5/month, 10M requests/month) was bought for September 2026. With interception
+off, normal traffic sits far inside Free; whether to drop back is an open Phase 6 item in
+[`PLAN.md`](./PLAN.md).
+
 ## Checks after a deploy
 
 - `/`, `/projects`, a case study, `/explore` → 200 HTML, not `text/plain` 500
@@ -123,5 +130,4 @@ is this bug.
 - `vercel.json` can go once the Vercel project is deleted; it does nothing on Cloudflare.
 - The Vercel project's env vars and the old `*.vercel.app` URL - delete the project when the
   Cloudflare URL is confirmed.
-- The custom domain (Phase 6) is simpler here: if the domain's DNS is on Cloudflare, attach it
-  under Settings → Domains & Routes.
+- ~~The custom domain~~ - done: `sansikawaduge.dev`, see §Custom domain above.

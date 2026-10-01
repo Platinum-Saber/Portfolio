@@ -5,6 +5,13 @@
 **Stated constraints:** free tier only · global recruiter audience · backend needed for ML/CV demos and a 3D asset pipeline
 **Build plan and current phase:** [`PLAN.md`](./PLAN.md) · **Visual rules:** [`DESIGN-LANGUAGE.md`](./DESIGN-LANGUAGE.md)
 
+> **Status note (2026-10-01).** This is the original 2026-08-21 assessment, kept as written for
+> its reasoning. What has moved since: hosting is **Cloudflare Workers** via OpenNext, not
+> Vercel, since 2026-09-24 ([`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md)); the domain is
+> `sansikawaduge.dev`; and 3D textures ship as WebP, not KTX2 (measured - see `PLAN.md`). Where
+> this document says Vercel, read "the static host"; the static-first argument is unchanged.
+> Current decisions live in `PLAN.md` §2.
+
 ---
 
 ## 1. Verdict up front

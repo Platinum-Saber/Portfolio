@@ -16,14 +16,22 @@ Ticked off as of 2026-09-04. **The contact form is fully working**: a
 submission is stored and lands in Discord seconds later. What is left is
 hygiene, not function.
 
+> **Hosting moved to Cloudflare Workers on 2026-09-24.** The Supabase side below is unchanged.
+> Everything that said Vercel - env vars, redeploys, logs, `vercel.json` - is now covered by
+> [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md). The Vercel passages are kept as history and
+> marked as such.
+
 - [x] **1. Create the table** - both migrations applied.
-- [x] **2. Point the site at the project** - Production only; Preview and
-      Development still to tick, and §5 needs Preview.
+- [x] **2. Point the site at the project** - Worker secrets since 2026-09-24
+      (`DEPLOY-CLOUDFLARE.md` §Secrets). Preview/Development no longer applies:
+      one Worker, one secret set. A live submission since the move is still to
+      be recorded.
 - [x] **2b. Deployment settings** - `vercel.json` pins `"framework": "nextjs"`.
+      *(Vercel only - obsolete on Cloudflare.)*
 - [x] **3. Notification** - Discord, end to end. Resend was swapped out; §3
       says why and §3d says how to go back.
 - [x] **4. Keep-alive** - green as of run #9.
-- [ ] **5. Prove the failure path** - five minutes, worth it.
+- [ ] **5. Prove the failure path** - in local workerd now, five minutes.
 - [ ] **Clear the probe rows** - `verify:supabase` has run, so there are rows
       to clear.
 
@@ -70,6 +78,9 @@ something else created it - drop it.
 > can never read back, which is exactly what the endpoint needs and nothing
 > more. If a future session suggests "upgrading" to the service role key to fix
 > something, the actual bug is elsewhere.
+
+> **On Cloudflare now:** set both as Worker secrets - `DEPLOY-CLOUDFLARE.md`
+> §Secrets. The Vercel steps below are the 2026-09-04 history.
 
 **Vercel → your project → Settings → Environment Variables.** Add both, for
 Production, Preview and Development.
@@ -122,7 +133,8 @@ Then send yourself a real message through the deployed form - the row should
 appear in the Table Editor. **Confirmed 2026-09-04.**
 
 **If the panel persists**, the function logs say which of the three failure
-branches fired. Vercel → **Logs**, filtered to `/api/contact`:
+branches fired. Worker logs (Workers & Pages → portfolio → **Logs**; was Vercel
+→ Logs), filtered to `/api/contact`:
 
 | What you see | What it means |
 | --- | --- |
@@ -130,11 +142,11 @@ branches fired. Vercel → **Logs**, filtered to `/api/contact`:
 | `[contact] insert failed: 401 …` | They arrived; Supabase refused the key. Usually a stray space or newline in the pasted JWT. |
 | `[contact] insert threw: … TimeoutError` | The 6 s abort fired - the project is paused or unreachable. |
 
-Silence means Vercel, a log line means Supabase.
+Silence means the host (secrets not reaching the Worker), a log line means Supabase.
 
 ---
 
-## 2b. Deployment settings
+## 2b. Deployment settings *(Vercel - history)*
 
 The build failing with **`No Output Directory named "public" found`** does not
 mean the build failed - read the log again and `next build` completed fine, all
@@ -359,15 +371,20 @@ early warning that the project has paused.
 ## 5. Prove the failure path deliberately
 
 This is the part people skip, and it is the part the whole design is for. Do it
-once, on a preview deployment, and you will know the site cannot be taken down
-by its own database.
+once, in the Worker runtime, and you will know the site cannot be taken down by
+its own database.
 
-1. In Vercel, change `SUPABASE_ANON_KEY` on a **Preview** environment to
-   `deliberately-wrong`, and redeploy the preview.
-2. Submit the form on the preview URL.
-3. You should get a calm paragraph and an **Open this message in my mail app**
-   button, prefilled with what you typed. No error text, no red, nothing lost.
+1. In `.dev.vars`, set `SUPABASE_ANON_KEY=deliberately-wrong` (keep the real URL).
+2. `npm run preview` - the real Worker runtime (workerd), locally.
+3. Submit the form at the local URL. You should get a calm paragraph and an
+   **Open this message in my mail app** button, prefilled with what you typed.
+   No error text, no red, nothing lost.
 4. Put the key back.
+
+> **Not on the live Worker.** A secret changed in the dashboard or with
+> `wrangler secret put` deploys to production at once, so it would break the
+> real form for as long as the test lasts. (The Vercel-era version of this step
+> broke a Preview environment instead.)
 
 Already verified locally against a stubbed PostgREST - a 401, a 403 from RLS,
 and a hung connection all produce that same panel, the last within a six-second
@@ -397,8 +414,8 @@ where email in ('setup-check@example.com', 'probe@example.com');
 
 Written down so nobody has to rediscover it.
 
-- **The rate limit is per serverless instance.** Vercel runs several and
-  recycles them, so the real ceiling is a multiple of 3 per 10 minutes and a
+- **The rate limit is per Worker isolate** (per serverless instance, on
+  Vercel). Cloudflare runs many and recycles them, so the real ceiling is a multiple of 3 per 10 minutes and a
   cold start resets it. It stops stuck retry loops and casual abuse, not a
   determined attacker. Upgrade path if it ever matters: a `SECURITY DEFINER`
   Postgres function that counts recent inserts against a hashed IP, called

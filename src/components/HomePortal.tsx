@@ -7,7 +7,7 @@ import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
  * The final chapter of the home sequence: a console-boot panel with a still of
  * the world and one explicit action. (Its own heading was removed in 8.9 -
  * `Chapter` supplies the label now.) **Nothing 3D is in this route's graph.** The poster is two
- * pre-built WebP files (12 KB / 5 KB) and the action is a `<Link>`, so the
+ * pre-built WebP files (10 KB / 4 KB) and the action is a `<Link>`, so the
  * homepage stays exactly as heavy as it was and remains complete with WebGL
  * disabled and JavaScript off.
  *
@@ -21,7 +21,8 @@ import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
  *
  * The poster is a real frame from `/explore`, captured from the built site -
  * not an illustration. If the world changes, re-shoot it; a portal showing a
- * place that no longer exists is worse than no portal.
+ * place that no longer exists is worse than no portal. Last re-shot 2026-10-01,
+ * when /explore switched to the FYP quad.
  */
 export function HomePortal() {
   return (

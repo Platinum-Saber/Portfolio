@@ -10,16 +10,16 @@ const URL = '/models/fyp-drone.glb';
 /**
  * The craft you fly indoors: the FYP quad, from its own CAD.
  *
- * Not the VT-802 the outdoor world flies. The lab is the room the work
- * happens in, so the thing in it is the airframe actually being built - the
- * Gemini 336 bar across the nose, the Jetson stack, RS2205 motors on 5" props.
+ * The same model the outdoor world flies (`DroneModel.tsx`, since
+ * 2026-10-01), here at a size that fits the room: the airframe actually being
+ * built - the Gemini 336 bar across the nose, the Jetson stack, RS2205 motors
+ * on 5" props.
  *
  * ── Where it came from ──────────────────────────────────────────────────────
  * A Fusion OBJ export (1.6 M triangles, 83 appearances), converted by
  * scripts/obj-to-glb.mjs into assets/raw/fyp-drone.glb and then built like any
  * other asset. That script already turns it Y-up, metres, nose along −Z - the
- * direction labFlight.ts flies - so, unlike the VT-802, nothing is rotated
- * here.
+ * direction labFlight.ts flies - so nothing is rotated here.
  *
  * ── The props turn ──────────────────────────────────────────────────────────
  * They are the only modelled rotors on the site: the converter keeps them as

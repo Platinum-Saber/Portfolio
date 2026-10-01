@@ -7,7 +7,7 @@ import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
  * The final chapter of the home sequence: a console-boot panel with a still of
  * the world and one explicit action. (Its own heading was removed in 8.9 -
  * `Chapter` supplies the label now.) **Nothing 3D is in this route's graph.** The poster is two
- * pre-built WebP files (10 KB / 4 KB) and the action is a `<Link>`, so the
+ * pre-built WebP files (16 KB / 10 KB) and the action is a `<Link>`, so the
  * homepage stays exactly as heavy as it was and remains complete with WebGL
  * disabled and JavaScript off.
  *
@@ -22,7 +22,10 @@ import { ConsoleCard, ConsoleField } from '@/components/ConsoleCard';
  * The poster is a real frame from `/explore`, captured from the built site -
  * not an illustration. If the world changes, re-shoot it; a portal showing a
  * place that no longer exists is worse than no portal. Last re-shot 2026-10-01,
- * when /explore switched to the FYP quad.
+ * when /explore switched to the FYP quad. **A re-shoot gets a NEW FILENAME**
+ * (portal-<what>-<width>.webp): `/images/*` is cached for a day in browsers
+ * and at the Cloudflare edge (public/_headers), so overwriting the file in place
+ * left the live site showing the old frame.
  */
 export function HomePortal() {
   return (
@@ -32,8 +35,8 @@ export function HomePortal() {
           <div className="-mx-1 mb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/portal-1200.webp"
-              srcSet="/images/portal-700.webp 700w, /images/portal-1200.webp 1200w"
+              src="/images/portal-fyp-1200.webp"
+              srcSet="/images/portal-fyp-700.webp 700w, /images/portal-fyp-1200.webp 1200w"
               sizes="(min-width: 640px) 640px, 100vw"
               width={1200}
               height={429}

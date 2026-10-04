@@ -147,7 +147,7 @@ These are settled. Changing one means updating this file and noting why in the D
   - [x] Core banking system database (3rd-semester databases project, team Cybernetica5)
   - [ ] Review the set and cut any that don't earn their place
 - [x] Each project page: problem → approach → what you built → result → stack → links (repo/demo/video)
-- [x] **CV as a PDF** → `public/suhan-waduge-cv.pdf`, `site.cv` set (2026-08-24). Served 200, 115,706 bytes, linked from `/about`
+- [x] **CV as a PDF** → `public/suhan-waduge-cv.pdf`, `site.cv` set (2026-08-24). Served 200, linked from `/about`. Replaced 2026-10-04 with the semester-6 version (CGPA 3.57, portfolio link in header), 110,049 bytes
 - [x] Responsive layout, clean typography, dark/light
 - [x] Basic SEO: title/description per page, OpenGraph image, sitemap, robots.txt
 - [x] **LinkedIn URL** → `socials.linkedin` set (2026-08-24); renders in the footer site-wide and on `/contact`

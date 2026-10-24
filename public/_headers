@@ -13,3 +13,6 @@
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 /video/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+# Third-party runtimes we self-host (the Cubism Core for /chibi-agent).
+/vendor/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

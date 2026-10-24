@@ -1537,3 +1537,328 @@ button {
 header nav .glass {
   font-family: inherit;
 }
+
+/* ── /chibi-agent ───────────────────────────────────────────────────────────
+   Raphael's page carries her own palette (the thinking core's cyan, violet and
+   green, and the teal glass of her desktop reply panel), scoped to the stage
+   so no site token changes. The stage is dark in both themes, so it also
+   wears `.hud`, which redefines the site tokens for a dark canvas.
+
+   Scroll writes --hero, --zoom, --her, --graph and --cap (0..1) on the sticky
+   stage every frame (ChibiStory); everything below is a function of them, so
+   no React render happens while scrolling. */
+
+/* Full bleed out of the 48rem column. 100vw includes a classic scrollbar, so
+   the page clips horizontal overflow; `clip` (not `hidden`) keeps sticky. */
+html:has(.chibi-bleed) {
+  overflow-x: clip;
+}
+.chibi-bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-top: -3.5rem;
+}
+
+.chibi-stage {
+  --chibi-cyan: #7fe3ff;
+  --chibi-violet: #a57bff;
+  --chibi-green: #78e6aa;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 40%, rgb(30 60 110 / 0.35), transparent 70%),
+    radial-gradient(ellipse 120% 90% at 50% 30%, #0b1426 0%, #060912 60%, #03050a 100%);
+}
+.chibi-stage::before {
+  /* A faint field of points: depth behind her, no image, no JS. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgb(200 230 255 / 0.7), transparent 60%),
+    radial-gradient(1px 1px at 70% 80%, rgb(165 123 255 / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 45% 60%, rgb(127 227 255 / 0.6), transparent 60%);
+  background-size: 140px 140px, 190px 190px, 230px 230px;
+}
+
+.chibi-glass {
+  --glass-tint: rgb(20 200 190 / 0.13);
+  --glass-rim-hi: rgb(160 245 235 / 0.45);
+  background-image: linear-gradient(
+    160deg,
+    rgb(255 255 255 / 0.1),
+    rgb(20 200 190 / 0.06) 55%,
+    rgb(6 20 26 / 0.25)
+  );
+}
+
+/* Her */
+.chibi-her {
+  opacity: var(--her);
+}
+/* The still (no WebGL, reduced motion, and while the rig loads) is cropped to
+   the model's own box, so it sits exactly where Live2DStage puts her: feet at
+   92%, 60% tall on phones and 84% on wide screens. Its zoom mirrors the rig's
+   (x2.4 about her face, the face travelling to 66% of the stage height). */
+.chibi-still {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  height: 60%;
+  width: auto;
+  transform-origin: 50% 30%;
+  translate: -50% calc(var(--zoom) * 16svh);
+  scale: calc(1 + var(--zoom) * 1.4);
+}
+
+/* The six capabilities orbiting her */
+.chibi-orbit {
+  /* Chips sit centred on the ring, so it leaves room for half a chip each side. */
+  --ring: calc(100vw - 9rem);
+  left: 50%;
+  top: 62%;
+  width: var(--ring);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  opacity: var(--hero);
+  scale: calc(1 + (1 - var(--hero)) * 0.9);
+}
+.chibi-orbit-ring {
+  position: absolute;
+  inset: 0;
+  animation: chibi-orbit 70s linear infinite;
+}
+.chibi-cap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(var(--a)) translateX(calc(var(--ring) / 2))
+    rotate(calc(-1 * var(--a)));
+}
+.chibi-cap-in {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  font-size: 11px;
+  white-space: nowrap;
+  animation: chibi-orbit 70s linear infinite reverse;
+}
+@keyframes chibi-orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.chibi-hero-copy {
+  left: 1rem;
+  right: 1rem;
+  top: 5.5rem;
+  opacity: var(--hero);
+  translate: 0 calc((1 - var(--hero)) * -3rem);
+}
+.chibi-hero-copy p:last-child {
+  display: none;
+}
+.chibi-scroll-cue {
+  color: var(--fg-muted);
+  opacity: var(--hero);
+}
+
+/* The core over her head, moving to the middle as the graph grows */
+.chibi-story-core {
+  left: 50%;
+  /* Ends on the graph's centre, which sits below the 4rem sticky nav. */
+  top: calc(34% + var(--graph) * (16% + 2rem));
+  width: calc(46vmin - var(--graph) * 12vmin);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  opacity: calc(min(1, var(--zoom) * 1.6) * (1 - var(--graph)));
+}
+.chibi-caption {
+  /* Phones: above the core, under the nav; lower down it would sit on her face. */
+  left: 1rem;
+  right: 1rem;
+  top: 5.25rem;
+  opacity: var(--cap);
+}
+
+@media (min-width: 900px) {
+  .chibi-still {
+    left: 34%;
+    height: 84%;
+    translate: calc(-50% + var(--zoom) * 16vw) calc(var(--zoom) * 33svh);
+  }
+  .chibi-orbit {
+    --ring: min(64vmin, 36vw); /* its right edge stays clear of the title at 58% */
+    left: 34%;
+    top: 52%;
+  }
+  .chibi-hero-copy {
+    left: 58%;
+    right: auto;
+    top: 50%;
+    translate: 0 calc(-50% + (1 - var(--hero)) * -3rem);
+  }
+  .chibi-hero-copy p:last-child {
+    display: block;
+  }
+  .chibi-caption {
+    left: calc(50% + 21vmin);
+    right: auto;
+    top: 24%;
+    width: min(340px, 28vw);
+  }
+}
+
+/* The graph */
+.chibi-graph-layer {
+  opacity: var(--graph);
+  pointer-events: none;
+}
+.chibi-graph-layer[data-live] {
+  pointer-events: auto;
+}
+.chibi-world {
+  transition: transform var(--t-page) var(--ease-console);
+}
+.chibi-edge {
+  stroke: rgb(127 227 255 / 0.32);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - clamp(0, var(--graph) * 1.5 - var(--i) * 0.045, 1));
+  transition: stroke 0.25s;
+}
+.chibi-edge[data-on] {
+  stroke: var(--chibi-cyan);
+  stroke-width: 1.6;
+}
+.chibi-stub {
+  stroke: rgb(127 227 255 / 0.2);
+  stroke-width: 1;
+  opacity: var(--graph);
+}
+.chibi-node {
+  color: var(--fg);
+  opacity: clamp(0, calc(var(--graph) * 1.6 - var(--i) * 0.05), 1);
+  transition: opacity 0.3s;
+  outline: none;
+}
+.chibi-graph[data-zoomed] .chibi-node[data-dim] {
+  opacity: 0.3;
+}
+.chibi-node-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--chibi-cyan);
+  background: radial-gradient(circle at 35% 30%, rgb(127 227 255 / 0.28), rgb(8 18 32 / 0.9) 70%);
+  border: 1px solid rgb(127 227 255 / 0.45);
+  box-shadow: 0 0 18px rgb(127 227 255 / 0.22);
+  transition:
+    transform 0.25s var(--ease-console),
+    box-shadow 0.25s;
+}
+.chibi-node:hover .chibi-node-dot,
+.chibi-node:focus-visible .chibi-node-dot,
+.chibi-node[data-on] .chibi-node-dot {
+  transform: scale(1.12);
+  box-shadow:
+    0 0 26px rgb(127 227 255 / 0.5),
+    0 0 0 1px rgb(165 123 255 / 0.5);
+}
+.chibi-node:focus-visible .chibi-node-dot,
+.chibi-core-hit:focus-visible {
+  outline: 2px solid var(--chibi-cyan);
+  outline-offset: 4px;
+}
+.chibi-node-tag,
+.chibi-core-label {
+  color: var(--fg-muted);
+}
+.chibi-branch {
+  padding: 0.2rem 0.55rem;
+  font-size: 9.5px;
+  color: var(--fg);
+  animation: chibi-pop 0.35s var(--ease-console) both;
+}
+@keyframes chibi-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+@media (min-width: 640px) {
+  .chibi-node-dot {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+  }
+}
+.chibi-hint {
+  color: var(--fg-muted);
+  animation: chibi-pop 0.6s ease both;
+}
+
+/* The detail panel: a bottom sheet on phones, a side panel from 640px */
+.chibi-panel {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 60svh;
+  border-radius: 18px 18px 0 0;
+  animation: chibi-sheet 0.35s var(--ease-console) both;
+}
+@keyframes chibi-sheet {
+  from {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+}
+@media (min-width: 640px) {
+  .chibi-panel {
+    left: auto;
+    right: 1rem;
+    top: 5rem;
+    bottom: 1rem;
+    width: min(400px, calc(100% - 2rem));
+    max-height: none;
+    border-radius: 18px;
+  }
+}
+.chibi-stat {
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(127 227 255 / 0.14);
+}
+.chibi-step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--chibi-cyan);
+  border: 1px solid rgb(127 227 255 / 0.4);
+}
+.chibi-branch-row {
+  background: rgb(255 255 255 / 0.03);
+  border: 1px solid transparent;
+}
+.chibi-branch-row[data-open] {
+  border-color: rgb(127 227 255 / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chibi-world,
+  .chibi-node,
+  .chibi-node-dot {
+    transition: none;
+  }
+  .chibi-orbit-ring,
+  .chibi-cap-in,
+  .chibi-branch,
+  .chibi-panel,
+  .chibi-hint {
+    animation: none;
+  }
+}

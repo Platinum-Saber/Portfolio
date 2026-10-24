@@ -15,6 +15,7 @@
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload"
   },
   "dependencies": {
+    "@naari3/pixi-live2d-display": "1.2.5",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@supabase/ssr": "^0.12.4",
@@ -22,6 +23,7 @@
     "gray-matter": "^4.0.3",
     "next": "^16.3.2",
     "next-mdx-remote": "^6.0.0",
+    "pixi.js": "8.22.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "three": "^0.185.1"

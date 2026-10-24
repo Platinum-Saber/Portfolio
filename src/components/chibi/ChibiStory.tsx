@@ -1,51 +1,48 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { allNodes, capabilities, coreDemo, intro, nodeById } from '@/lib/chibi/graph';
-import { PHASE, phases } from '@/lib/chibi/timeline';
+import { allPaths, coreDemo, hashToPath, intro, nodeAt, pathToHash } from '@/lib/chibi/graph';
+import { PHASE, beat, phases, voiceLevel } from '@/lib/chibi/timeline';
 import { ramp, useReducedMotion, useScrollProgress } from '@/lib/chibi/useScrollProgress';
 import type { CoreInput } from '@/lib/chibi/coreFx';
-import { useWebGLSupport } from '../explore/useWebGLSupport';
-import { ArchitectureGraph } from './ArchitectureGraph';
+import { ArchitectureGraph, nodeDomId } from './ArchitectureGraph';
 import { CoreCanvas } from './CoreCanvas';
 import { NodePanel } from './NodePanel';
+import { OrbitChips } from './OrbitChips';
+import { SpriteStage } from './SpriteStage';
 
-const Live2DStage = dynamic(() => import('./Live2DStage'), { ssr: false, loading: () => null });
-
-const STILL = '/images/raphael-still.webp';
 const QUIET: CoreInput = { thinking: false, speaking: false, level: 0 };
+const NONE: string[] = [];
 
 /**
  * The /chibi-agent scroll story. One sticky stage, one timeline (see
- * lib/chibi/timeline.ts): Raphael with her capabilities around her, a zoom
+ * lib/chibi/timeline.ts): Raphael with her capabilities orbiting her, a zoom
  * into her head where the thinking core thinks and then speaks, and the core
- * settling in the middle of the architecture graph, which becomes clickable.
+ * settling in the middle of the architecture, a tree you can walk into.
  *
  * Per-frame work never goes through React: scroll writes CSS variables on the
- * stage and a progress ref that the Live2D stage and the core read themselves.
- * React state changes only when a phase boundary is crossed.
+ * stage and a progress ref that her sprite, the chips and the core read
+ * themselves. React state changes only when a phase boundary is crossed or a
+ * node is opened.
  *
  * Reduced motion gets no scroll-driven zoom at all: a still hero, then the
  * graph, already drawn, with a still core.
  */
 export function ChibiStory() {
   const reduced = useReducedMotion();
-  const webgl = useWebGLSupport();
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const herBox = useRef<HTMLDivElement>(null);
   const caption = useRef<HTMLParagraphElement>(null);
   const phaseLabel = useRef<HTMLParagraphElement>(null);
   const progress = useRef(0);
   const hover = useRef<string | null>(null);
-  const openRef = useRef<string | null>(null); // `selected`, readable from the scroll callback
+  const openRef = useRef<string[]>(NONE); // the open path, readable from the scroll callback
   const clock = useRef(0);
   const graphClock = useRef(0);
 
   const [interactive, setInteractive] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [branch, setBranch] = useState<string | null>(null);
-  const [herState, setHerState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [path, setPath] = useState<string[]>(NONE);
 
   const onFrame = useCallback((p: number) => {
     progress.current = p;
@@ -66,97 +63,106 @@ export function ChibiStory() {
     }
     const live = p >= PHASE.interactive;
     setInteractive(live);
-    if (!live && openRef.current) {
+    if (!live && openRef.current.length) {
       // Scrolled back up past the graph: close what was open, and its #hash.
-      openRef.current = null;
-      setSelected(null);
-      setBranch(null);
+      openRef.current = NONE;
+      setPath(NONE);
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
   useScrollProgress(section, onFrame, !reduced);
 
-  // The story's core: thinking while the zoom lands, speaking through the
-  // second half of the demo (a made-up voice level: there is no audio here).
+  // The story's core: thinking while the zoom lands, then speaking with the
+  // same made-up level that moves her mouth (there is no audio here).
   const storyCore = useCallback((dt: number): CoreInput => {
     clock.current += dt;
-    const ph = phases(progress.current);
-    if (ph.zoom < 0.55 || ph.graph > 0.98) return QUIET;
-    if (ph.demo < 0.5) return { thinking: true, speaking: false, level: 0 };
-    const t = clock.current;
-    return { thinking: false, speaking: true, level: 0.3 + 0.5 * Math.abs(Math.sin(t * 7.3)) * (0.6 + 0.4 * Math.sin(t * 1.7)) };
+    const b = beat(phases(progress.current));
+    if (b === 'quiet') return QUIET;
+    if (b === 'thinking') return { thinking: true, speaking: false, level: 0 };
+    return { thinking: false, speaking: true, level: voiceLevel(clock.current) };
   }, []);
 
-  // The graph's core: a calm pulse, livelier while a node is hovered or focused.
-  const graphCore = useCallback((dt: number): CoreInput => {
-    graphClock.current += dt;
-    const t = graphClock.current;
-    const base = hover.current || selected ? 0.55 : 0.16;
-    return { thinking: false, speaking: true, level: base + 0.08 * Math.sin(t * 2.1) };
-  }, [selected]);
+  // The graph's core: a calm pulse, livelier while a node is hovered or open.
+  const graphCore = useCallback(
+    (dt: number): CoreInput => {
+      graphClock.current += dt;
+      const base = hover.current || path.length ? 0.55 : 0.16;
+      return { thinking: false, speaking: true, level: base + 0.08 * Math.sin(graphClock.current * 2.1) };
+    },
+    [path],
+  );
 
-  const select = useCallback((id: string | null) => {
+  const open = useCallback((next: string[]) => {
     const prev = openRef.current;
-    openRef.current = id;
-    setSelected(id);
-    setBranch(null);
-    if (!id && prev) {
-      // Give focus back to the node that was open, once the panel has gone.
-      const back = prev === 'core' ? '.chibi-core-hit' : `#chibi-node-${prev}`;
-      setTimeout(() => document.querySelector<HTMLElement>(back)?.focus({ preventScroll: true }), 0);
+    openRef.current = next;
+    setPath(next);
+    if (next.length < prev.length) {
+      // Going back up: focus returns to the node that was open, once it is laid out again.
+      setTimeout(() => document.getElementById(nodeDomId(prev))?.focus({ preventScroll: true }), 0);
     }
-    const url = id ? `#${id}` : window.location.pathname + window.location.search;
+    const url = next.length ? `#${pathToHash(next)}` : window.location.pathname + window.location.search;
     window.history.replaceState(null, '', url);
   }, []);
 
   useEffect(() => {
-    if (!selected) return;
+    if (!path.length) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') select(null);
+      if (e.key === 'Escape') open(openRef.current.slice(0, -1));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selected, select]);
+  }, [path, open]);
 
-  // Deep links (/chibi-agent#memory). Each node has a real anchor where the
-  // graph is fully drawn (below), so the browser can jump there by itself; this
-  // repeats the jump after hydration, which can reset the scroll, then opens it.
+  // Deep links (/chibi-agent#voice/cloned). Each node has a real anchor where
+  // the graph is fully drawn (below), so the browser can jump there by itself;
+  // this repeats the jump after hydration, which can reset the scroll, then
+  // opens the node. The orbit chips use the same route.
   useEffect(() => {
     let t = 0;
-    const open = () => {
-      const id = window.location.hash.slice(1);
-      if (!id || !nodeById(id) || id === openRef.current) return;
+    const go = () => {
+      const next = hashToPath(window.location.hash);
+      if (!next.length || !nodeAt(next) || pathToHash(next) === pathToHash(openRef.current)) return;
       clearTimeout(t);
       t = window.setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
+        document.getElementById(pathToHash(next))?.scrollIntoView({ behavior: 'instant', block: 'start' });
         requestAnimationFrame(() => {
           setInteractive(true);
-          openRef.current = id;
-          setSelected(id);
-          setBranch(null);
+          openRef.current = next;
+          setPath(next);
         });
       }, 60);
     };
-    open();
-    window.addEventListener('hashchange', open);
+    go();
+    window.addEventListener('hashchange', go);
     return () => {
       clearTimeout(t);
-      window.removeEventListener('hashchange', open);
+      window.removeEventListener('hashchange', go);
     };
   }, [reduced]);
 
-  const node = selected ? nodeById(selected) : null;
-  const showLive2D = !reduced && webgl === 'ok' && herState !== 'failed';
-  const showStill = reduced || webgl === 'unsupported' || herState !== 'ready';
+  // The story is up: hide the plain-HTML fallback below it (DeepDive). If this
+  // component never mounts (no JS, or it threw), the fallback stays visible.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.chibiReady = '';
+    return () => {
+      delete root.dataset.chibiReady;
+    };
+  }, []);
 
-  const panel = node && (
-    <NodePanel node={node} openBranch={branch} onBranch={setBranch} onClose={() => select(null)} />
-  );
+  const pick = useCallback((id: string) => {
+    window.location.hash = id;
+  }, []);
+
+  const anchors = (style: CSSProperties) =>
+    allPaths().map((p) => (
+      <span key={pathToHash(p)} id={pathToHash(p)} aria-hidden className="pointer-events-none absolute left-0" style={style} />
+    ));
+  const panel = path.length > 0 && <NodePanel path={path} onPath={open} />;
   const graph = (live: boolean, coreStill: boolean) => (
     <ArchitectureGraph
-      selected={selected}
-      onSelect={select}
-      onBranch={setBranch}
+      path={path}
+      onPath={open}
       onHover={(id) => {
         hover.current = id;
       }}
@@ -168,17 +174,17 @@ export function ChibiStory() {
   if (reduced) {
     return (
       <div className="chibi-bleed">
-        <section className="chibi-stage hud relative isolate overflow-hidden" style={{ '--hero': 1 } as CSSProperties}>
+        <section className="chibi-stage hud relative isolate overflow-hidden">
           <div className="relative mx-auto grid min-h-[80svh] max-w-6xl items-center gap-8 px-4 py-16 sm:grid-cols-2 sm:px-8">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimiser */}
-            <img src={STILL} alt="Raphael, a chibi character in a dark robe" className="mx-auto max-h-[64svh] w-auto" />
+            <div ref={herBox} className="relative z-[2] mx-auto h-[64svh]">
+              <SpriteStage progress={progress} still className="h-full" />
+            </div>
             <Hero />
           </div>
+          <OrbitChips around={herBox} progress={progress} onPick={pick} still />
         </section>
         <section className="chibi-stage hud relative isolate h-[100svh] overflow-hidden" style={{ '--graph': 1 } as CSSProperties} aria-label="Architecture">
-          {allNodes.map((n) => (
-            <span key={n.id} id={n.id} aria-hidden className="absolute top-0" />
-          ))}
+          {anchors({ top: 0 })}
           {graph(true, true)}
           {panel}
         </section>
@@ -189,49 +195,22 @@ export function ChibiStory() {
   return (
     <div className="chibi-bleed">
       <section ref={section} className="relative" style={{ height: '450svh' }} aria-label="Raphael, from character to architecture">
-        {allNodes.map((n) => (
-          // Deep-link targets: one viewport above the end, where the graph is live.
-          <span key={n.id} id={n.id} aria-hidden className="pointer-events-none absolute left-0" style={{ top: 'calc(100% - 100svh)' }} />
-        ))}
+        {/* Deep-link targets: one viewport above the end, where the graph is live. */}
+        {anchors({ top: 'calc(100% - 100svh)' })}
         <div
           ref={stage}
           className="chibi-stage hud sticky top-0 isolate h-[100svh] overflow-hidden"
           style={{ '--hero': 1, '--zoom': 0, '--her': 1, '--graph': 0, '--cap': 0 } as CSSProperties}
         >
-          {/* Her */}
-          <div className="chibi-her absolute inset-0">
-            {showStill && (
-              // eslint-disable-next-line @next/next/no-img-element -- static export, no image optimiser
-              <img src={STILL} alt="" aria-hidden className="chibi-still" onError={(e) => (e.currentTarget.style.display = 'none')} />
-            )}
-            {showLive2D && (
-              <Live2DStage
-                progress={progress}
-                onReady={() => setHerState('ready')}
-                onError={(e) => {
-                  console.warn('Live2D stage unavailable:', e);
-                  setHerState('failed');
-                }}
-              />
-            )}
-          </div>
-
-          {/* Capabilities orbiting her */}
-          <div className="chibi-orbit pointer-events-none absolute" aria-hidden>
-            <div className="chibi-orbit-ring">
-              {capabilities.map((c, i) => (
-                <span
-                  key={c.id}
-                  className="chibi-cap glass-chip font-mono"
-                  style={{ '--a': `${(360 / capabilities.length) * i - 90}deg` } as CSSProperties}
-                >
-                  <span className="chibi-cap-in">{c.label}</span>
-                </span>
-              ))}
+          {/* Her, between the far and near halves of the orbit */}
+          <div className="chibi-her pointer-events-none absolute inset-0 z-[2]">
+            <div ref={herBox} className="chibi-sprite-box absolute">
+              <SpriteStage progress={progress} className="h-full" />
             </div>
           </div>
+          <OrbitChips around={herBox} progress={progress} onPick={pick} />
 
-          <div className="chibi-hero-copy absolute">
+          <div className="chibi-hero-copy absolute z-[4]">
             <Hero />
           </div>
 
@@ -240,10 +219,10 @@ export function ChibiStory() {
           </p>
 
           {/* The core over her head, then moving to the centre */}
-          <div className="chibi-story-core absolute" aria-hidden>
+          <div className="chibi-story-core absolute z-[5]" aria-hidden>
             <CoreCanvas drive={storyCore} radius={0.26} className="absolute inset-0 h-full w-full" />
           </div>
-          <div className="chibi-caption absolute" aria-live="off">
+          <div className="chibi-caption absolute z-[5]" aria-live="off">
             <p ref={phaseLabel} className="font-mono text-[11px] tracking-[0.12em] text-[var(--chibi-cyan)] uppercase">
               {coreDemo.thinking}
             </p>
@@ -253,11 +232,11 @@ export function ChibiStory() {
           </div>
 
           {/* The architecture */}
-          <div className="chibi-graph-layer absolute inset-x-0 top-16 bottom-0" data-live={interactive ? '' : undefined}>
+          <div className="chibi-graph-layer absolute inset-x-0 top-16 bottom-0 z-[6]" data-live={interactive ? '' : undefined}>
             {graph(interactive, false)}
-            {interactive && !selected && (
+            {interactive && !path.length && (
               <p className="chibi-hint pointer-events-none absolute inset-x-0 bottom-6 text-center font-mono text-[11px] tracking-[0.18em] uppercase">
-                Select a node to zoom in
+                Select a node to walk in
               </p>
             )}
           </div>

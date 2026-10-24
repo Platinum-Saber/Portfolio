@@ -991,6 +991,22 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date - decision - why.
 
+- **2026-10-24 (later)** - **`/chibi-agent` v2: the sprite art, chips that read, and the graph as a tree.** This supersedes the Live2D parts of the entry below.
+  - **Her art is now the casual-coat image pack** her overlay runs on the Chibi-Agent `svg-rig` branch (`chibi_overlay/sprites.py`), not the robe Live2D rig.
+    - `scripts/sync-raphael.mjs` cuts the pack into one full base plus feathered patches: blink, three mouth shapes, the thinking face and 8×2 gaze eyes. Each patch is the measured box where that redraw differs from the master.
+    - `SpriteStage.tsx` stacks them as plain `<img>`s: she blinks, follows the pointer with her eyes, waves on load and talks with the core's made-up level.
+  - **Gone:**
+    - pixi.js and pixi-live2d-display;
+    - the Cubism Core, the rig and the still;
+    - the `/vendor` header.
+    No WebGL is needed anywhere on the page now.
+  - **Measured (`next start`):** 506 KB of JS up front (155 KB on the wire), 0 lazy (was 1,157 KB), and 593 KB of sprite images (was 848 KB of rig plus the Core).
+  - **Capabilities** are 7 glass pills on a tilted orbit (`OrbitChips.tsx`). They pass behind her on the far side, stop short of the title, and each opens its node.
+  - **The architecture is a tree** (`graph.ts`):
+    - a node gets children only where it really splits, e.g. Voice → Cloned voice / Kokoro, and Briefings → Mail / Calendar / Reminders / Notifications;
+    - isolated features (Hearing, Memory, Screen sight, Resources, Processes) are leaves that open straight to their details.
+    - **Navigation:** opening a node grows its parts as nodes; Esc, Back or the breadcrumb go up; deep links carry the path (`#voice/cloned`).
+
 - **2026-10-24** - **`/chibi-agent`: Raphael (the Chibi-Agent desktop companion), unlisted.** It's a scroll story: her Live2D rig, a zoom into her head where the thinking core runs, then the architecture as a clickable graph, then a plain-HTML deep dive that carries every word for no-JS and no-WebGL visitors.
   - **Hidden for now:** `robots: noindex, nofollow`, and absent from `nav` and `sitemap.ts`. To link it, add both and drop `robots` in `app/chibi-agent/page.tsx`.
   - **Live2D on this route only.** The new deps are `pixi.js` 8.22.0 and `@naari3/pixi-live2d-display` 1.2.5, both pinned. They're loaded through `next/dynamic({ ssr: false })` from `Live2DStage`, so no other route's JS changes.

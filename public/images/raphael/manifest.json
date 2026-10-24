@@ -1,0 +1,231 @@
+{
+  "canvas": [
+    1024,
+    1536
+  ],
+  "base": "base.webp",
+  "wave": {
+    "src": "wave.webp",
+    "dx": 5.5,
+    "dy": -23
+  },
+  "eyeCentre": [
+    524,
+    603
+  ],
+  "deadzone": 0.15,
+  "patches": {
+    "blink_half": {
+      "src": "patches/blink_half.webp",
+      "x": 240,
+      "y": 400,
+      "w": 544,
+      "h": 320
+    },
+    "blink_closed": {
+      "src": "patches/blink_closed.webp",
+      "x": 240,
+      "y": 400,
+      "w": 544,
+      "h": 320
+    },
+    "mouth_1": {
+      "src": "patches/mouth_1.webp",
+      "x": 460,
+      "y": 650,
+      "w": 136,
+      "h": 136
+    },
+    "mouth_2": {
+      "src": "patches/mouth_2.webp",
+      "x": 460,
+      "y": 650,
+      "w": 136,
+      "h": 136
+    },
+    "mouth_3": {
+      "src": "patches/mouth_3.webp",
+      "x": 460,
+      "y": 650,
+      "w": 136,
+      "h": 136
+    },
+    "thinking": {
+      "src": "patches/thinking.webp",
+      "x": 144,
+      "y": 336,
+      "w": 640,
+      "h": 512
+    }
+  },
+  "gaze": [
+    {
+      "name": "left",
+      "x": -1,
+      "y": 0,
+      "eyes": [
+        {
+          "src": "patches/gaze_left_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_left_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "right",
+      "x": 1,
+      "y": 0,
+      "eyes": [
+        {
+          "src": "patches/gaze_right_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_right_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "up",
+      "x": 0,
+      "y": 1,
+      "eyes": [
+        {
+          "src": "patches/gaze_up_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_up_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "down",
+      "x": 0,
+      "y": -1,
+      "eyes": [
+        {
+          "src": "patches/gaze_down_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_down_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "up_left",
+      "x": -1,
+      "y": 1,
+      "eyes": [
+        {
+          "src": "patches/gaze_up_left_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_up_left_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "up_right",
+      "x": 1,
+      "y": 1,
+      "eyes": [
+        {
+          "src": "patches/gaze_up_right_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_up_right_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "down_left",
+      "x": -1,
+      "y": -1,
+      "eyes": [
+        {
+          "src": "patches/gaze_down_left_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_down_left_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    },
+    {
+      "name": "down_right",
+      "x": 1,
+      "y": -1,
+      "eyes": [
+        {
+          "src": "patches/gaze_down_right_0.webp",
+          "x": 299,
+          "y": 548,
+          "w": 150,
+          "h": 116
+        },
+        {
+          "src": "patches/gaze_down_right_1.webp",
+          "x": 602,
+          "y": 541,
+          "w": 147,
+          "h": 118
+        }
+      ]
+    }
+  ]
+}

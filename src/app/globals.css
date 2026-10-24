@@ -1592,59 +1592,86 @@ html:has(.chibi-bleed) {
   );
 }
 
-/* Her */
+/* Her: the sprite box (SpriteStage) sits feet-down at 92% of the stage, 60%
+   tall on phones and 84% on wide screens. The zoom scales it x1.6 about her
+   face (39% down the drawing) while the face travels to 78% of the stage
+   height, which leaves the core room above her head. */
 .chibi-her {
   opacity: var(--her);
 }
-/* The still (no WebGL, reduced motion, and while the rig loads) is cropped to
-   the model's own box, so it sits exactly where Live2DStage puts her: feet at
-   92%, 60% tall on phones and 84% on wide screens. Its zoom mirrors the rig's
-   (x2.4 about her face, the face travelling to 66% of the stage height). */
-.chibi-still {
-  position: absolute;
+.chibi-sprite-box {
   left: 50%;
   bottom: 8%;
   height: 60%;
-  width: auto;
-  transform-origin: 50% 30%;
-  translate: -50% calc(var(--zoom) * 16svh);
-  scale: calc(1 + var(--zoom) * 1.4);
+  transform-origin: 50% 39.3%;
+  translate: -50% calc(var(--zoom) * 22.4svh);
+  scale: calc(1 + var(--zoom) * 0.6);
+}
+.chibi-sprite {
+  position: relative;
+  height: 100%;
+  user-select: none;
+}
+.chibi-sprite-layer {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
 }
 
-/* The six capabilities orbiting her */
-.chibi-orbit {
-  /* Chips sit centred on the ring, so it leaves room for half a chip each side. */
-  --ring: calc(100vw - 9rem);
-  left: 50%;
-  top: 62%;
-  width: var(--ring);
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  opacity: var(--hero);
-  scale: calc(1 + (1 - var(--hero)) * 0.9);
-}
-.chibi-orbit-ring {
-  position: absolute;
-  inset: 0;
-  animation: chibi-orbit 70s linear infinite;
-}
+/* Her capabilities: glass pills on a tilted orbit (OrbitChips positions them;
+   z-index 1 passes behind her, 3 in front). */
 .chibi-cap {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(var(--a)) translateX(calc(var(--ring) / 2))
-    rotate(calc(-1 * var(--a)));
-}
-.chibi-cap-in {
-  display: inline-block;
-  padding: 0.3rem 0.65rem;
-  font-size: 11px;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.45rem;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
   white-space: nowrap;
-  animation: chibi-orbit 70s linear infinite reverse;
+  color: var(--fg);
+  background: rgb(8 18 34 / 0.72);
+  border: 1px solid rgb(127 227 255 / 0.35);
+  box-shadow:
+    0 6px 18px -8px rgb(0 0 0 / 0.8),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  will-change: transform, opacity;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
-@keyframes chibi-orbit {
-  to {
-    rotate: 360deg;
+.chibi-cap:hover,
+.chibi-cap:focus-visible {
+  border-color: var(--chibi-cyan);
+  box-shadow:
+    0 0 22px rgb(127 227 255 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  outline: none;
+}
+.chibi-cap-glyph {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 12px;
+  color: var(--chibi-cyan);
+  background: rgb(127 227 255 / 0.12);
+}
+.chibi-cap-long {
+  display: none;
+}
+@media (min-width: 640px) {
+  .chibi-cap-long {
+    display: inline;
+  }
+  .chibi-cap-short {
+    display: none;
   }
 }
 
@@ -1654,6 +1681,7 @@ html:has(.chibi-bleed) {
   top: 5.5rem;
   opacity: var(--hero);
   translate: 0 calc((1 - var(--hero)) * -3rem);
+  pointer-events: none;
 }
 .chibi-hero-copy p:last-child {
   display: none;
@@ -1665,9 +1693,10 @@ html:has(.chibi-bleed) {
 
 /* The core over her head, moving to the middle as the graph grows */
 .chibi-story-core {
+  --core-y: 30%;
   left: 50%;
   /* Ends on the graph's centre, which sits below the 4rem sticky nav. */
-  top: calc(34% + var(--graph) * (16% + 2rem));
+  top: calc(var(--core-y) + var(--graph) * (50% - var(--core-y) + 2rem));
   width: calc(46vmin - var(--graph) * 12vmin);
   aspect-ratio: 1;
   translate: -50% -50%;
@@ -1682,18 +1711,13 @@ html:has(.chibi-bleed) {
 }
 
 @media (min-width: 900px) {
-  .chibi-still {
-    left: 34%;
+  .chibi-sprite-box {
+    left: 30%;
     height: 84%;
-    translate: calc(-50% + var(--zoom) * 16vw) calc(var(--zoom) * 33svh);
-  }
-  .chibi-orbit {
-    --ring: min(64vmin, 36vw); /* its right edge stays clear of the title at 58% */
-    left: 34%;
-    top: 52%;
+    translate: calc(-50% + var(--zoom) * 20vw) calc(var(--zoom) * 37svh);
   }
   .chibi-hero-copy {
-    left: 58%;
+    left: 60%;
     right: auto;
     top: 50%;
     translate: 0 calc(-50% + (1 - var(--hero)) * -3rem);
@@ -1701,10 +1725,13 @@ html:has(.chibi-bleed) {
   .chibi-hero-copy p:last-child {
     display: block;
   }
+  .chibi-story-core {
+    --core-y: 22%;
+  }
   .chibi-caption {
     left: calc(50% + 21vmin);
     right: auto;
-    top: 24%;
+    top: 20%;
     width: min(340px, 28vw);
   }
 }
@@ -1775,11 +1802,38 @@ html:has(.chibi-bleed) {
 .chibi-core-label {
   color: var(--fg-muted);
 }
-.chibi-branch {
-  padding: 0.2rem 0.55rem;
-  font-size: 9.5px;
-  color: var(--fg);
+.chibi-node-label {
+  font-size: 13px;
+}
+.chibi-edge[data-dim] {
+  stroke: rgb(127 227 255 / 0.12);
+}
+/* A node's parts, grown out of it when it opens: smaller, and popping in. */
+.chibi-node[data-level='2'],
+.chibi-node[data-level='3'] {
   animation: chibi-pop 0.35s var(--ease-console) both;
+}
+.chibi-node[data-level='2'] .chibi-node-dot,
+.chibi-node[data-level='3'] .chibi-node-dot {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+.chibi-node[data-level='2'] .chibi-node-label,
+.chibi-node[data-level='3'] .chibi-node-label {
+  font-size: 10px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: rgb(6 12 24 / 0.7);
+}
+.chibi-branch-edge {
+  stroke: rgb(127 227 255 / 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.chibi-branch-edge[data-on] {
+  stroke: var(--chibi-cyan);
+  stroke-dasharray: none;
 }
 @keyframes chibi-pop {
   from {
@@ -1840,12 +1894,43 @@ html:has(.chibi-bleed) {
   color: var(--chibi-cyan);
   border: 1px solid rgb(127 227 255 / 0.4);
 }
-.chibi-branch-row {
-  background: rgb(255 255 255 / 0.03);
-  border: 1px solid transparent;
+.chibi-crumbs {
+  color: var(--fg-muted);
 }
-.chibi-branch-row[data-open] {
-  border-color: rgb(127 227 255 / 0.3);
+.chibi-crumbs button {
+  color: var(--chibi-cyan);
+}
+.chibi-crumbs button:hover,
+.chibi-crumbs button:focus-visible {
+  text-decoration: underline;
+}
+.chibi-part {
+  background: rgb(255 255 255 / 0.03);
+  border: 1px solid rgb(127 227 255 / 0.14);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.chibi-part:hover,
+.chibi-part:focus-visible {
+  border-color: rgb(127 227 255 / 0.5);
+  background: rgb(127 227 255 / 0.06);
+  outline: none;
+}
+.chibi-part-glyph {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  color: var(--chibi-cyan);
+  border: 1px solid rgb(127 227 255 / 0.4);
+}
+.chibi-tag {
+  border-radius: 999px;
+  border: 1px solid rgb(127 227 255 / 0.25);
+  background: rgb(255 255 255 / 0.04);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1854,11 +1939,17 @@ html:has(.chibi-bleed) {
   .chibi-node-dot {
     transition: none;
   }
-  .chibi-orbit-ring,
-  .chibi-cap-in,
-  .chibi-branch,
+  .chibi-node[data-level='2'],
+  .chibi-node[data-level='3'],
   .chibi-panel,
   .chibi-hint {
     animation: none;
   }
+}
+
+/* The plain-HTML deep dive is the fallback for when the graph can't be shown:
+   ChibiStory marks <html> once it has mounted, and then the fallback hides.
+   Without JS (or if the story throws) the mark never appears and it stays. */
+html[data-chibi-ready] .chibi-deep-dive {
+  display: none;
 }

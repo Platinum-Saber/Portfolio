@@ -29,6 +29,21 @@ export type Phases = {
   graph: number;
 };
 
+/**
+ * The made-up voice level (0..1) the demo "speaks" with: syllable-rate pulses
+ * under a slower swell. There is no audio on the page (her voice is a personal
+ * clone and is never published); the core and her mouth both follow this.
+ */
+export function voiceLevel(t: number): number {
+  return 0.3 + 0.5 * Math.abs(Math.sin(t * 7.3)) * (0.6 + 0.4 * Math.sin(t * 1.7));
+}
+
+/** Which story beat the core and her face are in at progress phases `ph`. */
+export function beat(ph: Phases): 'quiet' | 'thinking' | 'speaking' {
+  if (ph.zoom < 0.55 || ph.graph > 0.98) return 'quiet';
+  return ph.demo < 0.5 ? 'thinking' : 'speaking';
+}
+
 export function phases(p: number): Phases {
   const [d0, d1] = PHASE.demo;
   return {

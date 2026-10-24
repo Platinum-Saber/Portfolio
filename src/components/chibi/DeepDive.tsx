@@ -1,15 +1,16 @@
-import { MEASURED_ON, core, intro, nodes, type ChibiNode } from '@/lib/chibi/graph';
+import { MEASURED_ON, intro, roots, type ChibiNode } from '@/lib/chibi/graph';
 
 /**
- * Everything the scroll story shows, as plain HTML in the normal column: the
- * page for visitors without JS or WebGL, for screen readers that would rather
- * read than explore a graph, and for anyone who scrolled past the story and
- * wants it all in one place. Rendered on the server from the same module as
- * the graph, so the two always agree.
+ * Everything the scroll story shows, as plain HTML: the fallback for when the
+ * graph cannot be shown (no JS, or the story failed to start). It is always in
+ * the server HTML, so crawlers and no-JS visitors get every word, and hidden by
+ * CSS once ChibiStory has mounted (`html[data-chibi-ready]`, globals.css), so a
+ * working page shows the graph only. Rendered from the same tree as the graph
+ * (parts nest under their node), so the two always agree.
  */
 export function DeepDive() {
   return (
-    <div className="mt-16 space-y-14">
+    <div className="chibi-deep-dive mt-16 space-y-14">
       <noscript>
         <div className="mb-10">
           <p className="font-mono text-xs tracking-[0.18em] text-[var(--accent)] uppercase">{intro.eyebrow}</p>
@@ -23,11 +24,11 @@ export function DeepDive() {
         <p className="font-mono text-xs tracking-[0.18em] text-[var(--accent)] uppercase">The whole system</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight">How she is built</h2>
         <p className="mt-3 leading-relaxed text-[var(--fg-muted)]">
-          Four local processes (her body, the agent, the voice and the language model) around one turn
-          loop. Each part below is a node in the graph above. {MEASURED_ON}
+          Four local processes (her body, the agent, the voice and the language model) around one turn loop.
+          Each part below is a node in the graph above. {MEASURED_ON}
         </p>
         <nav aria-label="Parts" className="mt-4 flex flex-wrap gap-1.5">
-          {[core, ...nodes].map((n) => (
+          {roots.map((n) => (
             <a key={n.id} href={`#about-${n.id}`} className="glass-chip px-2.5 py-1 font-mono text-xs">
               {n.label}
             </a>
@@ -35,8 +36,8 @@ export function DeepDive() {
         </nav>
       </header>
 
-      {[core, ...nodes].map((n) => (
-        <Part key={n.id} node={n} />
+      {roots.map((n) => (
+        <Part key={n.id} node={n} anchor={`about-${n.id}`} depth={0} />
       ))}
 
       <section aria-labelledby="about-voice-note">
@@ -50,28 +51,33 @@ export function DeepDive() {
   );
 }
 
-function Part({ node }: { node: ChibiNode }) {
+function Part({ node, anchor, depth }: { node: ChibiNode; anchor: string; depth: number }) {
+  const H = depth === 0 ? 'h2' : 'h3';
   return (
-    <section id={`about-${node.id}`} aria-labelledby={`about-${node.id}-h`} className="scroll-mt-24">
+    <section
+      id={anchor}
+      aria-labelledby={`${anchor}-h`}
+      className={depth === 0 ? 'scroll-mt-24' : 'scroll-mt-24 border-l border-[var(--border)] pl-4'}
+    >
       <p className="font-mono text-xs text-[var(--fg-muted)]">
         <span aria-hidden className="mr-1.5 text-[var(--accent)]">{node.glyph}</span>
         {node.tagline}
       </p>
-      <h2 id={`about-${node.id}-h`} className="mt-1 text-xl font-semibold tracking-tight">
+      <H id={`${anchor}-h`} className={`mt-1 font-semibold tracking-tight ${depth === 0 ? 'text-xl' : 'text-base'}`}>
         {node.label}
-      </h2>
-      <p className="mt-3 leading-relaxed">{node.summary}</p>
+      </H>
+      <p className="mt-2 leading-relaxed">{node.summary}</p>
 
       {node.flow && (
-        <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-[15px] leading-snug">
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-[15px] leading-snug">
           {node.flow.map((s, i) => (
             <li key={i}>{s}</li>
           ))}
         </ol>
       )}
 
-      {node.stats.length > 0 && (
-        <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {node.stats && node.stats.length > 0 && (
+        <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {node.stats.map((s) => (
             <div key={s.label} className="glass px-3 py-2">
               <dt className="text-xs text-[var(--fg-muted)]">{s.label}</dt>
@@ -81,23 +87,22 @@ function Part({ node }: { node: ChibiNode }) {
         </dl>
       )}
 
-      <dl className="mt-4 space-y-2.5">
-        {node.branches.map((b) => (
-          <div key={b.id}>
-            <dt className="font-medium">{b.label}</dt>
-            <dd className="text-[15px] leading-relaxed text-[var(--fg-muted)]">{b.body}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {node.stack.length > 0 && (
-        <ul className="mt-4 flex flex-wrap gap-1.5" aria-label={`${node.label} stack`}>
+      {node.stack && node.stack.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={`${node.label} stack`}>
           {node.stack.map((s) => (
             <li key={s} className="glass-chip px-2 py-0.5 font-mono text-[11px]">
               {s}
             </li>
           ))}
         </ul>
+      )}
+
+      {node.children && (
+        <div className="mt-5 space-y-6">
+          {node.children.map((k) => (
+            <Part key={k.id} node={k} anchor={`${anchor}-${k.id}`} depth={depth + 1} />
+          ))}
+        </div>
       )}
     </section>
   );

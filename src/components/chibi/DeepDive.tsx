@@ -43,8 +43,9 @@ export function DeepDive() {
       <section aria-labelledby="about-voice-note">
         <h2 id="about-voice-note" className="text-lg font-semibold">A note on her voice</h2>
         <p className="mt-2 leading-relaxed text-[var(--fg-muted)]">
-          Her voice is cloned from a character’s original lines for my own use on my own machine. It is never
-          published, so this page has no audio of her: the speaking core above is driven by a made-up level.
+          Her voice is cloned from a character’s original lines and is used for personal purposes on one machine
+          only. It is never published, so no audio of her is included on this page: the speaking core above is
+          driven by a made-up level.
         </p>
       </section>
     </div>

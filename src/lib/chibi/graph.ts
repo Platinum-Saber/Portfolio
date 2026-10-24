@@ -39,9 +39,10 @@ export const intro = {
   title: 'Raphael',
   subtitle: 'A local AI companion that lives on the Windows desktop.',
   body:
-    'She listens when I hold a key, answers in her own voice, remembers what matters, briefs me on mail ' +
-    'and calendar, looks at the screen when asked, and acts on the PC only after I say yes. ' +
-    'Every model runs on one laptop: no cloud AI, and nothing leaves the machine unless I ask for it.',
+    'Speech is captured while a key is held and answered in her own voice. What matters is remembered, ' +
+    'mail and calendar are summarised in briefings, the screen is read only when asked, and nothing on ' +
+    'the PC is changed until a yes is given. Every model is run on one laptop: no cloud AI is used, and ' +
+    'nothing leaves the machine unless it is asked for.',
 };
 
 /** What the core demo captions while scroll plays one turn. */
@@ -302,9 +303,9 @@ export const nodes: ChibiNode[] = [
     glyph: '❖',
     angle: 131,
     summary:
-      'A local SQLite database with vector search keeps facts about me and a one-line summary of each ' +
-      'conversation. The most relevant ones are recalled into every turn, so something said yesterday can ' +
-      'come up today without being asked.',
+      'Facts about the user and a one-line summary of each conversation are kept in a local SQLite ' +
+      'database with vector search. The most relevant ones are recalled into every turn, so something said ' +
+      'yesterday can come up today without being asked.',
     flow: [
       'Five minutes after a conversation ends, the model lists durable facts (preferences, people, projects, routines) and a summary.',
       'Each fact is embedded; one close to an older fact replaces it instead of piling up.',
@@ -421,7 +422,7 @@ export const nodes: ChibiNode[] = [
         summary:
           'Google tokens live in Windows Credential Manager, never in files. Logs hold no audio, screenshots ' +
           'or mail bodies; untrusted tool results are logged as a character count only. Only the read-only ' +
-          'Google APIs, searches I ask for and model downloads leave the machine.',
+          'Google APIs, searches that are asked for and model downloads leave the machine.',
       },
     ],
   },
@@ -476,7 +477,7 @@ export const nodes: ChibiNode[] = [
       'workflows, interrupting only at natural breaks, and results that are cheap to check.',
     children: [
       { id: 'workflows', label: 'Saved workflows', tagline: 'One request, many steps', glyph: '⋯', summary: '"Start my study session": open apps, arrange windows, start a timer and hold notifications, with one confirmation for the lot.' },
-      { id: 'focus', label: 'Focus guardian', tagline: 'Interrupt at the breaks', glyph: '◐', summary: 'Batch non-urgent notifications during focus time and deliver them when I switch tasks.' },
+      { id: 'focus', label: 'Focus guardian', tagline: 'Interrupt at the breaks', glyph: '◐', summary: 'Non-urgent notifications are held back during focus time and delivered together when the task changes.' },
       { id: 'mcp', label: 'MCP client', tagline: 'Borrow tools, don’t write them', glyph: '⧉', summary: 'Use existing Model Context Protocol servers instead of hand-writing every tool, now that tool selection keeps the prompt small.' },
       { id: 'wake', label: 'Wake word', tagline: '"Raphael"', glyph: '◌', summary: '"Raphael" instead of a hotkey: opt-in and fully local.' },
     ],

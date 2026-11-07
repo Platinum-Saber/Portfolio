@@ -18,7 +18,20 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Members-only files (the full PDF notes) are static assets, but a
+    // visitor's request for one must reach the Worker so the notes gate can
+    // check the session - otherwise the asset store would hand them to anyone.
+    // The route handler then reads the bytes through the ASSETS binding,
+    // which is not subject to this rule. docs/NOTES.md.
+    "run_worker_first": ["/notes-files/*"],
+    // Required by @opennextjs/cloudflare >= 1.20.x whenever run_worker_first
+    // is set (its build fails otherwise): assets answer only at their exact
+    // path, as Next.js does. "auto-trailing-slash" would also serve /x for
+    // x.html - a second path the middleware matcher does not cover.
+    // public/ holds no HTML, so nothing a visitor sees changes.
+    "html_handling": "none",
+    "not_found_handling": "none"
   },
   // OpenNext calls the Worker through itself for some internal requests.
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "portfolio" }],

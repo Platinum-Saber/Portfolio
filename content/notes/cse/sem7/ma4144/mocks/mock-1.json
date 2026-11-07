@@ -1,0 +1,569 @@
+{
+ "title": "Mock paper 1",
+ "minutes": 180,
+ "intro": "**3 hours · 100 marks · answer all six questions.** The real paper has 5–6 comprehensive questions like these: each mixes definitions, a derivation and a calculation.\n\nWork on paper as you would in the hall, with a calculator. When time is up (or you submit), each part shows a **model answer** and a **mark scheme** - tick the points your answer actually contains to get your score. You may also type working into the boxes.",
+ "sections": [
+  {
+   "id": "A",
+   "title": "Neural networks",
+   "blurb": "Questions 1–3.",
+   "questions": [
+    {
+     "id": "q1",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Neurons · M-P",
+     "prompt": "This question is about the artificial neuron and the McCulloch–Pitts model.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 3,
+       "prompt": "State the **three characteristics** that define a neural network and say in one line what each determines.",
+       "answer": "| Characteristic | Determines |\n|---|---|\n| Architecture | how neurons are arranged in layers and connected - the flow of information |\n| Learning (training) algorithm | how the connection weights are adjusted |\n| Activation function | how a neuron's net input becomes its output (adds non-linearity) |",
+       "points": [
+        {
+         "text": "Architecture, with meaning",
+         "marks": 1
+        },
+        {
+         "text": "Learning / training algorithm, with meaning",
+         "marks": 1
+        },
+        {
+         "text": "Activation function, with meaning",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 4,
+       "prompt": "A neuron has inputs $x = (2, -1, 0.5)$, weights $w = (0.4, 0.3, -1.2)$ and bias $b = 0.2$. Find the net input and the output for (i) the binary step and (ii) the log-sigmoid activation. (iii) Where is the midpoint of the log-sigmoid curve of a neuron $y = \\sigma(x + b)$ with $b = -1.5$, and which way has it moved?",
+       "answer": "$y_{in} = 0.2 + 0.4(2) + 0.3(-1) + (-1.2)(0.5) = 0.2 + 0.8 - 0.3 - 0.6 = 0.1$.\n\n(i) step: $0.1 \\ge 0$ → $y = 1$. (ii) $\\sigma(0.1) = 1/(1 + e^{-0.1}) = 0.525$.\n\n(iii) Midpoint where $x + b = 0$: $x = 1.5$ - a **negative** bias moves the curve **right** by 1.5.",
+       "points": [
+        {
+         "text": "Net input 0.1",
+         "marks": 1.5
+        },
+        {
+         "text": "Step output 1 and sigmoid 0.525",
+         "marks": 1.5
+        },
+        {
+         "text": "Midpoint at x = 1.5, shifted right",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 5,
+       "prompt": "Derive the threshold conditions for a McCulloch–Pitts neuron with $n$ excitatory inputs of weight $w$ and inhibitory weight $-p$ that must (i) fire when **at least $k$** excitatory inputs are on and (ii) never fire when any inhibitory input is on.",
+       "answer": "(i) With exactly $k$ inputs on the net input is $kw$, which must reach the threshold: $kw \\ge \\theta$. With $k - 1$ on it must not: $(k-1)w < \\theta$. Together:\n$$kw \\ge \\theta > (k-1)w.$$\n\n(ii) Absolute inhibition: even with **all** $n$ excitatory inputs on, one inhibitory input must keep the net input below θ: $nw - p < \\theta$, i.e.\n$$\\theta > nw - p.$$",
+       "points": [
+        {
+         "text": "kw ≥ θ (k inputs fire)",
+         "marks": 1.5
+        },
+        {
+         "text": "θ > (k − 1)w (k − 1 do not)",
+         "marks": 1.5
+        },
+        {
+         "text": "θ > nw − p with the \"all excitatory on\" argument",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 4,
+       "prompt": "Design an M-P neuron with three excitatory inputs (weight 2) and one inhibitory input that fires when **at least two** excitatory inputs are on, unless the inhibitor is on. Give θ and a suitable inhibitory weight, and verify the worst case.",
+       "answer": "$k = 2$, $w = 2$: $4 \\ge \\theta > 2$ → choose $\\theta = 4$.\n\nAbsolute inhibition: $\\theta > nw - p = 6 - p$ → $p > 2$; take inhibitory weight $-3$.\n\nWorst case - all three excitatory on and the inhibitor on: $6 - 3 = 3 < 4$ → does not fire ✓. Two on, no inhibitor: $4 \\ge 4$ → fires ✓. One on: $2 < 4$ ✓.",
+       "points": [
+        {
+         "text": "θ = 4 (any value in (2, 4])",
+         "marks": 1.5
+        },
+        {
+         "text": "p > 2, e.g. −3",
+         "marks": 1.5
+        },
+        {
+         "text": "Verification of worst case",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Part (c) is pure recall of the two inequalities but examiners want the *reasoning* - \"k inputs must reach θ, k − 1 must not\" - not just the formula."
+    },
+    {
+     "id": "q2",
+     "kind": "long",
+     "marks": 18,
+     "lab": "Perceptron · ADALINE",
+     "prompt": "A perceptron with bipolar inputs and targets is trained on the **OR** function. The output is $y = +1$ if $y_{in} > 0$ and $-1$ otherwise; the weights update only on misclassification by $w_i \\leftarrow w_i + \\eta\\, t\\, x_i$, $b \\leftarrow b + \\eta\\, t$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 8,
+       "prompt": "Starting from $w_1 = w_2 = b = 0$ with $\\eta = 1$, train until convergence presenting the patterns in the order $(-1,-1), (-1,1), (1,-1), (1,1)$. Show every step in a table.",
+       "answer": "| Ep | $(x_1, x_2)$ | $t$ | $y_{in}$ | $y$ | update | $w_1, w_2, b$ |\n|---|---|---|---|---|---|---|\n| 1 | (−1, −1) | −1 | 0 | −1 | - | 0, 0, 0 |\n| 1 | (−1, 1) | 1 | 0 | −1 | yes | −1, 1, 1 |\n| 1 | (1, −1) | 1 | −1 | −1 | yes | 0, 0, 2 |\n| 1 | (1, 1) | 1 | 2 | 1 | - | 0, 0, 2 |\n| 2 | (−1, −1) | −1 | 2 | 1 | yes | 1, 1, 1 |\n| 2 | (−1, 1) | 1 | 1 | 1 | - | 1, 1, 1 |\n| 2 | (1, −1) | 1 | 1 | 1 | - | 1, 1, 1 |\n| 2 | (1, 1) | 1 | 3 | 1 | - | 1, 1, 1 |\n| 3 | all | | −1, 1, 1, 3 | correct | - | **1, 1, 1** |\n\nConverged after epoch 3 (a full epoch with no update): $w_1 = w_2 = 1$, $b = 1$.",
+       "points": [
+        {
+         "text": "Epoch 1 updates correct (two updates, weights 0, 0, 2)",
+         "marks": 3
+        },
+        {
+         "text": "Epoch 2 update on (−1, −1) to 1, 1, 1",
+         "marks": 2
+        },
+        {
+         "text": "Epoch 3 confirms convergence",
+         "marks": 2
+        },
+        {
+         "text": "Clear table / working",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "Write the decision boundary and sketch it with the four patterns.",
+       "answer": "$x_1 + x_2 + 1 = 0$, i.e. the line $x_2 = -x_1 - 1$ through $(-1, 0)$ and $(0, -1)$. Only $(-1, -1)$ lies on the negative side ($-1 < 0$); the other three give $y_{in} \\ge 1$.",
+       "points": [
+        {
+         "text": "Boundary x₁ + x₂ + 1 = 0",
+         "marks": 1.5
+        },
+        {
+         "text": "Sketch with (−1, −1) alone on the − side",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "Prove that no single perceptron can compute XOR (binary inputs, output 1 when $y_{in} \\ge 0$).",
+       "answer": "Suppose $w_1, w_2, b$ work. (0,0) → 0 needs $b < 0$. (1,0) → 1 needs $w_1 + b \\ge 0$; (0,1) → 1 needs $w_2 + b \\ge 0$. Adding these two: $w_1 + w_2 + 2b \\ge 0$, so $w_1 + w_2 + b \\ge -b > 0$. But (1,1) → 0 needs $w_1 + w_2 + b < 0$ - contradiction. Geometrically, no line separates {(0,1), (1,0)} from {(0,0), (1,1)}: XOR is not linearly separable.",
+       "points": [
+        {
+         "text": "Four inequalities from the truth table",
+         "marks": 2
+        },
+        {
+         "text": "Combine to a contradiction",
+         "marks": 1.5
+        },
+        {
+         "text": "Conclusion: not linearly separable",
+         "marks": 0.5
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "The ADALINE learning rule $\\Delta w_i = \\eta(t - y)x_i$ looks identical to the perceptron rule. Explain the difference and its consequence.",
+       "answer": "In ADALINE $y$ is the **linear** output $y_{in}$ (before thresholding); in the perceptron it is the **thresholded** class. So ADALINE's error is graded - it measures *how far* off the output is - and it minimises the mean squared error by gradient descent, continuing to adjust even when all patterns are classified correctly. The perceptron stops changing as soon as every pattern is on the right side.",
+       "points": [
+        {
+         "text": "ADALINE uses linear output, perceptron the thresholded one",
+         "marks": 1.5
+        },
+        {
+         "text": "Consequence: MSE minimisation / keeps adjusting",
+         "marks": 1.5
+        }
+       ]
+      }
+     ],
+     "explain": "Most lost marks in (a) come from using y = 1 when y_in = 0 - in this bipolar form y_in = 0 gives −1."
+    },
+    {
+     "id": "q3",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Backpropagation",
+     "prompt": "A 2-2-1 network uses the binary sigmoid $f(x) = 1/(1+e^{-x})$ in both layers. Weights: $v_{11} = 0.2$, $v_{12} = -0.3$, $v_{21} = 0.4$, $v_{22} = 0.1$ (input $i$ → hidden $j$), hidden biases $v_{01} = -0.4$, $v_{02} = 0.2$; output weights $w_1 = 0.5$, $w_2 = -0.6$, $w_0 = 0.1$. Learning rate $\\alpha = 0.5$. Training pair: $x = (1, 0)$, $t = 0$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 4,
+       "prompt": "Carry out the forward pass.",
+       "answer": "$z_{in,1} = -0.4 + 1(0.2) + 0(0.4) = -0.2$ → $z_1 = f(-0.2) = 0.4502$.\n$z_{in,2} = 0.2 + 1(-0.3) + 0(0.1) = -0.1$ → $z_2 = 0.4750$.\n$y_{in} = 0.1 + 0.4502(0.5) + 0.4750(-0.6) = 0.0401$ → $y = 0.5100$.",
+       "points": [
+        {
+         "text": "Hidden net inputs −0.2 and −0.1",
+         "marks": 1
+        },
+        {
+         "text": "Hidden outputs 0.4502, 0.4750",
+         "marks": 1
+        },
+        {
+         "text": "Output net 0.0401 and y = 0.5100",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "prompt": "Compute the error terms and the weight corrections for all weights and biases.",
+       "answer": "Output: $\\delta = (t - y)y(1 - y) = (-0.5100)(0.5100)(0.4900) = -0.1275$.\n$\\Delta w_1 = 0.5(-0.1275)(0.4502) = -0.0287$; $\\Delta w_2 = 0.5(-0.1275)(0.4750) = -0.0303$; $\\Delta w_0 = -0.0637$.\n\nHidden (old $w$): $\\delta_{in,1} = -0.1275(0.5) = -0.0637$, $\\delta_1 = -0.0637(0.4502)(0.5498) = -0.0158$;\n$\\delta_{in,2} = -0.1275(-0.6) = 0.0765$, $\\delta_2 = 0.0765(0.4750)(0.5250) = 0.0191$.\n\n$\\Delta v_{11} = 0.5(-0.0158)(1) = -0.0079$, $\\Delta v_{12} = 0.0095$; $\\Delta v_{21} = \\Delta v_{22} = 0$ (since $x_2 = 0$); $\\Delta v_{01} = -0.0079$, $\\Delta v_{02} = 0.0095$.",
+       "points": [
+        {
+         "text": "Output δ = −0.1275",
+         "marks": 1.5
+        },
+        {
+         "text": "Output weight and bias corrections",
+         "marks": 1.5
+        },
+        {
+         "text": "Hidden δ₁, δ₂ (using old w)",
+         "marks": 2
+        },
+        {
+         "text": "Hidden corrections incl. zero for x₂ and biases",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 2,
+       "prompt": "Show that the update reduces the squared error.",
+       "answer": "New weights give $y = 0.4861$. $E = \\tfrac12(t - y)^2$ falls from $\\tfrac12(0.5100)^2 = 0.1301$ to $\\tfrac12(0.4861)^2 = 0.1181$.",
+       "points": [
+        {
+         "text": "Recompute output with new weights",
+         "marks": 1
+        },
+        {
+         "text": "Compare errors",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 4,
+       "prompt": "Derive the hidden-layer update $\\Delta v_{ij} = \\alpha\\delta_j x_i$ with $\\delta_j = f'(z_{in,j})\\sum_k\\delta_k w_{jk}$, starting from $E = \\tfrac12\\sum_k(t_k - y_k)^2$.",
+       "answer": "Gradient descent: $\\Delta v_{ij} = -\\alpha\\,\\partial E/\\partial v_{ij}$. Chain rule:\n$$\\frac{\\partial E}{\\partial v_{ij}} = \\frac{\\partial E}{\\partial z_j}\\,\\frac{\\partial z_j}{\\partial z_{in,j}}\\,\\frac{\\partial z_{in,j}}{\\partial v_{ij}} = \\frac{\\partial E}{\\partial z_j}\\,f'(z_{in,j})\\,x_i.$$\n$z_j$ feeds every output, so\n$$\\frac{\\partial E}{\\partial z_j} = \\sum_k \\frac{\\partial E}{\\partial y_k}\\frac{\\partial y_k}{\\partial y_{in,k}}\\frac{\\partial y_{in,k}}{\\partial z_j} = \\sum_k -(t_k - y_k)f'(y_{in,k})\\,w_{jk} = -\\sum_k\\delta_k w_{jk}.$$\nHence $\\partial E/\\partial v_{ij} = -\\delta_j x_i$ with $\\delta_j = f'(z_{in,j})\\sum_k\\delta_k w_{jk}$, and $\\Delta v_{ij} = \\alpha\\delta_j x_i$.",
+       "points": [
+        {
+         "text": "Gradient descent statement",
+         "marks": 0.5
+        },
+        {
+         "text": "Chain rule to f′(z_in) xᵢ",
+         "marks": 1
+        },
+        {
+         "text": "Sum over outputs for ∂E/∂z_j",
+         "marks": 1.5
+        },
+        {
+         "text": "Final δ_j and update",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Common slip: updating w first and then using the new w to compute δ_j. Backprop uses the weights from the forward pass."
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Fuzzy logic",
+   "blurb": "Questions 4–6.",
+   "questions": [
+    {
+     "id": "q4",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Fuzzy sets · relations",
+     "prompt": "On $X = \\{x_1, x_2, x_3, x_4\\}$ let $\\tilde A = \\{0.3/x_1 + 0.8/x_2 + 1/x_3 + 0.5/x_4\\}$ and $\\tilde B = \\{0.6/x_1 + 0.4/x_2 + 0.7/x_3 + 0.9/x_4\\}$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 4,
+       "prompt": "Find $\\tilde A \\cup \\tilde B$, $\\tilde A \\cap \\tilde B$, $\\bar{\\tilde A}$, and use $\\tilde A \\cup \\bar{\\tilde A}$ and $\\tilde A \\cap \\bar{\\tilde A}$ to show which classical laws fail.",
+       "answer": "$\\tilde A\\cup\\tilde B = \\{0.6, 0.8, 1, 0.9\\}$, $\\tilde A\\cap\\tilde B = \\{0.3, 0.4, 0.7, 0.5\\}$, $\\bar{\\tilde A} = \\{0.7, 0.2, 0, 0.5\\}$.\n\n$\\tilde A\\cup\\bar{\\tilde A} = \\{0.7, 0.8, 1, 0.5\\} \\ne X$ and $\\tilde A\\cap\\bar{\\tilde A} = \\{0.3, 0.2, 0, 0.5\\} \\ne \\emptyset$: the laws of the **excluded middle** and **contradiction** fail (worst at $x_4$, μ = 0.5).",
+       "points": [
+        {
+         "text": "Union, intersection, complement",
+         "marks": 2
+        },
+        {
+         "text": "Excluded middle / contradiction shown to fail",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "Give the 0.5-cut of $\\tilde A$, its core, support and height. Is it normal?",
+       "answer": "$A_{0.5} = \\{x_2, x_3, x_4\\}$; core $\\{x_3\\}$; support $X$; height 1 → **normal** ($x_3$ is the prototype).",
+       "points": [
+        {
+         "text": "λ-cut",
+         "marks": 1
+        },
+        {
+         "text": "Core and support",
+         "marks": 1
+        },
+        {
+         "text": "Height 1, normal",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "$\\tilde P = \\begin{bmatrix}0.4 & 0.9\\\\ 0.7 & 0.2\\end{bmatrix}$ relates X₁ to Y and $\\tilde Q = \\begin{bmatrix}0.5 & 0.1 & 0.8\\\\ 0.6 & 0.3 & 0.2\\end{bmatrix}$ relates Y to Z. Compute $\\tilde P\\circ\\tilde Q$ by max–min and by max–product.",
+       "answer": "Max–min: row 1: $(\\max(0.4, 0.6), \\max(0.1, 0.3), \\max(0.4, 0.2)) = (0.6, 0.3, 0.4)$; row 2: $(\\max(0.5, 0.2), \\max(0.1, 0.2), \\max(0.7, 0.2)) = (0.5, 0.2, 0.7)$.\n$$\\begin{bmatrix}0.6 & 0.3 & 0.4\\\\ 0.5 & 0.2 & 0.7\\end{bmatrix}$$\nMax–product: $\\begin{bmatrix}0.54 & 0.27 & 0.32\\\\ 0.35 & 0.07 & 0.56\\end{bmatrix}$ (e.g. (1,1): $\\max(0.20, 0.54)$).",
+       "points": [
+        {
+         "text": "Max–min matrix",
+         "marks": 2
+        },
+        {
+         "text": "Max–product matrix",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 5,
+       "prompt": "$\\tilde R = \\begin{bmatrix}1 & 0.8 & 0.4\\\\ 0.8 & 1 & 0.5\\\\ 0.4 & 0.5 & 1\\end{bmatrix}$. Show it is a tolerance relation but not an equivalence relation, and find the equivalence relation it generates.",
+       "answer": "Reflexive (diagonal 1) and symmetric → **tolerance**. Transitivity needs $\\mu(x_1, x_3) \\ge \\min(\\mu(x_1, x_2), \\mu(x_2, x_3)) = \\min(0.8, 0.5) = 0.5$, but $\\mu(x_1, x_3) = 0.4$ - **not transitive**.\n\n$\\tilde R^2 = \\tilde R\\circ\\tilde R$: entry (1,3) = $\\max(\\min(1, 0.4), \\min(0.8, 0.5), \\min(0.4, 1)) = 0.5$, others unchanged:\n$$\\tilde R^2 = \\begin{bmatrix}1 & 0.8 & 0.5\\\\ 0.8 & 1 & 0.5\\\\ 0.5 & 0.5 & 1\\end{bmatrix}, \\quad \\tilde R^3 = \\tilde R^2.$$\nAt most $n - 1 = 2$ compositions were needed; $\\tilde R^2$ is the equivalence relation.",
+       "points": [
+        {
+         "text": "Reflexive + symmetric = tolerance",
+         "marks": 1
+        },
+        {
+         "text": "Counter-example to transitivity",
+         "marks": 1.5
+        },
+        {
+         "text": "R² computed",
+         "marks": 1.5
+        },
+        {
+         "text": "States n − 1 bound / R³ = R²",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "For (d) always quote a specific triple that breaks transitivity - \"it is not transitive\" alone earns little."
+    },
+    {
+     "id": "q5",
+     "kind": "long",
+     "marks": 18,
+     "lab": "Fuzzy inference",
+     "prompt": "A fan controller reads temperature $T \\in [0, 40]$ °C and humidity $H \\in [0, 100]$ %:\n- $\\mu_{Hot}(T) = (T - 20)/10$ on [20, 30], 1 above 30, 0 below 20; $\\mu_{Cool} = 1 - \\mu_{Hot}$.\n- $\\mu_{Humid}(H) = (H - 40)/40$ on [40, 80], 1 above 80, 0 below 40; $\\mu_{Dry} = 1 - \\mu_{Humid}$.\n- Fan speed $z \\in [0, 100]$: $\\mu_{Slow}(z) = 1 - z/50$ on [0, 50] (0 above), $\\mu_{Fast}(z) = (z - 50)/50$ on [50, 100] (0 below).\n\nR1: IF $T$ is Hot OR $H$ is Humid THEN fan is Fast. R2: IF $T$ is Cool AND $H$ is Dry THEN fan is Slow. Inputs $T = 26$, $H = 50$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 3,
+       "prompt": "Fuzzify the inputs and find the firing strengths.",
+       "answer": "$\\mu_{Hot} = 0.6$, $\\mu_{Cool} = 0.4$, $\\mu_{Humid} = 0.25$, $\\mu_{Dry} = 0.75$.\n$\\alpha_1 = \\max(0.6, 0.25) = 0.6$; $\\alpha_2 = \\min(0.4, 0.75) = 0.4$.",
+       "points": [
+        {
+         "text": "Four memberships",
+         "marks": 1.5
+        },
+        {
+         "text": "α₁ = 0.6 by max, α₂ = 0.4 by min",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 4,
+       "prompt": "Using Mamdani min implication and max aggregation, write the aggregated output membership function piece by piece.",
+       "answer": "Slow clipped at 0.4: $1 - z/50 = 0.4$ at $z = 30$. Fast clipped at 0.6: $(z - 50)/50 = 0.6$ at $z = 80$.\n$$\\mu_C(z) = \\begin{cases}0.4, & 0 \\le z \\le 30\\\\ 1 - z/50, & 30 \\le z \\le 50\\\\ (z - 50)/50, & 50 \\le z \\le 80\\\\ 0.6, & 80 \\le z \\le 100\\end{cases}$$",
+       "points": [
+        {
+         "text": "Clip points z = 30 and z = 80",
+         "marks": 2
+        },
+        {
+         "text": "Four correct pieces",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "prompt": "Compute the crisp fan speed by the centroid method.",
+       "answer": "| Piece | $\\int\\mu$ | $\\int z\\mu$ |\n|---|---|---|\n| [0, 30], 0.4 | 12 | 180 |\n| [30, 50], $1 - z/50$ | 4 | 146.67 |\n| [50, 80], $(z - 50)/50$ | 9 | 630 |\n| [80, 100], 0.6 | 12 | 1080 |\n| Total | 37 | 2036.67 |\n\n$z^* = 2036.67/37 = 6110/111 \\approx$ **55.0**.",
+       "points": [
+        {
+         "text": "Areas of the four pieces",
+         "marks": 2
+        },
+        {
+         "text": "Moments of the four pieces",
+         "marks": 2.5
+        },
+        {
+         "text": "z* ≈ 55.0",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "What would mean-of-maxima give, and why do Mamdani controllers usually prefer the centroid?",
+       "answer": "Maximum membership 0.6 on [80, 100] → MOM $= 90$. MOM ignores everything but the top plateau (here it jumps to \"nearly full speed\"); the centroid uses the whole aggregated set, so it changes smoothly as the inputs change - better for control.",
+       "points": [
+        {
+         "text": "MOM = 90",
+         "marks": 1.5
+        },
+        {
+         "text": "Reason: centroid smooth / uses all rules",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "e",
+       "marks": 2,
+       "prompt": "Replace the consequents by Tsukamoto sets $\\mu_{Fast}(z) = z/100$ and $\\mu_{Slow}(z) = (80 - z)/80$. Find the output.",
+       "answer": "$y_1 = 100\\alpha_1 = 60$, $y_2 = 80(1 - \\alpha_2) = 48$; $y^* = \\dfrac{0.6(60) + 0.4(48)}{1.0} = 55.2$.",
+       "points": [
+        {
+         "text": "Inverse values 60 and 48",
+         "marks": 1
+        },
+        {
+         "text": "Weighted average 55.2",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Draw the clipped sets before integrating - most wrong centroids come from a wrong breakpoint (here z = 30 and z = 80)."
+    },
+    {
+     "id": "q6",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Fuzzy logic · hedges",
+     "prompt": "Let $\\tilde A = \\{1/x_1 + 0.6/x_2 + 0.1/x_3\\}$ on X and $\\tilde B = \\{0.2/y_1 + 0.7/y_2 + 1/y_3\\}$ on Y, for the rule \"IF $x$ is $\\tilde A$ THEN $y$ is $\\tilde B$\".",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 4,
+       "prompt": "Build the relation $\\tilde R$ using Zadeh's implication $\\mu_R = \\max(\\min(\\mu_A, \\mu_B), 1 - \\mu_A)$.",
+       "answer": "Row $x_1$ ($\\mu_A = 1$): $\\mu_B$ = (0.2, 0.7, 1). Row $x_2$ (0.6, $1 - \\mu_A = 0.4$): $(\\max(0.2, 0.4), \\max(0.6, 0.4), \\max(0.6, 0.4)) = (0.4, 0.6, 0.6)$. Row $x_3$ (0.1, 0.9): 0.9 everywhere.\n$$\\tilde R = \\begin{bmatrix}0.2 & 0.7 & 1\\\\ 0.4 & 0.6 & 0.6\\\\ 0.9 & 0.9 & 0.9\\end{bmatrix}$$",
+       "points": [
+        {
+         "text": "Row x₁",
+         "marks": 1
+        },
+        {
+         "text": "Row x₂",
+         "marks": 1.5
+        },
+        {
+         "text": "Row x₃",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "For the observation $\\tilde A' = \\{0.8/x_1 + 1/x_2 + 0.3/x_3\\}$ infer $\\tilde B'$ by max–min composition.",
+       "answer": "$y_1$: $\\max(\\min(0.8, 0.2), \\min(1, 0.4), \\min(0.3, 0.9)) = 0.4$; $y_2$: $\\max(0.7, 0.6, 0.3) = 0.7$; $y_3$: $\\max(0.8, 0.6, 0.3) = 0.8$.\n$\\tilde B' = \\{0.4/y_1 + 0.7/y_2 + 0.8/y_3\\}$.",
+       "points": [
+        {
+         "text": "Each element correct",
+         "marks": 3
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 3,
+       "prompt": "Evaluate the Łukasiewicz and Mamdani (min) implications at $(x_2, y_1)$ and confirm the lemma $Q_Z \\le Q_D \\le Q_L$ there.",
+       "answer": "$\\mu_A = 0.6$, $\\mu_B = 0.2$. Zadeh 0.4; Dienes–Rescher $\\max(0.2, 0.4) = 0.4$; Łukasiewicz $\\min(1, 0.4 + 0.2) = 0.6$; Mamdani $\\min(0.6, 0.2) = 0.2$. $0.4 \\le 0.4 \\le 0.6$ ✓.",
+       "points": [
+        {
+         "text": "Łukasiewicz 0.6",
+         "marks": 1
+        },
+        {
+         "text": "Mamdani 0.2",
+         "marks": 1
+        },
+        {
+         "text": "Lemma check with D–R",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "A term has memberships (0, 0.3, 0.7, 1, 0.6) on five points. Apply *very*, *more or less*, and *INT*.",
+       "answer": "very ($\\mu^2$): (0, 0.09, 0.49, 1, 0.36). more or less ($\\sqrt\\mu$): (0, 0.548, 0.837, 1, 0.775). INT: (0, 0.18, 0.82, 1, 0.68) - $2\\mu^2$ below 0.5, $1 - 2(1-\\mu)^2$ above.",
+       "points": [
+        {
+         "text": "very",
+         "marks": 1
+        },
+        {
+         "text": "more or less",
+         "marks": 1
+        },
+        {
+         "text": "INT with both branches",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "e",
+       "marks": 3,
+       "prompt": "For $a = 0.4$, $b = 0.9$ evaluate the bounded difference, product, min, max, algebraic sum and bounded sum, and state the ordering they illustrate.",
+       "answer": "0.3, 0.36, 0.4 | 0.9, 0.94, 1. Every T-norm ≤ min ≤ max ≤ every S-norm:\n$\\max(0, a + b - 1) \\le ab \\le \\min \\le \\max \\le a + b - ab \\le \\min(1, a + b)$.",
+       "points": [
+        {
+         "text": "Six values",
+         "marks": 2
+        },
+        {
+         "text": "Ordering statement",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "In (a) remember Zadeh's rule lets \"x not in A\" make the rule vacuously true - that is why row x₃ is 0.9 everywhere."
+    }
+   ]
+  }
+ ]
+}

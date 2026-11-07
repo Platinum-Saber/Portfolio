@@ -1,0 +1,581 @@
+{
+ "title": "Mock paper 2",
+ "minutes": 180,
+ "intro": "**3 hours · 100 marks · answer all six questions.** Four neural-network and two fuzzy questions, heavier on derivations (LMS, the scaled-sigmoid derivative) and on the less-practised topics - MADALINE, PNN, Tsukamoto and defuzzification methods. Paper 1 leans the other way; together they touch every lesson.\n\nWork on paper with a calculator. After submitting, each part shows a model answer and a mark scheme - tick what your answer contains.",
+ "sections": [
+  {
+   "id": "A",
+   "title": "Neural networks",
+   "blurb": "Questions 1–4.",
+   "questions": [
+    {
+     "id": "q1",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Widrow–Hoff · LMS",
+     "prompt": "An ADALINE without bias is trained on $\\mathbf{p}_1 = [1, 1]^T, t_1 = 1$ and $\\mathbf{p}_2 = [1, 0]^T, t_2 = -1$, each occurring with probability ½. The LMS update is $W(k+1) = W(k) + 2\\alpha\\, e(k)\\,\\mathbf{p}^T(k)$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 5,
+       "prompt": "Show that the mean square error $F(\\mathbf{x}) = E[(t - \\mathbf{x}^T\\mathbf{z})^2]$ is a quadratic function, identifying $c$, $\\mathbf{h}$ and $R$, and give its gradient and Hessian.",
+       "answer": "$F = E[t^2 - 2t\\mathbf{x}^T\\mathbf{z} + \\mathbf{x}^T\\mathbf{z}\\mathbf{z}^T\\mathbf{x}] = E[t^2] - 2\\mathbf{x}^TE[t\\mathbf{z}] + \\mathbf{x}^TE[\\mathbf{z}\\mathbf{z}^T]\\mathbf{x} = c - 2\\mathbf{x}^T\\mathbf{h} + \\mathbf{x}^TR\\mathbf{x}$,\nwith $c = E[t^2]$, $\\mathbf{h} = E[t\\mathbf{z}]$ (cross-correlation), $R = E[\\mathbf{z}\\mathbf{z}^T]$ (input correlation). This is $c + \\mathbf{d}^T\\mathbf{x} + \\tfrac12\\mathbf{x}^TA\\mathbf{x}$ with $\\mathbf{d} = -2\\mathbf{h}$, $A = 2R$. Gradient $\\nabla F = 2R\\mathbf{x} - 2\\mathbf{h}$; Hessian $2R$.",
+       "points": [
+        {
+         "text": "Expansion of the square and expectation",
+         "marks": 2
+        },
+        {
+         "text": "c, h, R identified",
+         "marks": 1.5
+        },
+        {
+         "text": "Gradient and Hessian",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 5,
+       "prompt": "For the given data compute $R$, $\\mathbf{h}$, the eigenvalues of $R$, the minimum point $\\mathbf{x}^*$ and the maximum stable learning rate.",
+       "answer": "$R = \\tfrac12\\begin{bmatrix}1&1\\\\1&1\\end{bmatrix} + \\tfrac12\\begin{bmatrix}1&0\\\\0&0\\end{bmatrix} = \\begin{bmatrix}1 & 0.5\\\\ 0.5 & 0.5\\end{bmatrix}$; $\\mathbf{h} = \\tfrac12(1)[1,1]^T + \\tfrac12(-1)[1,0]^T = [0, 0.5]^T$.\n\n$\\lambda^2 - 1.5\\lambda + 0.25 = 0$ → $\\lambda = 1.309, 0.191$ - both positive, so a **unique strong minimum**.\n\n$\\mathbf{x}^* = R^{-1}\\mathbf{h} = \\begin{bmatrix}2 & -2\\\\ -2 & 4\\end{bmatrix}\\begin{bmatrix}0\\\\0.5\\end{bmatrix} = [-1, 2]^T$ (check: $p_1$ → 1, $p_2$ → −1 exactly, so $F_{min} = 0$).\n\nStable for $\\alpha < 1/\\lambda_{max} = 1/1.309 = 0.764$.",
+       "points": [
+        {
+         "text": "R and h",
+         "marks": 1.5
+        },
+        {
+         "text": "Eigenvalues and \"strong minimum\"",
+         "marks": 1.5
+        },
+        {
+         "text": "x* = [−1, 2]",
+         "marks": 1
+        },
+        {
+         "text": "α < 0.764",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "Starting from $W = [0, 0]$ with $\\alpha = 0.25$, perform four LMS iterations presenting $p_1, p_2, p_1, p_2$.",
+       "answer": "| k | input | $a = Wp$ | $e$ | $W(k+1)$ |\n|---|---|---|---|---|\n| 0 | $p_1$ | 0 | 1 | [0.5, 0.5] |\n| 1 | $p_2$ | 0.5 | −1.5 | [−0.25, 0.5] |\n| 2 | $p_1$ | 0.25 | 0.75 | [0.125, 0.875] |\n| 3 | $p_2$ | 0.125 | −1.125 | [−0.4375, 0.875] |\n\nMoving towards $[-1, 2]$.",
+       "points": [
+        {
+         "text": "Iteration 1–2 correct",
+         "marks": 2
+        },
+        {
+         "text": "Iteration 3–4 correct",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "prompt": "State the practical learning-rate heuristic for an ADALINE with $n$ inputs and apply it to $n = 50$.",
+       "answer": "$0.1 \\le n\\eta \\le 1$ → $0.002 \\le \\eta \\le 0.02$ for $n = 50$.",
+       "points": [
+        {
+         "text": "Heuristic",
+         "marks": 1
+        },
+        {
+         "text": "Range for n = 50",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "In (b), say explicitly what the eigenvalues mean for the error surface (strong / weak minimum) - that is where the marks for interpretation sit."
+    },
+    {
+     "id": "q2",
+     "kind": "long",
+     "marks": 16,
+     "lab": "MADALINE",
+     "prompt": "A MADALINE has two hidden ADALINEs $Z_1, Z_2$ and an output unit $Y$ that computes OR with $v_1 = v_2 = b_y = 0.5$. All units use the bipolar step $f(x) = 1$ if $x \\ge 0$, else $-1$. Hidden weights: $w_{11} = 0.3, w_{21} = 0.1, b_1 = -0.3$; $w_{12} = -0.2, w_{22} = 0.25, b_2 = -0.5$. Learning rate $\\alpha = 0.4$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 3,
+       "prompt": "Explain why hidden units make MADALINE more powerful than ADALINE and name the training difficulty they introduce.",
+       "answer": "One ADALINE draws one line. Several hidden ADALINEs each draw a line and the output unit combines their half-planes, giving a non-linear (piecewise-linear) decision region - e.g. XOR. The difficulty: there are no targets for hidden units, so it is unclear which hidden weights to blame (the credit-assignment problem) - MR-I and MR-II are heuristics for it.",
+       "points": [
+        {
+         "text": "Combination of linear boundaries → non-linear",
+         "marks": 1.5
+        },
+        {
+         "text": "Credit assignment / no hidden targets",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "prompt": "Present $x = (-1, 1)$ with $t = 1$. Compute the network output and apply one MR-I update.",
+       "answer": "$z_{in,1} = -0.3 + (-1)(0.3) + 1(0.1) = -0.5$ → $z_1 = -1$; $z_{in,2} = -0.5 + (-1)(-0.2) + 1(0.25) = -0.05$ → $z_2 = -1$.\n$y_{in} = 0.5 + 0.5(-1) + 0.5(-1) = -0.5$ → $y = -1 \\ne t$.\n\n$t = +1$: update only the unit whose net input is **closest to 0** - $Z_2$ (−0.05):\n$\\alpha(1 - z_{in,2}) = 0.4(1.05) = 0.42$.\n$b_2 = -0.5 + 0.42 = -0.08$; $w_{12} = -0.2 + 0.42(-1) = -0.62$; $w_{22} = 0.25 + 0.42(1) = 0.67$.\n\nCheck: $z_{in,2} = -0.08 + 0.62 + 0.67 = 1.21$ → $z_2 = 1$, $y_{in} = 0.5$ → $y = 1$ ✓.",
+       "points": [
+        {
+         "text": "Hidden net inputs and outputs",
+         "marks": 1.5
+        },
+        {
+         "text": "Network output −1",
+         "marks": 1
+        },
+        {
+         "text": "Chooses Z₂ (closest to 0) with reason",
+         "marks": 1.5
+        },
+        {
+         "text": "Updated weights",
+         "marks": 1.5
+        },
+        {
+         "text": "Verification",
+         "marks": 0.5
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 3,
+       "prompt": "Had the target been $t = -1$ for a pattern where both hidden net inputs are positive, what would MR-I do?",
+       "answer": "Update **every** hidden unit with positive net input towards −1: $b_j \\leftarrow b_j + \\alpha(-1 - z_{in,j})$, $w_{ij} \\leftarrow w_{ij} + \\alpha(-1 - z_{in,j})x_i$ - because an OR output is −1 only if *all* hidden units are −1.",
+       "points": [
+        {
+         "text": "All positive units",
+         "marks": 1
+        },
+        {
+         "text": "Correct update formula",
+         "marks": 1
+        },
+        {
+         "text": "Reason (OR needs all −1)",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 4,
+       "prompt": "Describe MR-II and give two differences from MR-I.",
+       "answer": "MR-II: when $y \\ne t$, take hidden units whose net input is near 0 (e.g. within ±0.25), closest first; flip the unit's output (+1 ↔ −1) and recompute the network output; if the error falls, adapt that unit's weights by the delta rule using the flipped value as its target.\n\nDifferences: MR-II adjusts **all** weights (MR-I only the hidden ones); MR-II does **not** assume an OR output unit; MR-II uses a trial-flip / minimal-disturbance search.",
+       "points": [
+        {
+         "text": "Flip-and-test procedure",
+         "marks": 2
+        },
+        {
+         "text": "Delta rule on improvement",
+         "marks": 1
+        },
+        {
+         "text": "Two differences",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Part (b): many answers update both hidden units - that is the t = −1 rule. For t = +1 only the unit nearest 0 changes."
+    },
+    {
+     "id": "q3",
+     "kind": "long",
+     "marks": 18,
+     "lab": "Backprop variations",
+     "prompt": "This question is about training multilayer perceptrons.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 5,
+       "prompt": "A 2-2-1 network uses the **bipolar sigmoid** $f(x) = 2/(1 + e^{-x}) - 1$ everywhere. With $x = (0.5, -1)$, $v_{11} = 1.0, v_{12} = -0.5, v_{21} = 0.5, v_{22} = 0.8$, $v_{01} = 0.1, v_{02} = -0.2$, $w_1 = 0.7, w_2 = -0.4, w_0 = 0.2$ and target $t = 0.8$, compute the output and the output error term $\\delta$.",
+       "answer": "$z_{in,1} = 0.1 + 0.5(1.0) + (-1)(0.5) = 0.1$ → $z_1 = 0.0500$; $z_{in,2} = -0.2 + 0.5(-0.5) + (-1)(0.8) = -1.25$ → $z_2 = -0.5546$.\n$y_{in} = 0.2 + 0.7(0.05) - 0.4(-0.5546) = 0.4568$ → $y = 0.2245$.\n$f'(y_{in}) = \\tfrac12(1 + y)(1 - y) = \\tfrac12(1.2245)(0.7755) = 0.4748$; $\\delta = (0.8 - 0.2245)(0.4748) = 0.2732$.",
+       "points": [
+        {
+         "text": "Hidden layer",
+         "marks": 2
+        },
+        {
+         "text": "Output 0.2245",
+         "marks": 1.5
+        },
+        {
+         "text": "δ using ½(1 + y)(1 − y)",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "Write the momentum update and compute two successive changes of a weight when $\\alpha = 0.1$, $\\mu = 0.8$ and the gradient term $\\delta_k z_j = 0.6$ both times (starting from zero).",
+       "answer": "$\\Delta w_{jk}(t+1) = \\alpha\\delta_k z_j + \\mu\\Delta w_{jk}(t)$, $0 < \\mu < 1$.\n$\\Delta w(1) = 0.1(0.6) = 0.06$; $\\Delta w(2) = 0.06 + 0.8(0.06) = 0.108$. (Limit $0.06/(1 - 0.8) = 0.3$.)",
+       "points": [
+        {
+         "text": "Rule",
+         "marks": 1
+        },
+        {
+         "text": "Two values",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "Explain the delta-bar-delta rule: what each of κ, φ and θ does, and why increases and decreases are treated differently.",
+       "answer": "Each weight gets its own learning rate $\\alpha_i(t)$. θ smooths past gradients: $\\bar\\delta_i(t) = (1 - \\theta)g_i(t) + \\theta\\bar\\delta_i(t-1)$. If $\\bar\\delta_i(t-1)g_i(t) > 0$ (consistent slope) the rate increases by **κ** (additive); if $< 0$ (sign flip, overshooting a valley) it decreases by **φ** $\\alpha_i(t-1)$ (multiplicative); otherwise unchanged. Additive increase avoids explosive step sizes; multiplicative decrease damps oscillation quickly.",
+       "points": [
+        {
+         "text": "Per-weight rates and θ smoothing",
+         "marks": 1
+        },
+        {
+         "text": "κ increase on same sign",
+         "marks": 1
+        },
+        {
+         "text": "φ decrease on sign change",
+         "marks": 1
+        },
+        {
+         "text": "Asymmetry explained",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "Compute the Nguyen–Widrow scale factor for 3 inputs and 8 hidden units, and explain the procedure and its benefit.",
+       "answer": "$\\beta = 0.7\\,p^{1/n} = 0.7 \\cdot 8^{1/3} = 1.4$. For each hidden unit: random weights → normalise to unit length → scale to length β; bias uniform in $[-\\beta, \\beta]$. Units start in the active (non-saturated) part of the sigmoid and cover the input space evenly, so training converges faster.",
+       "points": [
+        {
+         "text": "β = 1.4",
+         "marks": 1
+        },
+        {
+         "text": "Procedure",
+         "marks": 1
+        },
+        {
+         "text": "Benefit",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "e",
+       "marks": 3,
+       "prompt": "For $f(x) = a + (b - a)\\sigma(x)$ show that $f'(x) = (y - a)(b - y)/(b - a)$ where $y = f(x)$.",
+       "answer": "$f' = (b - a)\\sigma(1 - \\sigma)$. From $y = a + (b - a)\\sigma$: $\\sigma = \\dfrac{y - a}{b - a}$ and $1 - \\sigma = \\dfrac{b - y}{b - a}$. So $f' = (b - a)\\dfrac{(y - a)(b - y)}{(b - a)^2} = \\dfrac{(y - a)(b - y)}{b - a}$.",
+       "points": [
+        {
+         "text": "Derivative via σ(1 − σ)",
+         "marks": 1
+        },
+        {
+         "text": "Invert for σ",
+         "marks": 1
+        },
+        {
+         "text": "Simplify",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Bipolar sigmoid derivative is ½(1 + f)(1 − f), not f(1 − f) - the commonest error in (a)."
+    },
+    {
+     "id": "q4",
+     "kind": "long",
+     "marks": 16,
+     "lab": "PNN",
+     "prompt": "A probabilistic neural network has class A samples (0, 0), (1, 0), (0, 1) and class B samples (2, 2), (3, 2). The kernel is $\\exp(-\\lVert\\mathbf{x} - \\mathbf{x}_{kj}\\rVert^2 / 2\\sigma^2)$ (the common factor $1/(2\\pi\\sigma^2)$ may be omitted).",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 4,
+       "prompt": "Draw and describe the four layers of the network for this data, saying how many units each has.",
+       "answer": "Input (2 units: $x_1, x_2$) → pattern layer (5 units, one per stored sample, each a Gaussian kernel at its sample) → summation layer (2 units, one per class, averaging their class's pattern units) → output/decision (1 unit choosing the class with the largest $hC\\hat f$).",
+       "points": [
+        {
+         "text": "Four layers named",
+         "marks": 2
+        },
+        {
+         "text": "Correct unit counts 2/5/2/1",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "prompt": "Classify $\\mathbf{x} = (1.5, 1)$ with σ = 1 and equal priors and costs.",
+       "answer": "Squared distances: to (0,0) 3.25, (1,0) 1.25, (0,1) 2.25; to (2,2) 1.25, (3,2) 3.25.\nKernels $e^{-d^2/2}$: 0.197, 0.535, 0.325 | 0.535, 0.197.\n$\\hat f_A = (0.197 + 0.535 + 0.325)/3 = 0.352$; $\\hat f_B = (0.535 + 0.197)/2 = 0.366$.\n$\\hat f_B > \\hat f_A$ → **class B** (a narrow call - the query is almost on the boundary).",
+       "points": [
+        {
+         "text": "Distances",
+         "marks": 1.5
+        },
+        {
+         "text": "Kernel values",
+         "marks": 1.5
+        },
+        {
+         "text": "Class averages",
+         "marks": 2
+        },
+        {
+         "text": "Decision B",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 3,
+       "prompt": "Repeat the decision when class A has prior 0.6 and B 0.4 (equal costs). Then explain what happens as σ is made very small or very large.",
+       "answer": "$0.6(0.352) = 0.211 > 0.4(0.366) = 0.146$ → **class A**.\nSmall σ: each sample is a narrow spike - nearest-neighbour behaviour, jagged boundary, over-fitting. Large σ: densities smooth out, boundary approaches a simple smooth curve - over-smoothing, loses detail.",
+       "points": [
+        {
+         "text": "Weighted comparison → A",
+         "marks": 1.5
+        },
+        {
+         "text": "Effect of σ both ways",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "Give two advantages and two disadvantages of a PNN compared with a backpropagation network.",
+       "answer": "Advantages: training is instantaneous (just store samples), outputs have a probabilistic (Bayes) interpretation and approach Bayes-optimal with enough data, new samples can be added without retraining. Disadvantages: one pattern unit per sample - large memory; classification slows as data grows; sensitive to the choice of σ.",
+       "points": [
+        {
+         "text": "Two advantages",
+         "marks": 1.5
+        },
+        {
+         "text": "Two disadvantages",
+         "marks": 1.5
+        }
+       ]
+      }
+     ],
+     "explain": "Dividing by the class sizes (3 and 2) is essential - without it class A wins only because it has more samples."
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Fuzzy logic",
+   "blurb": "Questions 5–6.",
+   "questions": [
+    {
+     "id": "q5",
+     "kind": "long",
+     "marks": 18,
+     "lab": "Sugeno · Tsukamoto",
+     "prompt": "Inputs $x, y \\in [0, 10]$ with $\\mu_{Small}(u) = (10 - u)/10$ and $\\mu_{Large}(u) = u/10$ for both. Rules:\n- R1: IF $x$ is Small AND $y$ is Small THEN $z_1 = x + y + 1$\n- R2: IF $x$ is Large AND $y$ is Small THEN $z_2 = 2x + 1$\n- R3: IF $x$ is Large OR $y$ is Large THEN $z_3 = 3x + 2y$\n\nInputs $x = 3$, $y = 6$.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "prompt": "Using min for AND and max for OR, compute the first-order Sugeno output.",
+       "answer": "$\\mu_{Small}(3) = 0.7$, $\\mu_{Large}(3) = 0.3$, $\\mu_{Small}(6) = 0.4$, $\\mu_{Large}(6) = 0.6$.\n$w_1 = \\min(0.7, 0.4) = 0.4$, $w_2 = \\min(0.3, 0.4) = 0.3$, $w_3 = \\max(0.3, 0.6) = 0.6$.\n$z_1 = 10$, $z_2 = 7$, $z_3 = 21$.\n$z^* = \\dfrac{0.4(10) + 0.3(7) + 0.6(21)}{1.3} = \\dfrac{18.7}{1.3} = 14.38$.",
+       "points": [
+        {
+         "text": "Memberships",
+         "marks": 1.5
+        },
+        {
+         "text": "Firing strengths",
+         "marks": 1.5
+        },
+        {
+         "text": "Rule outputs",
+         "marks": 1.5
+        },
+        {
+         "text": "Weighted average",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "Recompute with the product T-norm for AND and the algebraic sum for OR.",
+       "answer": "$w_1 = 0.28$, $w_2 = 0.12$, $w_3 = 0.3 + 0.6 - 0.18 = 0.72$. $z^* = (2.8 + 0.84 + 15.12)/1.12 = 16.75$.",
+       "points": [
+        {
+         "text": "New strengths",
+         "marks": 1.5
+        },
+        {
+         "text": "Output 16.75",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "Now treat it as a Tsukamoto system: R1 and R2 conclude \"z is Low\" with $\\mu_{Low}(z) = (20 - z)/20$, R3 \"z is High\" with $\\mu_{High}(z) = z/20$. Find the output (min/max operators).",
+       "answer": "$y_1 = 20(1 - 0.4) = 12$, $y_2 = 20(1 - 0.3) = 14$, $y_3 = 20(0.6) = 12$.\n$y^* = \\dfrac{0.4(12) + 0.3(14) + 0.6(12)}{1.3} = \\dfrac{16.2}{1.3} = 12.46$.",
+       "points": [
+        {
+         "text": "Inverse values",
+         "marks": 2
+        },
+        {
+         "text": "Weighted average",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "An antecedent reads \"$x$ is $A_1$ OR $x$ is $A_2$ AND $y$ is $B_1$\" with grades 0.9, 0.3, 0.4. Evaluate it with the standard precedence and with left-to-right grouping, and comment.",
+       "answer": "Standard (AND before OR): $\\max(0.9, \\min(0.3, 0.4)) = 0.9$. Left-to-right $(A_1 \\vee A_2) \\wedge B_1$: $\\min(\\max(0.9, 0.3), 0.4) = 0.4$. Different firing strengths - a rule base must fix the precedence (AND first) or use brackets.",
+       "points": [
+        {
+         "text": "0.9 with precedence",
+         "marks": 1
+        },
+        {
+         "text": "0.4 left-to-right",
+         "marks": 1
+        },
+        {
+         "text": "Comment",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "e",
+       "marks": 2,
+       "prompt": "Why is a first-order TSK system the basis of ANFIS, and how does ANFIS train it?",
+       "answer": "Its output is **linear in the consequent parameters**, so with the premises fixed they can be solved by least squares in a forward pass; the non-linear membership parameters are then tuned by gradient descent in a backward pass (hybrid learning).",
+       "points": [
+        {
+         "text": "Linear in consequents",
+         "marks": 1
+        },
+        {
+         "text": "Hybrid LSE + gradient descent",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Keep the three inference systems apart: Sugeno averages functions of the inputs, Tsukamoto averages μ⁻¹(α), Mamdani defuzzifies an aggregated set."
+    },
+    {
+     "id": "q6",
+     "kind": "long",
+     "marks": 16,
+     "lab": "Defuzzification · logic",
+     "prompt": "This question covers membership-function features, defuzzification and classical logic.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "prompt": "An output is the union of $C_1$: triangle on [0, 8] with peak at 4, clipped at 0.6, and $C_2$: triangle on [6, 14] with peak at 10, clipped at 0.8. Find $z^*$ by (i) the weighted average method, (ii) centre of sums and (iii) mean of maxima. The centroid of the union is 7.21 - comment.",
+       "answer": "Clipped triangle of base 8 at height $h$: trapezoid area $4h(2 - h)$.\n\n(i) Weighted average (heights): $\\dfrac{0.6(4) + 0.8(10)}{1.4} = 7.43$.\n\n(ii) Centre of sums (areas): $A_1 = 4(0.6)(1.4) = 3.36$, $A_2 = 4(0.8)(1.2) = 3.84$; $z^* = \\dfrac{3.36(4) + 3.84(10)}{7.2} = 7.2$.\n\n(iii) Max 0.8 on $C_2$'s plateau [9.2, 10.8] → MOM $= 10$.\n\nThe centroid (7.21) uses the union, counting the small overlap on [6, 8] once; centre of sums counts it twice but the overlap is tiny, so they agree closely. Weighted average ignores widths; MOM ignores $C_1$ entirely.",
+       "points": [
+        {
+         "text": "Weighted average 7.43",
+         "marks": 1.5
+        },
+        {
+         "text": "Areas and centre of sums 7.2",
+         "marks": 2
+        },
+        {
+         "text": "MOM 10 with plateau",
+         "marks": 1.5
+        },
+        {
+         "text": "Comment",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "prompt": "Define the core, support, crossover points and height of a fuzzy set, and state when a fuzzy set is convex.",
+       "answer": "Core: $\\mu = 1$. Support: $\\mu > 0$. Crossover: $\\mu = 0.5$. Height: $\\max\\mu$ (normal if 1). Convex: $x < y < z \\Rightarrow \\mu(y) \\ge \\min(\\mu(x), \\mu(z))$ - no dips.",
+       "points": [
+        {
+         "text": "Four definitions",
+         "marks": 2
+        },
+        {
+         "text": "Convexity condition",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 4,
+       "prompt": "Show by truth table that modus ponens $(A \\wedge (A \\Rightarrow B)) \\Rightarrow B$ is a tautology.",
+       "answer": "| A | B | A ⇒ B | A ∧ (A ⇒ B) | … ⇒ B |\n|---|---|---|---|---|\n| 0 | 0 | 1 | 0 | 1 |\n| 0 | 1 | 1 | 0 | 1 |\n| 1 | 0 | 0 | 0 | 1 |\n| 1 | 1 | 1 | 1 | 1 |\n\nAll 1 → tautology.",
+       "points": [
+        {
+         "text": "Implication column",
+         "marks": 1.5
+        },
+        {
+         "text": "Conjunction column",
+         "marks": 1
+        },
+        {
+         "text": "Final column all 1 + conclusion",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 3,
+       "prompt": "With $X = \\{1, 2, 3\\}$, $Y = \\{a, b\\}$, $A = \\{1, 2\\}$, $B = \\{a\\}$, write the crisp relation for IF A THEN B and infer the consequent for $A' = \\{3\\}$.",
+       "answer": "$R = (A \\times B)\\cup(\\bar A \\times Y)$: rows 1, 2 = (1, 0); row 3 = (1, 1). $A' = \\{3\\}$ picks row 3 → $B' = \\{a, b\\} = Y$ - the antecedent is false, so the rule constrains nothing.",
+       "points": [
+        {
+         "text": "Relation matrix",
+         "marks": 2
+        },
+        {
+         "text": "Inference and interpretation",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "For (a)(ii) the weights are areas, not heights - write the area formula before substituting."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,554 @@
+---
+title: Labs & solutions
+summary: All six CS4533 labs - every exercise with a compiled and tested solution, the numbers it produced on a 2-core machine, and an answer to every question. Half of the final paper is MCQs about exactly these situations.
+files:
+  - label: Lab 01 - Threads & mutual exclusion
+    file: cse/sem7/cs4533-lab01.pdf
+    pages: 5
+  - label: Lab 02 - Producer-consumer, reader-writer
+    file: cse/sem7/cs4533-lab02.pdf
+    pages: 9
+  - label: Lab 03 - OpenMP
+    file: cse/sem7/cs4533-lab03.pdf
+    pages: 8
+  - label: Lab 04 - Semaphores
+    file: cse/sem7/cs4533-lab04.pdf
+    pages: 7
+  - label: Lab 05 - Concurrent data structures
+    file: cse/sem7/cs4533-lab05.pdf
+    pages: 11
+  - label: Lab 06 - Solution patterns
+    file: cse/sem7/cs4533-lab06.pdf
+    pages: 10
+---
+
+<Section id="l0" num="0" title="How to use the labs tab" tags="exam">
+
+The MCQ half of the paper checks that you *did* the labs: "you ran Lab 1 Ex2 with N = 8 - what did you see and why?", "your ping-pong used `if` instead of `while` - which failure is possible?". So for every exercise this page gives:
+
+1. **What the exercise wants** in one paragraph, with a link to the lab sheet page.
+2. **The solution** - the exact file that was compiled and run (the green ✓ badge), with the build line.
+3. **What it printed** on a 2-core Linux box - your numbers will differ, the *shape* will not.
+4. **Every question answered.**
+
+<Callout kind="tip" title="Numbers to remember">
+
+| Lab | The one number that tells the story |
+|---|---|
+| 1 | 17–43 % of unsynchronised increments lost; local accumulation ~100× faster than a lock per increment |
+| 2 | Writer priority cut the writers' wait 0.236 s → 0.178 s |
+| 3 | π: critical 0.173 s · atomic 0.084 s · reduction 0.012 s |
+| 4 | River crossing 5H + 3S never finishes - 8 people cannot make two valid boats |
+| 5 | Fine-grained list ~10× slower than coarse on 2 cores; "unsafe" counter correct at -O2 |
+| 6 | Tree sum slower than serial for thresholds ≤ 10 000; work stealing ≈ 2× with only a few dozen steals |
+
+</Callout>
+
+</Section>
+
+<Section id="l1" num="1" title="Lab 01 - Threads and mutual exclusion" tags="exam code" pages="Lab 01 · 5 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab01.pdf" page="1">Lab 01 sheet</PdfRef>
+
+### Ex 1 - create and join
+
+Create N threads; each prints its id and index and returns $\text{index}^2$; `main` joins and prints the results. The trap is passing the index: pass the *value* inside the pointer, never `&i`.
+
+<CodeFile src="cse/sem7/cs4533/code/lab1-ex1.c" cmd="gcc -Wall -O0 -pthread lab1-ex1.c && ./a.out 8" />
+
+**Q1.1 - same order every run?** No. The threads' prints interleave differently on each run because the OS scheduler decides when each thread runs and on which core; creation order is not execution order. The "returned" lines *are* in order only because `main` joins in index order.
+
+**Q1.2 - omit `pthread_join`?** `main` reaches `return 0`, which calls `exit()` and ends the whole process - threads still running are killed. You see some, all or none of the thread prints, varying run to run, and the return values are never collected. (Calling `pthread_exit()` in `main` instead would let the other threads finish.)
+
+### Ex 2 - observe the race
+
+<CodeFile src="cse/sem7/cs4533/code/lab1-ex2.c" cmd="gcc -Wall -O0 -pthread lab1-ex2.c && ./a.out 4" />
+
+| N (M = 100 000) | One run: actual / expected | Lost |
+|---|---|---|
+| 2 | 128 404 / 200 000 | 35.8 % |
+| 4 | 329 125 / 400 000 | 17.7 % |
+| 8 | 455 479 / 800 000 | 43.1 % |
+| 16 | 1 041 658 / 1 600 000 | 34.9 % |
+
+Over repeated runs the loss ranged from **about 17 % to 43 %**, different every time - even for the same N.
+
+**Q2.1** - error % = $(NM - \text{actual}) / NM \times 100$ per run; the range is the point: the result is non-deterministic.
+
+**Q2.2 - instruction level.**
+
+<RaceLab />
+
+| Time | T1 | T2 | counter |
+|---|---|---|---|
+| 1 | `LOAD r1 ← counter` (5) | | 5 |
+| 2 | | `LOAD r2 ← counter` (5) | 5 |
+| 3 | `ADD r1 = 6` | `ADD r2 = 6` | 5 |
+| 4 | `STORE counter ← 6` | | 6 |
+| 5 | | `STORE counter ← 6` | 6 ← T1's update lost |
+
+**Q2.3 - worse with more N?** Not monotonically - single runs jump around (17.7 % at N = 4, 43 % at N = 8) - but on average more threads lose more: more threads means more overlapping load–store windows, and with true parallelism (cores ≥ 2) two threads hit the same cache line at the same moment. It levels off once threads exceed cores, because then extra threads just time-slice.
+
+### Ex 3 - fix it: lock every increment vs local accumulation
+
+<CodeFile src="cse/sem7/cs4533/code/lab1-ex3.c" focus="void *inc_global_mutex" focusTo="double run(" cmd="gcc -Wall -O0 -pthread lab1-ex3.c && ./a.out 16" />
+
+| N | Part A - lock per `++` | Part B - local count, lock once |
+|---|---|---|
+| 1 | 0.0019 s | 0.0002 s |
+| 2 | 0.004–0.019 s | 0.0002 s |
+| 4 | 0.013–0.038 s | 0.0002 s |
+| 8 | 0.026–0.073 s | 0.0005 s |
+| 16 | **0.05–0.15 s** | **0.001 s** |
+
+(Ranges over five runs - contention makes Part A noisy.) Both always print exactly N × M.
+
+**Q3.1/Q3.2 - why is B faster?** Part A does N × M lock/unlock pairs and every one of them fights for one mutex - **lock contention**: threads spend their time blocked or spinning, the lock's cache line bounces between cores, and the "parallel" loop is fully serialised plus overhead. Part B touches the lock N times in total; the loop runs on private registers at full speed.
+
+**Q3.3 - forget the unlock?** The first thread increments once and keeps the mutex. Its own next `lock` call blocks (a default mutex is not recursive - self-deadlock), and every other thread blocks too. The program hangs with 0 % CPU and never prints the result.
+
+### Ex 4 - Amdahl
+
+<CodeFile src="cse/sem7/cs4533/code/lab1-ex4.c" focus="void *sum_chunk" focusTo="int main" cmd="gcc -Wall -O0 -pthread lab1-ex4.c && ./a.out" />
+
+```text
+ N     serial   parallel      total  speedup
+ 1     1.9443     0.0307     1.9749     1.00
+ 2     1.9457     0.0216     1.9673     1.00
+ 4     1.9178     0.0158     1.9336     1.02
+ 8     2.0254     0.0165     2.0419     0.97
+```
+
+**Q4.2 - estimate P.** $P = T_\text{par}(1)/T_\text{total}(1) = 0.0307 / 1.975 \approx 0.016$.
+
+**Q4.3** - $S(64) = 1/(0.984 + 0.016/64) \approx 1.016$; $S_\infty = 1/(1 - 0.016) \approx 1.016$. The observed ≈ 1.0–1.02 matches: the 98 % serial sort caps everything. N = 8 is slightly *slower* - 8 threads on 2 cores only add creation and switching cost.
+
+**Q4.4 - increase P.** Parallelise the sort: give each thread a chunk to `qsort`, then merge the sorted chunks (or use the OpenMP task merge sort from Lab 3 Ex4). Now almost the whole run is parallel and the 2-core speedup approaches 2.
+
+<Detail>
+
+### Pitfalls to watch for in Lab 1
+
+- **Missing `-pthread`** on older toolchains gives "undefined reference to `pthread_create`". Pass it to both compile and link.
+- **Measuring with `clock()`** reported *larger* times for more threads - it adds up CPU time of all threads. Use `CLOCK_MONOTONIC`.
+- **Compiling Ex2 with `-O2`** can make the race nearly disappear (the loop is folded) - the lab asks for `-O0` for a reason; Lab 5 Ex2 shows the same trap on purpose.
+- **Printing inside the timed loop** (Ex3) measures `printf`'s internal lock, not your mutex.
+
+</Detail>
+
+</Section>
+
+<Section id="l2" num="2" title="Lab 02 - Condition variables, producer-consumer, reader-writer" tags="exam code" pages="Lab 02 · 9 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab02.pdf" page="1">Lab 02 sheet</PdfRef>
+
+### Ex 1 - ping pong
+
+<CodeFile src="cse/sem7/cs4533/code/lab2-ex1.c" cmd="gcc -Wall -O0 -pthread lab2-ex1.c && ./a.out 10" />
+
+**Q1.1 - `if` instead of `while`?** It usually still works here - and that is the trap. `pthread_cond_wait` may return without a matching signal (**spurious wakeup**, explicitly allowed by POSIX), and with Mesa semantics the condition may have changed between the signal and re-acquiring the mutex. With `if`, the thread proceeds on a false condition and prints out of turn ("ping ping"). `while` re-tests the predicate after every wake-up, so a spurious or stale wake-up just goes back to sleep.
+
+**Q1.2 - `broadcast` instead of `signal`?** Still correct: there is only one other thread waiting, so it wakes the same thread. Even with more waiters it would stay correct because of the `while` re-check - broadcast only costs extra wake-ups that immediately sleep again.
+
+### Ex 2 - one producer, one consumer, bounded buffer
+
+<CodeFile src="cse/sem7/cs4533/code/lab2-ex2.c" focus="void put(int item)" focusTo="void *producer" cmd="gcc -Wall -O0 -pthread lab2-ex2.c && ./a.out 100" />
+
+**Q2.1 - `BUFFER_SIZE = 1`?** Still correct - items come out 0 … N−1 in order - but producer and consumer now run in strict lock-step: every `put` must wait for the previous `get`. Each item costs a context switch in each direction, and the producer can never get ahead to absorb timing jitter, so it is slower than size 5.
+
+**Q2.2 - why two condition variables?** Producers wait for "not full", consumers wait for "not empty". With a single CV a producer's `signal` can wake *another producer* (still full) instead of the consumer - the consumer sleeps on, the woken producer sleeps again, and a wake-up is lost. With two CVs every signal reaches a thread that can use it.
+
+### Ex 3 - M producers, C consumers
+
+<CodeFile src="cse/sem7/cs4533/code/lab2-ex3.c" focus="void *producer" focusTo="int main" cmd="gcc -Wall -O0 -pthread lab2-ex3.c && ./a.out 3 3 20" />
+
+Every configuration printed `produced 60 / consumed 60 - MATCH` (A, C) or `20 / 20` (B).
+
+**Q3.1 - fastest?** The total work is tiny (20–60 prints), so the times are dominated by thread start-up and `printf` (which takes a lock on `stdout`). C (3P/3C) finished the most items per second because producers and consumers rarely block each other; A (3P/1C) is consumer-bound - one consumer drains three producers - and B (1P/3C) is producer-bound, with consumers mostly asleep.
+
+**Q3.2 - why broadcast?** With several producers and consumers on shared CVs, a `signal` can wake a thread of the wrong kind or one that will lose the race for the item. Combined with the sentinel logic, a consumer can be left sleeping while the last sentinel sits in the buffer - the run hangs at the end. `broadcast` wakes everyone; the `while` lets only those who can proceed continue.
+
+**Q3.3 - out of order?** Yes, between producers: 2005 can be consumed before 1003 because producers interleave their `put`s. Items from *one* producer stay in order (one FIFO buffer). It is not a problem unless the consumer needs a global order - then you need sequence numbers or one queue per producer.
+
+### Ex 4 - readers-writers (reader preference) and Ex 5 (writer priority)
+
+<CodeFile src="cse/sem7/cs4533/code/lab2-ex4.c" focus="void start_read" focusTo="void *reader" cmd="gcc -Wall -O0 -pthread lab2-ex4.c && ./a.out 5 5                    # Ex 4
+gcc -Wall -O0 -pthread -DWRITER_PRIORITY lab2-ex4.c && ./a.out 5 5   # Ex 5" />
+
+**Q4.1 - concurrent readers?** Look for lines like `Reader 2: reading (active_readers=3)` - three readers inside together. No writer was active because every writer line prints `active_readers=0`, and no `Writer … wrote` line appears between those readers' start and their `done`.
+
+**Q4.2 - does the writer starve with R = 5, W = 1?** It does get in, but late: while at least one reader is inside, new readers are admitted, so `reader_count` rarely touches 0. The writer waits for a gap in an overlapping stream of readers - **writer starvation**. With R = 1, W = 5 the writers simply take turns.
+
+| R = 5, W = 5 | Mean writer wait |
+|---|---|
+| Ex 4 - reader preference | 0.236 s |
+| Ex 5 - writer priority | **0.178 s** |
+
+**Q5.1** - writers complete faster in Ex 5: once `waiting_writers > 0`, new readers block, so the active readers drain and the writer gets in.
+
+**Q5.2 - can readers starve now?** Yes - if writers keep arriving, `waiting_writers` never reaches 0 and readers wait indefinitely. A fair design serves in arrival order: a **turnstile** (a mutex or semaphore everyone passes through on entry, which a waiting writer holds), or a ticket/queue-based lock so that readers arriving after a writer wait behind it, but readers before it go together.
+
+<Detail>
+
+### Pitfalls to watch for in Lab 2
+
+- **Signalling without holding the mutex** is legal in POSIX but makes it easy to lose a wake-up if the predicate is changed outside the lock. Change the shared state and signal while holding the mutex.
+- **One sentinel for several consumers** (Ex3): the first consumer to read it exits; the rest block forever on an empty buffer. Each consumer needs to see enough sentinels - here, it must count M of them, or main puts one per consumer.
+- **`printf` after `end_read()`** (Ex4) can print `done` after a writer has already started, which makes logs look like an overlap. Read the `active_readers` field, not the order of the lines.
+- **`rand()` in several threads** is not reentrant; for sleep times it only matters that the values look random, but use `rand_r` for anything measured.
+
+</Detail>
+
+</Section>
+
+<Section id="l3" num="3" title="Lab 03 - OpenMP" tags="exam code" pages="Lab 03 · 8 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab03.pdf" page="1">Lab 03 sheet</PdfRef>
+
+Without `-fopenmp` every `#pragma omp` is silently ignored - the code compiles, runs serially and "speedup" is 1.0.
+
+### Ex 1 - warm-up: hello, shared vs private, parallel for
+
+<CodeFile src="cse/sem7/cs4533/code/lab3-ex1.c" cmd="gcc -fopenmp -O0 lab3-ex1.c && OMP_NUM_THREADS=4 ./a.out" />
+
+**Q1.1** - a `private` variable is a *new, uninitialised* variable in each thread: its starting value is garbage (GCC warns "is used uninitialized" - that warning is the expected observation). After the region, `main`'s original variable still has its value from before the region; the private copies are discarded. `firstprivate` would initialise them; `lastprivate` would copy the last iteration's value out.
+
+**Q1.2** - the default schedule is static: 20 iterations over 4 threads gives contiguous blocks of 5 - thread 0 gets 0–4, thread 1 gets 5–9, thread 2 gets 10–14, thread 3 gets 15–19. The *assignment* is the same every run; the *print order* is not.
+
+### Ex 2 - Monte Carlo π, four fixes
+
+<CodeFile src="cse/sem7/cs4533/code/lab3-ex2.c" focus="long pi_critical" focusTo="int main" cmd="gcc -fopenmp -O0 lab3-ex2.c && ./a.out" />
+
+| 4 threads, $10^7$ darts | π | Time |
+|---|---|---|
+| A - `critical` | 3.14 ± 0.001 | 0.173 s |
+| B - `atomic` | 3.14 ± 0.001 | 0.084 s |
+| C - `reduction(+:count)` | 3.14 ± 0.001 | **0.012 s** |
+| D - per-thread array | 3.14 ± 0.001 | 0.014 s |
+
+**Q2.1** - critical is slowest (a full lock acquire/release per hit, ~78 % of darts hit), atomic is faster (one locked hardware add, but every thread hammers one cache line), reduction is fastest (each thread counts privately, one combine at the end). D is nearly as fast; it is slightly slower if the slots share a cache line (**false sharing**) - pad them to 64 bytes.
+
+**Q2.2** - reduction *is* Lab 1 Ex3 Part B: private accumulation, synchronise once. OpenMP just writes the boilerplate for you.
+
+**Q2.3 - $10^8$ darts?** The error shrinks roughly as $1/\sqrt{n}$, so ~3× more accurate for 10× the darts. The speedup *improves* slightly - the fixed costs (thread start, final combine) are a smaller fraction of a longer run.
+
+Note `rand()` → `rand_r(&seed)` with `seed` declared inside the parallel region: `rand()` shares hidden state between threads (and is locked in glibc), which both races and serialises.
+
+### Ex 3 - box blur and schedules
+
+<CodeFile src="cse/sem7/cs4533/code/lab3-ex3.c" focus="static void blur_row" focusTo="int verify" cmd="gcc -fopenmp -O0 lab3-ex3.c && ./a.out" />
+
+```text
+Serial: 0.1001s
+static 1 threads: 0.0797s speedup 1.26 efficiency 1.26 OK
+static 2 threads: 0.0367s speedup 2.73 efficiency 1.36 OK
+static 4 threads: 0.0417s speedup 2.40 efficiency 0.60 OK
+static      4 threads: 0.0408s OK
+dynamic     4 threads: 0.0399s OK
+dynamic(64) 4 threads: 0.0395s OK
+guided      4 threads: 0.0423s OK
+```
+
+**Q3.1** - speedup peaks at the core count (2) and falls off beyond it: 4 and 8 threads on 2 cores only add switching. (The "1 thread faster than serial" line is a warm-cache artefact: the serial run paid the first-touch page faults on `output`. Measure after a warm-up run.)
+
+**Q3.2** - all four schedules are within noise. Every row costs the same, so static's equal blocks are already balanced, and dynamic only adds counter traffic. `dynamic(64)` is as good as static because 64-row chunks make the overhead negligible.
+
+**Q3.3** - dynamic wins when iteration cost varies: the Mandelbrot set (rows through the set hit the iteration cap, others escape at once - Lab 6 Ex1), a triangular loop (`for j < i`), or tasks that wait on I/O.
+
+<ScheduleLab />
+
+### Ex 4 - merge sort with tasks
+
+<CodeFile src="cse/sem7/cs4533/code/lab3-ex4.c" focus="void merge_sort_parallel" focusTo="int is_sorted" cmd="gcc -fopenmp -O0 lab3-ex4.c && ./a.out" />
+
+```text
+Serial: 1.8780s sorted: YES
+1 threads: 1.9748s speedup 0.95 sorted: YES
+2 threads: 0.9991s speedup 1.88 sorted: YES
+4 threads: 1.0535s speedup 1.78 sorted: YES
+```
+
+**Q4.2 - no depth threshold?** Every call creates two tasks down to single elements - about $2n$ tasks for $n$ elements. Each task costs far more to create and schedule than comparing two ints, so the parallel version becomes much slower than serial (and uses a lot of memory). **Granularity**: a task must do enough work to pay for its own overhead.
+
+**Q4.3 - why `single`?** Inside `#pragma omp parallel` every thread executes the code. Without `single`, all T threads call the top-level sort on the same array at once: T copies of the full work, racing on `arr` and `temp` - wrong output or a massive slowdown. With `single` one thread makes the root call and creates tasks; the others pick tasks up at the implicit barrier.
+
+<Detail>
+
+### Pitfalls to watch for in Lab 3
+
+- **Declaring the `rand_r` seed outside the parallel region** makes it shared - a race on the seed, and every thread fights over one cache line.
+- **Nested `parallel for`** inside a parallel region creates a new team per thread (or runs serially, if nesting is off) - use `omp for` inside an existing region.
+- **Timing with `clock()`** again - use `omp_get_wtime()`.
+- **More threads than cores** (8 on a 2-core lab machine) never helps for CPU-bound loops: speedup peaks at the core count.
+- **Forgetting `taskwait`** before `merge` merges halves that are still being sorted - wrong output, not a crash.
+
+</Detail>
+
+</Section>
+
+<Section id="l4" num="4" title="Lab 04 - Semaphores" tags="exam code" pages="Lab 04 · 7 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab04.pdf" page="1">Lab 04 sheet</PdfRef>
+
+### Ex 1 - single-direction bridge, at most 3 cars
+
+<CodeFile src="cse/sem7/cs4533/code/lab4-ex1.c" focus="sem_t bridge" focusTo="int main" cmd="gcc -Wall -O0 -pthread lab4-ex1.c && ./a.out" />
+
+Result: 20 cars passed, **0 violations** (the self-check counts N→S and S→N on the bridge after every entry and exit).
+
+**Q1.1 - how many semaphores?** Five for the synchronisation: `bridge` (binary, 1 - the bridge belongs to one direction), `dir_mutex[0]` and `dir_mutex[1]` (binary, 1 - protect each direction's count for the **lightswitch**: the first car of a direction waits on `bridge`, the last one out posts it), `capacity` (counting, 3 - the **multiplex**) and `turnstile` (binary, 1 - fairness). A sixth, `check`, only guards the validation counters. Without the fairness requirement you can drop the turnstile; the two direction mutexes could be merged into one at the cost of serialising both directions' bookkeeping.
+
+**Q1.2 - starvation?** Without the turnstile, yes: while cars keep arriving N→S, the count never reaches 0 and S→N waits forever (the lightswitch is reader-preference). The turnstile fixes it: every car passes through it on arrival; a waiting S→N car holds it while it waits for `bridge`, so new N→S cars queue behind it and the current ones drain.
+
+### Ex 2 - construction-zone passage, capacity N
+
+<CodeFile src="cse/sem7/cs4533/code/lab4-ex2.c" focus="void *car_thread" focusTo="int main" cmd="gcc -Wall -O0 -pthread lab4-ex2.c && ./a.out 3" />
+
+| N | Total time (S = R = 15) | Violations |
+|---|---|---|
+| 1 | 0.870 s | 0 |
+| 3 | 0.572 s | 0 |
+| 5 | 0.572 s | 0 |
+
+**Q2.1** - same design as Ex 1 with the capacity semaphore initialised to N from `argv`: the passage semaphore = 1, two lightswitch mutexes = 1, capacity = N, turnstile = 1 (plus one for the validation counters).
+
+**Q2.2** - N = 1 serialises every truck. N = 3 lets a direction's burst through together, a big win. N = 5 gives nothing extra: with random arrivals, rarely more than 3 same-direction trucks are waiting at once, and the turnstile switches direction as soon as the other side queues. Throughput is limited by direction changes, not capacity.
+
+**Q2.3** - the mutex + CV reader-writer (Lab 2) is more explicit: the condition is readable code (`while (writer_active || waiting_writers)`) and you can implement any priority policy. Semaphores are terser but the policy is hidden in initial values and the order of `wait`s - one misplaced wait deadlocks. Mutex + CVs give more control over fairness; semaphore patterns (lightswitch, turnstile) are cleaner once you know them.
+
+### Ex 3 - sleeping barber
+
+<CodeFile src="cse/sem7/cs4533/code/lab4-ex3.c" focus="void *barber" focusTo="int main" cmd="gcc -Wall -O0 -pthread lab4-ex3.c && ./a.out 3" />
+
+| M (C = 20) | Served | Turned away |
+|---|---|---|
+| 1 | 15 | 5 |
+| 3 | 20 | 0 |
+| 10 | 20 | 0 |
+
+Served + turned away = 20 in every run - the correctness check.
+
+**Q3.2 - very fast arrivals?** Still correct - more customers balk because the chairs fill in a burst, but no customer is lost, counted twice, or served by a sleeping barber. The `waiting` counter is only changed under `mutex`, and the `customers` semaphore remembers posts that arrive while the barber is busy (a semaphore never loses a signal, unlike a CV).
+
+**Q3.3 - several barbers?** Initialise `customers` to 0 as before, make the barber thread a pool of B threads all waiting on `customers`; the "chair free / haircut done" handshake must be per barber (an array of semaphores, or the customer records which barber took it) so a customer leaves only when *its* haircut is finished.
+
+### Ex 4 - river crossing (hackers and serfs)
+
+<CodeFile src="cse/sem7/cs4533/code/lab4-ex4.c" focus="sem_t mutex" focusTo="void *hacker" cmd="gcc -Wall -O0 -pthread lab4-ex4.c && ./a.out 12 12" />
+
+| H / S | Result |
+|---|---|
+| 12 / 12 | 6 crossings, 0 invalid |
+| 4 / 4 | 2 crossings |
+| 8 / 0 | 2 crossings (4H + 4H) |
+| 6 / 2 | 2 crossings (4H, then 2H + 2S) |
+| 5 / 3 | **one boat, then 1H + 3S wait forever** |
+
+**Q4.1** - one `mutex` guards `hackers` and `serfs` (waiting counts) and two queue semaphores (`hackerQ`, `serfQ`, init 0). The arriving thread checks whether *it* completes a valid group: 4 of its kind, or 2 + 2. If so it posts the queue semaphores exactly for the other three members, subtracts them from the counts and becomes **captain - while still holding the mutex** so no other group can form; otherwise it releases the mutex and waits on its queue. A 4-way `pthread_barrier` makes all four board before the captain calls `row()` and releases the mutex. Partial groups are impossible because only a captain ever posts the queues, and only in valid combinations.
+
+**Q4.2 - deadlock?** Not in the synchronisation: the captain holds the mutex only while posting and boarding, and the barrier waits only for threads already released. (An early version did deadlock: the captain waited on a semaphore the boarders needed `mutex` to post - fixed by a separate `seat_lock`.) Threads can, however, wait forever when the *remaining people cannot form a valid group*.
+
+**Q4.3** - H = 4, S = 4 works (2H + 2S twice, or 4H + 4S). H = 8, S = 0 works (two 4H boats). H = 6, S = 2: works only if the scheduler forms 4H first and then 2H + 2S - our solution does, because a group is formed as soon as one is possible. In general a split of the total into valid boats must exist: 5H + 3S cannot be split (no combination of 4H, 4S, 2H+2S makes 5 and 3), so the last 4 wait forever.
+
+### Ex 5 - reusable barrier
+
+<CodeFile src="cse/sem7/cs4533/code/lab4-ex5.c" focus="void barrier_init" focusTo="static void init" cmd="gcc -Wall -O0 -pthread lab4-ex5.c && ./a.out 4" />
+
+Output is identical to the serial version at 2, 4 and 8 threads (`MATCH`).
+
+**Q5.1 - why not one counter + one semaphore?** The last arriving thread posts the semaphore N times and resets the counter. A fast thread passes, finishes its next iteration, arrives at the barrier again and **takes one of the N tokens meant for a slow thread still in the previous round** - now the slow thread blocks in round k while the fast one runs ahead into round k+1, reading neighbour values that were not finished. The two-turnstile version closes turnstile 1 before opening turnstile 2 and vice versa, so no thread can enter round k+1's barrier until everyone has left round k's.
+
+**Q5.2** - bit-for-bit identical: each element's new value is computed from the same three old values with the same operations in the same order, whichever thread computes it. Differences would only appear if threads combined values in a different order (floating-point addition is not associative) - e.g. a parallel *reduction*.
+
+<Detail>
+
+### Pitfalls to watch for in Lab 4
+
+- **`sem_init(&s, 1, …)`** - the middle argument is "shared between processes"; for threads it must be 0.
+- **Waiting on a semaphore while holding the mutex** that the poster needs - the deadlock that the first river-crossing attempt hit. Release the mutex before you block, or use a separate lock for the part that must stay locked.
+- **Unnamed semaphores on macOS**: `sem_init` is deprecated and fails silently there (returns −1); test on Linux, or use `dispatch_semaphore`.
+- **Validation counters updated outside a lock** report fake violations - the check itself needs a mutex (`check` in the solution).
+
+</Detail>
+
+</Section>
+
+<Section id="l5" num="5" title="Lab 05 - Concurrent data structures" tags="exam code" pages="Lab 05 · 11 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab05.pdf" page="1">Lab 05 sheet</PdfRef>
+
+This lab uses **-O2** - the optimiser changes what the "unsafe" version does (Ex2).
+
+### Ex 1 - coarse vs fine-grained list
+
+<CodeFile src="cse/sem7/cs4533/code/lab5-ex1.c" focus="int fine_insert" focusTo="void *worker" cmd="gcc -O2 -pthread lab5-ex1.c && ./a.out" />
+
+```text
+1 threads: coarse=0.0114s (2199234 ops/s) fine=0.0976s (256018 ops/s)
+2 threads: coarse=0.1073s (465991 ops/s)  fine=0.4471s (111837 ops/s)
+4 threads: coarse=0.0902s (1108794 ops/s) fine=1.5193s (65821 ops/s)
+8 threads: coarse=0.1327s (1506822 ops/s) fine=2.2735s (87970 ops/s)
+```
+
+**Q1.1 - which scales better?** On this 2-core machine, **coarse**, by ~10×. Fine-grained does a lock + unlock for *every node visited* (~500 per operation on a 1000-key list), and every operation starts by locking the head, so threads form a **convoy** behind each other and gain no parallelism. Fine-grained only wins with many cores, long lists and expensive per-node work - the textbook claim assumes those.
+
+<HandOverHandDiagram />
+
+**Q1.2 - why hand-over-hand?** You must hold `pred` while locking `curr`. If you release `pred` first, another thread can delete `curr` (unlink and free it) or insert between `pred` and `curr` in that gap; you then follow a dangling pointer, or link a new node after a node that is no longer in the list, losing it.
+
+### Ex 2 - lock-free counter with CAS
+
+<CodeFile src="cse/sem7/cs4533/code/lab5-ex2.c" focus="void *inc_cas" focusTo="int main" cmd="gcc -O2 -pthread lab5-ex2.c && ./a.out" />
+
+| 8 threads × $10^6$ | Counter | Time |
+|---|---|---|
+| 1 Unsafe | **OK (!)** | ~0 |
+| 2 Mutex | OK | 0.59 s |
+| 3 CAS loop | OK | 0.40 s |
+| 4 fetch-and-add | OK | **0.17 s** |
+
+**Q2.1** - versions 2–4 are always correct; 4 is fastest. Version 1 printed "OK" at `-O2` because GCC turned `for (i < M) counter++` into a single `counter += M` - one load and one store per thread, so the race window almost vanishes. At `-O0`, or with `volatile`, it loses updates as in Lab 1. **The race is still there** - "it passed the test" is not proof.
+
+**Q2.2 - lock-free, not wait-free.** A CAS fails only because another thread's CAS succeeded, so the system always progresses (lock-free). But one thread can lose every time - nothing bounds how many retries *it* needs - so it can starve in theory (not wait-free).
+
+**Q2.3 - why is FAA faster?** `lock xadd` always succeeds in one instruction. The CAS loop reads, computes, then tries; under contention most attempts fail and retry, each costing another cache-line round-trip.
+
+### Ex 3 - bounded queue with split locks
+
+<CodeFile src="cse/sem7/cs4533/code/lab5-ex3.c" focus="void queue_enq" focusTo="void *producer" cmd="gcc -O2 -pthread lab5-ex3.c && ./a.out" />
+
+```text
+1P/1C cap=10: 0.0351s, items=10000/10000 OK
+2P/2C cap=10: 0.0796s, items=20000/20000 OK
+4P/4C cap=10: 0.2417s, items=40000/40000 OK
+4P/4C cap=100: 0.0339s, items=40000/40000 OK
+```
+
+**Q3.1** - every configuration matches. More producers/consumers with capacity 10 get *slower*: the queue is full or empty most of the time, so threads keep sleeping and waking. Capacity 100 absorbs bursts and is 7× faster.
+
+**Q3.2 - split counter.** One shared `permits` counter is written by every enqueue *and* every dequeue: the two locks let both sides run in parallel, but they still collide on that one cache line. Splitting it into `enqSidePermits` (only enqueuers touch it, under `enqLock`) and `deqSidePermits` (only dequeuers) removes the shared hot spot; when the enqueue side runs out, it takes `deqLock` once and moves all accumulated permits over in one go.
+
+**Q3.3 - why broadcast?** The condition each side waits for is changed by the *other* lock's side. A dequeuer checks "empty", and before it calls `wait`, an enqueuer adds an item and signals - the signal finds nobody waiting and is lost; the dequeuer then sleeps forever (**lost wake-up**). The fix is to take the other side's lock when signalling and to `broadcast`, so every waiter re-checks its condition.
+
+### Ex 4 - progress conditions (analysis)
+
+| Snippet | Class | Why |
+|---|---|---|
+| A - mutex around `counter++` | **Blocking** | If the holder is pre-empted or dies inside the CS, nobody else can progress |
+| B - CAS retry loop | **Lock-free** | Some CAS always succeeds; an unlucky thread may retry forever |
+| C - `__sync_fetch_and_add` | **Wait-free** | One atomic instruction, finishes in a bounded number of steps |
+| D - one CAS, give up on failure | **Wait-free** (but **wrong**) | Always returns in bounded steps, but a failed increment is silently lost |
+
+**Q4.2 - real-time?** Wait-free - only it bounds *every* operation's steps. Lock-free still lets an individual operation starve; blocking lets one delayed thread stall everyone.
+
+<Detail>
+
+### Pitfalls to watch for in Lab 5
+
+- **Forgetting to initialise each node's mutex** in `fine_insert` - undefined behaviour that often "works" until it doesn't.
+- **Unlock order in hand-over-hand**: unlocking `curr` before `pred` at the end of an insert is harmless; *locking* in the wrong order (`curr` before `pred`) between two threads deadlocks.
+- **`__sync_bool_compare_and_swap` on an `int` with `long` arguments** - make the counter and `old` the same type, or the comparison silently truncates.
+- **Benchmark noise**: ops/s at 1–2 threads swings by 2× between runs on a laptop (turbo, other load); report the median of several runs.
+
+</Detail>
+
+</Section>
+
+<Section id="l6" num="6" title="Lab 06 - Solution patterns" tags="exam code" pages="Lab 06 · 10 pp.">
+
+<PdfRef file="cse/sem7/cs4533-lab06.pdf" page="1">Lab 06 sheet</PdfRef>
+
+### Ex 1 - loop parallel: Mandelbrot, static vs dynamic
+
+<CodeFile src="cse/sem7/cs4533/code/lab6-ex1.c" focus="void compute_static" focusTo="int main" cmd="gcc -O2 -fopenmp lab6-ex1.c -lm && ./a.out" />
+
+**Q1.1** - dynamic beat static at every thread count above 1 - by **1.06–1.17×** across runs (images identical):
+
+```text
+2 threads: static 1.0089s OK | dynamic 0.9544s OK | dynamic is 1.06x faster
+4 threads: static 1.0763s OK | dynamic 0.9889s OK | dynamic is 1.09x faster
+```
+
+ Rows through the middle of the set run to `MAX_ITER` for many pixels; rows near the top and bottom escape in a few iterations. Static gives each thread a contiguous band, so the threads owning the middle bands finish last while the rest idle. Dynamic hands out rows as threads become free. In Lab 3's blur every row costs the same, so static was already balanced and dynamic only added overhead.
+
+### Ex 2 - divide & conquer: unbalanced tree sum
+
+<CodeFile src="cse/sem7/cs4533/code/lab6-ex2.c" focus="long parallel_sum" focusTo="int main" cmd="gcc -O2 -pthread lab6-ex2.c -lm && ./a.out" />
+
+```text
+Nodes: 118111
+threshold    100: 0.0665s speedup 0.01 OK
+threshold   1000: 0.0048s speedup 0.10 OK
+threshold  10000: 0.0007s speedup 0.63 OK
+threshold 100000: 0.0004s speedup 1.16 OK
+```
+
+With a deeper tree (`./a.out 28`, 2.4 M nodes) threshold 100 000 reached **1.4–2.0×** across runs; thresholds ≤ 10 000 stayed slower than serial.
+
+**Q2.1** - a node costs a few nanoseconds to add; `pthread_create` + `join` costs microseconds. At threshold 100 you create tens of thousands of threads, each doing ~100 ns of work - all overhead, and far more threads than cores. 10 000 still creates hundreds of threads on 2 cores. The sweet spot is a few tasks per core that are big enough to dwarf creation cost - here ~100 000 nodes. (The other half of the answer: "too high a threshold underperforms" holds too: with a threshold larger than the left subtree, you get one thread and no parallelism; the left-heavy shape makes the halves unequal, which is why the small tree stays well below 2×.)
+
+### Ex 3 - pipeline
+
+<CodeFile src="cse/sem7/cs4533/code/lab6-ex3.c" focus="void *stage1_thread" focusTo="int main" cmd="gcc -O2 -pthread lab6-ex3.c -lm && ./a.out" />
+
+| Stage-2 threads | Speedup vs serial |
+|---|---|
+| 1 | 0.89–0.97× |
+| 2 | **1.63–1.73×** |
+| 3 | 1.65× (only 2 cores) |
+
+<PipelineLab />
+
+**Q3.1** - with one stage-2 thread the pipeline is as slow as stage 2 alone (plus queue overhead): stages 1 and 3 are cheap and mostly wait. A second stage-2 thread doubles the bottleneck's throughput. A third cannot help on 2 cores. Each extra stage-2 thread must forward the poison pill so the others also stop.
+
+**Q3.2** - throughput = $1 / \max_k(t_k / n_k)$. Stage 2 = 10 ms, stages 1 and 3 = 1 ms: with one stage-2 thread, 1 item per 10 ms = **100 items/s**; with three, 1 per 3.33 ms = **300 items/s** (stages 1 and 3 at 1000/s are still not the limit). Latency per item is unchanged (12 ms).
+
+### Ex 4 - thread pool over a shared task index
+
+<CodeFile src="cse/sem7/cs4533/code/lab6-ex4.c" focus="void *pool_worker" focusTo="static double now" cmd="gcc -O2 -pthread lab6-ex4.c -lm && ./a.out" />
+
+```text
+Pool (2 threads): 0.1647s (speedup 1.96x) | static blocks: 0.1570s (2.05x)
+Pool (4 threads): 0.1653s (speedup 1.95x) | static blocks: 0.1670s (1.93x)
+```
+
+Both ≈ 2× on 2 cores - the maximum. Static blocks did *not* lose here: the heavy tasks are scattered at random, so each half of the task array got a similar share. Cluster the heavy tasks (or use more cores, so each block is small and luck averages out less) and static falls behind while the pool does not.
+
+**Q4.1** - each worker grabs the *next* task when it finishes one, so a thread that drew a 100× task simply takes fewer tasks; nobody idles while work remains. Static partitioning (NUM_TASKS/n each) fixes the split in advance, so the thread that happens to own several heavy tasks finishes last. The cost is one short critical section (or one atomic increment) per task.
+
+### Ex 5 - work stealing
+
+<CodeFile src="cse/sem7/cs4533/code/lab6-ex5.c" focus="int deque_pop" focusTo="static double now" cmd="gcc -O2 -pthread lab6-ex5.c -lm && ./a.out" />
+
+```text
+Work stealing (2 threads): 0.1634s (speedup 1.88x), 26 steals, all tasks done
+Work stealing (4 threads): 0.1569s (speedup 1.96x), 55 steals, all tasks done
+```
+
+≈ 2× (one run reached 2.19×) with only a few dozen steals for 200 tasks - the same as the shared pool on 2 cores.
+
+**Q5.1** - on 2 cores with 200 coarse tasks, the shared queue's single lock is barely contended, so stealing cannot win much. It pulls ahead with many cores, many tiny tasks (the shared index becomes a hot spot) and tasks that spawn subtasks (a shared queue needs a lock to push them too).
+
+**Q5.2** - the owner pushes and pops at the **back** (LIFO): the newest task's data is still hot in its cache, and in divide-and-conquer it is the smallest piece. A thief steals from the **front** (FIFO): the oldest task, which tends to be the biggest (fewer steals needed), and the opposite end from the owner, so the two rarely contend for the same slot or lock.
+
+### Ex 6 - pattern selection (analysis)
+
+| Problem | Pattern | Why |
+|---|---|---|
+| A - web server: parse, DB (10× slower), format | **Pipeline** (replicate the DB stage) / producer–consumer | A stream of requests through ordered stages; throughput is set by the DB stage, so give it more workers |
+| B - 100 GB log, count `ERROR` lines | **Loop parallel / MapReduce** | Independent lines: split into blocks, count each, sum - no communication |
+| C - web crawler, unpredictable fan-out | **Task queue / work stealing** | Work is generated dynamically and unevenly; dynamic assignment balances it |
+| D - 10 000 × 10 000 matrix multiply | **Loop parallel** (or blocked divide & conquer) | Every output element is independent and equal-cost; static `parallel for` over rows, tiled for cache |
+
+<Detail>
+
+### Pitfalls to watch for in Lab 6
+
+- **Mandelbrot images differing** between static and dynamic usually means a variable that should be per-iteration (the row, `zx`, `zy`) was declared outside the loop and is shared - with dynamic scheduling the race shows up quickly. Declare them inside the loop body.
+- **Thread explosion** in the tree sum: without a threshold (or with a tiny one) the program can hit the per-process thread limit and `pthread_create` fails - check its return value.
+- **Pipeline hang at exit**: the number of poison pills must match the number of consumers of each queue, and stage 3 must wait for one pill per stage-2 worker.
+- **Work stealing with the wrong end**: thieves popping the owner's end makes it slower than the shared queue - both contend for the same slot under the same lock.
+
+</Detail>
+
+</Section>

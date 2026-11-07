@@ -10,6 +10,11 @@ import { TransitionLink } from './TransitionLink';
 export function Nav() {
   const pathname = usePathname();
 
+  // The notes section (docs/NOTES.md) is its own product with its own
+  // chrome: the guide is a full-screen reader, the other notes pages carry a
+  // breadcrumb bar. The portfolio header would only compete with them.
+  if (pathname === '/notes' || pathname.startsWith('/notes/')) return null;
+
   return (
     <header
       // 9.0: the one content-route surface that earns real blur - the page

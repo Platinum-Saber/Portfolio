@@ -1,0 +1,1278 @@
+---
+code: CS4533
+title: Parallel and Concurrent Programming
+summary: Threads, races and Amdahl, the critical-section problem and interleavings, Pthreads and OpenMP, mutual-exclusion attempts through Peterson, Filter and Bakery, GPUs and CUDA, semaphores and the classic problems, monitors and barriers, MPI, deadlock and the Banker's algorithm, concurrent data structures and progress conditions, solution patterns and MapReduce - plus full lab solutions and two timed mock papers.
+order: 4
+sources: Built from the two-part CS4533 study notes (216 pages) and Labs 01–06. Every section links to the pages that treat it in full; lab code was compiled and run before publishing.
+updated: 2026-11-07
+files:
+  - label: Part 1 - Lectures 1–9, shared memory
+    file: cse/sem7/cs4533-part-1.pdf
+    pages: 142
+    sizeMb: 1.4
+  - label: Part 2 - Lectures 10–14, distributed & patterns
+    file: cse/sem7/cs4533-part-2.pdf
+    pages: 74
+    sizeMb: 0.9
+parts:
+  - slug: labs
+    label: Labs & solutions
+mocks:
+  - slug: mock-1
+    label: Mock paper 1
+  - slug: mock-2
+    label: Mock paper 2
+mockIntro: Done online, marked as you submit. Same shape as the final - MCQs built on scenarios from the lab work, code-based questions (fill the gaps, arrange the lines, spot the line) and one complete program.
+---
+
+<Section id="s0" num="0" title="Start here" tags="exam">
+
+The module in one line: **when several flows of control share state, every interleaving the scheduler might choose is a run you have to be correct for - and every lock you add to be correct costs you speed.** Lectures 1–2 say why we bother (the hardware stopped getting faster, so parallelism is the only way up) and how much we can hope for (Amdahl). Lectures 3–9 build correctness from the bottom: interleavings, mutual exclusion from plain reads and writes, then semaphores and monitors. Lectures 10–14 leave shared memory: MPI, deadlock theory, concurrent data structures and the design patterns that the labs make you implement.
+
+<ForkJoinDiagram />
+
+### How the final paper is set
+
+The lecturer's guidance on the paper - plan your revision around it:
+
+| Part | Weight | What it tests | Where to revise |
+|---|---|---|---|
+| **MCQs** | **50 %** | Everything done in the labs: the situations you hit while doing them and the theory behind them | **Labs & solutions** tab - every "what happened and why" |
+| **Code-based** | **40 %** | Fill in missing lines, arrange lines in order (drag and drop), spot the bug | The lab code below each exercise; §4, §8, §9, §12 |
+| **Full code** | **10 %** | Write a complete solution | Bounded buffer, reader-writer, barrier, OpenMP reduction |
+
+<Callout kind="tip" title="Using this guide">
+
+**Theory** (this tab) is the lecture material in exam order. **Labs & solutions** has every lab exercise with tested code, the numbers it produced, and an answer to every question. **Mock papers** are two timed online papers in the exam's 50 / 40 / 10 structure - do one after finishing the labs tab, the other the day before. Tick **Mark done** once you can answer a section's recall prompts cold.
+
+</Callout>
+
+### The vocabulary you will be marked on
+
+| Term | Meaning |
+|---|---|
+| **Concurrent** | Several tasks *in progress* at once (may share one core by interleaving) |
+| **Parallel** | Several tasks *executing* at the same instant on different hardware |
+| **Race condition** | Outcome depends on the interleaving; at least one access is a write |
+| **Critical section** | Code that touches shared state and must not interleave with itself |
+| **Safety** | Nothing bad ever happens (mutual exclusion, no lost update) |
+| **Liveness** | Something good eventually happens (no deadlock, no starvation) |
+
+</Section>
+
+<Section id="s1" num="1" title="Why concurrency: hardware, Flynn, the classic problems" tags="core" pages="Part 1 · pp. 13–25">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="13">Lecture 1</PdfRef>
+
+Moore's law still adds transistors, but around 2005 clock speed stopped rising: power grows with frequency (and voltage), and the chips hit the thermal wall. The transistors went into **more cores** instead. A serial program no longer gets faster on new hardware for free - the programmer has to expose parallelism.
+
+**Asynchrony** is the root difficulty: threads run at unpredictable relative speeds (pre-emption, cache misses, page faults, interrupts). Correctness must not depend on timing.
+
+### Flynn's taxonomy
+
+| | Single data | Multiple data |
+|---|---|---|
+| **Single instruction** | SISD - classic uniprocessor | **SIMD** - vector units, GPUs (SIMT) |
+| **Multiple instruction** | MISD - rare (fault-tolerant pipelines) | **MIMD** - multicores, clusters |
+
+Shared-memory MIMD is Pthreads / OpenMP (Labs 1–6); distributed-memory MIMD is MPI (§10).
+
+### Case study: parallel primality testing
+
+Counting primes in $1..10^{10}$ on 10 threads by giving each thread an equal **range** is unbalanced: larger numbers are costlier to test, so the last thread finishes long after the first. A **shared counter** that hands out the next number fixes the balance - but the counter itself is now a critical section (`counter++` is a load, add, store). This single example previews the whole module: load balancing (Lab 3, Lab 6) and the race on a shared counter (Lab 1).
+
+### The fables
+
+| Story | What it teaches |
+|---|---|
+| Alice & Bob's pets (flag protocol) | Mutual exclusion needs *persistent* communication (flags), not transient signals |
+| Can protocol | Producer/consumer signalling - one bit, but only with one producer and one consumer |
+| Readers/Writers | Many may read together; a writer needs everyone out |
+
+<Detail>
+
+### Why transient signals are not enough (Alice & Bob)
+
+Alice and Bob share a yard; only one pet may be out. Shouting ("I'm letting my dog out") fails - the other may not be listening at that moment, and a shout leaves no trace. A **can on a string** (knock on the other's can) has the same problem: the bit is consumed when read. What works is a **flag** each raises *and leaves up*, plus a rule for who backs off when both flags are up. That is exactly the shape of the mutual-exclusion protocols of Lecture 5: persistent shared state (flags), each process writing only its own, and a tie-breaker.
+
+### Flynn, more carefully
+
+GPUs are formally SIMD, but NVIDIA calls them **SIMT**: each thread has its own registers and program counter view, yet a warp issues one instruction for 32 threads. Multicore CPUs are MIMD *and* each core has SIMD vector units (SSE/AVX), so one chip is both.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Why did the industry switch from faster cores to more cores?">
+
+Dynamic power scales with $C V^2 f$; raising frequency needs higher voltage, so power and heat grew super-linearly. More, slower cores give more throughput per watt - but only to software that is parallel.
+
+</Recall>
+
+<Recall q="Why is splitting a prime search into equal ranges a bad idea?">
+
+Work per number is not uniform (bigger numbers take longer to test), so threads with high ranges finish last - load imbalance. A shared next-number counter balances the load, but must be accessed atomically.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s2" num="2" title="How much parallelism? Amdahl, work and span" tags="exam calc" pages="Part 1 · pp. 26–37">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="26">Lecture 2</PdfRef>
+
+If a fraction $p$ of the run can be parallelised and the rest $1-p$ cannot, on $n$ processors
+
+$$
+S(n) = \frac{1}{(1-p) + p/n}, \qquad S_{\max} = \lim_{n\to\infty} S(n) = \frac{1}{1-p}.
+$$
+
+<AmdahlLab />
+
+| Quantity | Formula | Read it as |
+|---|---|---|
+| Speedup | $S_P = T_1 / T_P \le P$ | How many times faster |
+| Efficiency | $E = T_1 / (P\,T_P) = S_P/P$ | How busy each core was |
+| Work law | $T_P \ge T_1 / P$ | You cannot beat perfect sharing |
+| Span law | $T_P \ge T_\infty$ | You cannot beat the critical path |
+| Parallelism | $T_1 / T_\infty$ | The most speedup the DAG allows |
+
+**Work** $T_1$ is the total of all nodes in the computation DAG; **span** $T_\infty$ is the longest path. For recursive Fibonacci, $T_1 = \Theta(\varphi^n)$ and $T_\infty = \Theta(n)$, so the parallelism is huge - in theory. In practice each spawn costs microseconds, which is why every lab that recurses needs a **threshold** below which it runs serially (Lab 3 Ex4, Lab 6 Ex2).
+
+<Worked title="Lab 1 Ex4: estimate p and the ceiling">
+
+Measured (one thread): `qsort` of $10^7$ ints ≈ 1.94 s, the chunked sum ≈ 0.031 s. So $p \approx 0.031 / 1.975 \approx 0.016$.
+
+$S(64) = 1/(0.984 + 0.016/64) \approx 1.016$; $S_\infty = 1/0.984 \approx 1.016$.
+
+Observed: 1.00 (N=2), 1.02 (N=4), 0.97 (N=8 - more threads than the 2 cores, so pure overhead). Exactly what Amdahl predicts: making the 1.5 % faster cannot help. To raise $p$, parallelise the *sort* itself (sort chunks in parallel and merge, or OpenMP-task merge sort as in Lab 3 Ex4).
+
+</Worked>
+
+<Callout kind="exam" title="Strong vs weak scaling">
+
+Amdahl assumes a **fixed** problem size (strong scaling). Gustafson's view grows the problem with $n$ (weak scaling): $S = (1-p) + p\,n$. If the question says "the problem grows with the machine", Amdahl's ceiling does not apply.
+
+</Callout>
+
+### Measuring like the labs do
+
+- Time with `clock_gettime(CLOCK_MONOTONIC, …)` or `omp_get_wtime()` - wall clock, not `clock()` (which sums CPU time over all threads and makes parallel code look *slower*).
+- Repeat runs; report mean and spread. The notes' sample-size rule: $n = (100\,z\,s / (r\,\bar x))^2$ for $r\,\%$ accuracy.
+- Compile at the stated `-O` level. At `-O2` the compiler may delete or fold your benchmark loop (Lab 5 Ex2's "unsafe" counter came out correct for exactly this reason).
+
+<Detail>
+
+### Deriving Amdahl, and its weak-scaling twin
+
+Normalise the one-processor time to 1: serial part $1-p$, parallel part $p$. On $n$ processors the parallel part ideally takes $p/n$, so
+
+$$
+T_n = (1-p) + \frac{p}{n}, \qquad S(n) = \frac{T_1}{T_n} = \frac{1}{(1-p) + p/n}.
+$$
+
+**Gustafson** fixes the *time* instead: on $n$ processors the run takes $(1-p) + p$ = 1, and the same work on one processor would take $(1-p) + p\,n$. So $S = (1-p) + p\,n$ - linear in $n$, because the parallel part grew with the machine.
+
+### Estimating the serial fraction from measurements (Karp–Flatt)
+
+Given a measured speedup $S$ on $n$ processors, the experimentally determined serial fraction is
+
+$$
+e = \frac{1/S - 1/n}{1 - 1/n}.
+$$
+
+If $e$ stays constant as $n$ grows, the limit really is serial code (Amdahl). If $e$ *grows* with $n$, overhead is growing - synchronisation, communication, thread creation. Lab 1 Ex4 at $n = 4$: $S = 1.02$, so $e = (0.980 - 0.25)/0.75 \approx 0.97$ - the run is almost entirely serial, as the timing table showed.
+
+### Work and span of recursive Fibonacci
+
+`fib(n)` spawns `fib(n-1)` and computes `fib(n-2)`, then adds. Work: $T_1(n) = T_1(n-1) + T_1(n-2) + \Theta(1) = \Theta(\varphi^n)$. Span: the two calls run in parallel, so $T_\infty(n) = \max(T_\infty(n-1), T_\infty(n-2)) + \Theta(1) = \Theta(n)$. Parallelism $\Theta(\varphi^n / n)$ - enormous, which is why the *practical* limit is spawn overhead, not the DAG.
+
+### Greedy scheduling bound
+
+Any greedy scheduler (never idles a processor while work is ready) achieves $T_P \le T_1/P + T_\infty$ - within a factor of 2 of the lower bound $\max(T_1/P, T_\infty)$. Work stealing (Lab 6 Ex5) is a greedy scheduler in expectation.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="p = 0.9. What is the best speedup on 8 cores, and on infinitely many?">
+
+$S(8) = 1/(0.1 + 0.9/8) = 1/0.2125 \approx 4.7$. $S_\infty = 1/0.1 = 10$.
+
+</Recall>
+
+<Recall q="T1 = 1000, T∞ = 50. Lower bound on T_P for P = 40?">
+
+$\max(T_1/P, T_\infty) = \max(25, 50) = 50$. The span dominates - more processors cannot help past $T_1/T_\infty = 20$.
+
+</Recall>
+
+<Recall q="Why is clock() the wrong timer for a pthreads program?">
+
+`clock()` returns processor time consumed by the whole process, summed over threads. Four threads running for 1 s report ~4 s. Use wall-clock time.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s3" num="3" title="The critical-section problem and interleavings" tags="exam core" pages="Part 1 · pp. 38–49">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="38">Lecture 3</PdfRef>
+
+`counter++` compiles to three instructions - **load** into a register, **add**, **store**. Two threads can both load the same value; both store value + 1; one update is lost. This is the Lab 1 Ex2 result: with 2–16 threads and $10^5$ increments each, **17–43 % of the updates disappeared**, a different amount on every run, and the loss varied from run to run.
+
+<RaceLab />
+
+### A correct critical-section solution needs
+
+| Requirement | Meaning |
+|---|---|
+| **Mutual exclusion** | At most one process in its CS |
+| **Progress** (no deadlock) | If nobody is in the CS and some want in, one of them gets in - decided only by those who want in |
+| **Bounded waiting** (no starvation) | A bound on how many times others may enter ahead of a waiting process |
+
+Plus the standing assumptions: no assumption about relative speeds; a process may halt only *outside* its CS; the CS always terminates.
+
+### The abstraction
+
+A concurrent program is the set of all **interleavings** of the atomic actions of its processes. With $n$ processes of $m$ atomic actions each, there are
+
+$$
+\frac{(nm)!}{(m!)^n}
+$$
+
+interleavings - 20 for two processes of three actions, $\approx 10^{20}$ for four processes of ten. You cannot test them all; you reason about invariants instead.
+
+**What is atomic?** Only what the hardware says: an aligned word load or store, and read-modify-write instructions (test-and-set, exchange, fetch-and-add, compare-and-swap). `x++`, `x = x + y`, `if (x == 0) x = 1` are **not** atomic.
+
+<Callout kind="warn" title="Lost update vs deadlock vs starvation">
+
+A **lost update** is a safety failure (wrong answer). **Deadlock** - everyone waits for each other forever - is a liveness failure. **Starvation** - one process waits forever while others keep going - is a fairness failure. MCQs love to describe a log and ask which one it shows.
+
+</Callout>
+
+<Detail>
+
+### Where the interleaving count comes from
+
+Each interleaving is a merge of $n$ sequences of length $m$ that keeps each sequence's own order. Choose which of the $nm$ slots belong to process 1 ($\binom{nm}{m}$ ways), then process 2 from the rest, and so on:
+
+$$
+\binom{nm}{m}\binom{nm-m}{m}\cdots = \frac{(nm)!}{(m!)^n}.
+$$
+
+Two processes, three actions each: $6!/(3!\,3!) = 20$.
+
+### What `counter++` really is
+
+```c
+// gcc -O0 on x86-64, roughly:
+mov  eax, DWORD PTR counter[rip]   // LOAD
+add  eax, 1                        // ADD (in a register - private to the thread)
+mov  DWORD PTR counter[rip], eax   // STORE
+```
+
+A context switch or a parallel core can act between any two of these. `lock add DWORD PTR counter[rip], 1` would be atomic - that is what `__sync_fetch_and_add` and `#pragma omp atomic` compile to.
+
+### Safety and liveness, formally
+
+A **safety** property is violated by a *finite* run (you can point at the step where both entered the CS). A **liveness** property can only be violated by an *infinite* run (a process that waits forever). That is why tests catch races (finite counter-examples) far more easily than starvation.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Two threads each run x = x + 1 once, x starts at 0. Which final values are possible?">
+
+1 or 2. Both load 0 then both store 1 (lost update), or one completes before the other loads.
+
+</Recall>
+
+<Recall q="Why did more threads lose a higher percentage of updates in Lab 1?">
+
+More threads means more overlapping load–store windows (and on more cores, true simultaneity), so collisions on the same cache line are more frequent.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s4" num="4" title="Shared-memory programming: Pthreads and OpenMP" tags="exam code" pages="Part 1 · pp. 50–66">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="50">Lecture 4</PdfRef>
+
+### Pthreads essentials
+
+| Call | Notes |
+|---|---|
+| `pthread_create(&t, NULL, fn, arg)` | `fn` is `void *fn(void *)`. Pass a small int as `(void *)(intptr_t)i`, **not** `&i` (the loop variable changes before the thread reads it). |
+| `pthread_join(t, &ret)` | Waits and collects the return value. Without it `main` returns, the process exits, and unfinished threads die mid-print (Lab 1 Q1.2). |
+| `pthread_mutex_lock / unlock` | Forget the unlock and the next locker blocks forever - the program hangs (Lab 1 Q3.3). |
+| `pthread_cond_wait(&c, &m)` | Atomically releases `m` and sleeps; re-acquires `m` before returning. **Always in a `while`.** |
+| `pthread_rwlock_rdlock / wrlock` | Many readers or one writer, built in. |
+
+Threads print in a different order on each run (Lab 1 Q1.1): creation order is not scheduling order. Joining in index order makes the *results* print in order even though the work did not happen in order.
+
+<Callout kind="exam" title="Coarse lock per increment vs local accumulation (Lab 1 Ex3)">
+
+Part A locks around every `counter++`: correct but every increment fights for one lock - at 16 threads it took **0.05–0.15 s**. Part B counts in a local variable and adds once under the lock: **~0.001 s**. Same answer, ~100× faster. The lesson - *shrink the critical section and lock rarely* - comes back as OpenMP `reduction` (Lab 3) and split counters (Lab 5).
+
+</Callout>
+
+### OpenMP essentials
+
+The fork-join picture from §0 is exactly what `#pragma omp parallel` does.
+
+| Construct | What it does |
+|---|---|
+| `#pragma omp parallel` | Fork a team; implicit barrier and join at `}` |
+| `#pragma omp parallel for` | Split loop iterations among the team (default: static blocks) |
+| `shared(x)` / `private(x)` | One copy / one **uninitialised** copy per thread |
+| `firstprivate(x)` | Private, initialised from the value before the region |
+| `reduction(+:sum)` | Private partial sums, combined once at the end |
+| `#pragma omp critical` | One thread at a time through the block (a named lock) |
+| `#pragma omp atomic` | Hardware atomic update of one scalar - cheaper than critical |
+| `schedule(static/dynamic/guided[, chunk])` | How iterations are dealt out (§13) |
+| `#pragma omp task` / `taskwait` | Unit of deferred work / wait for child tasks |
+| `#pragma omp single` | One thread runs the block (others wait at its end) |
+
+Without `-fopenmp` every pragma is silently ignored and the program runs serially - a classic "my speedup is 1.0" lab mistake.
+
+<Callout kind="warn" title="private means uninitialised (Lab 3 Ex1 Task B)">
+
+Inside the region a `private(x)` variable holds garbage (the compiler even warns), not the value from before the region. After the region, the original `x` is unchanged. Use `firstprivate` to copy in, `lastprivate` to copy out.
+
+</Callout>
+
+| Lab 3 Ex2, π with $10^7$ darts, 4 threads | Time | Why |
+|---|---|---|
+| `critical` around `count++` | 0.173 s | A lock per hit, fully serialised |
+| `atomic` | 0.084 s | Hardware atomic, still one contended cache line |
+| `reduction(+:count)` | **0.012 s** | Private counts, one combine |
+| Manual per-thread array | 0.014 s | Same idea (watch false sharing - pad the slots) |
+
+`rand()` is not thread-safe (it has hidden shared state, and a lock inside it in glibc): use `rand_r(&seed)` with a **private** seed such as `42 + omp_get_thread_num()`.
+
+<Detail>
+
+### Pthreads: matrix–vector multiply, block rows per thread
+
+```c
+void *mat_vect(void *rank) {
+    long my_rank = (long)rank;
+    int local_m = m / thread_count;              // rows per thread
+    int first = my_rank * local_m, last = first + local_m - 1;
+    for (int i = first; i <= last; i++) {
+        y[i] = 0.0;
+        for (int j = 0; j < n; j++) y[i] += A[i][j] * x[j];
+    }
+    return NULL;                                  // no locks: each thread writes its own y[i]
+}
+```
+
+### Read-write lock
+
+```c
+pthread_rwlock_t rw = PTHREAD_RWLOCK_INITIALIZER;
+int member(int v)  { pthread_rwlock_rdlock(&rw); int r = search(v); pthread_rwlock_unlock(&rw); return r; }
+void insert(int v) { pthread_rwlock_wrlock(&rw); add(v);            pthread_rwlock_unlock(&rw); }
+```
+
+Many `member` calls proceed together; `insert` waits for all readers to leave. Whether waiting writers block new readers is implementation-defined - the starvation question of Lab 2 Ex4/Ex5.
+
+### OpenMP: trapezoidal rule, three ways
+
+```c
+double global = 0.0;
+#pragma omp parallel num_threads(t)
+{
+    double my = local_trap(a, b, n);   // each thread's share
+    #pragma omp critical
+    global += my;                      // one critical section per thread - fine
+}
+// or simply:
+#pragma omp parallel for reduction(+:global)
+for (int i = 1; i < n; i++) global += f(a + i * h);
+```
+
+### Default data-sharing rules
+
+| Variable | Default |
+|---|---|
+| declared *before* the region | **shared** |
+| declared *inside* the region | private |
+| loop index of `omp for` | private |
+| `static` / global variables | shared |
+
+`default(none)` forces you to list every variable - the safest habit.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Why is passing &i to pthread_create in a loop a bug?">
+
+Every thread receives the address of the same loop variable; by the time a thread dereferences it, `i` has moved on (or the loop ended). Threads see duplicated or out-of-range indices.
+
+</Recall>
+
+<Recall q="Order: critical, atomic, reduction - fastest to slowest, and why.">
+
+reduction (no shared writes in the loop) < atomic (one hardware RMW per hit, contended line) < critical (lock acquire/release per hit).
+
+</Recall>
+
+<Recall q="Why must #pragma omp single wrap the first call of a task-parallel merge sort?">
+
+Inside `parallel` every thread runs the code. Without `single`, all threads start the whole sort on the same array - $T$ copies of the work racing on the same data (wrong or wildly slow). `single` makes one thread create the root task; the others execute tasks.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s5" num="5" title="Mutual exclusion from reads and writes: the four attempts, Dekker, Peterson" tags="exam core" pages="Part 1 · pp. 67–77">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="67">Lecture 5</PdfRef>
+
+Each attempt fixes the previous one's failure and introduces a new one. Know the failing interleaving for each:
+
+| Attempt | Mechanism | Mut. excl. | No deadlock | No livelock | No starvation | Works without contention |
+|---|---|---|---|---|---|---|
+| 1. Strict alternation | one `turn` | ✓ | ✓ | ✓ | ✓ | **×** a process that stops wanting blocks the other |
+| 2. Test then set | two flags, test first | **×** both test, both see "free", both set | | | | |
+| 3. Set then test | two flags, set first | ✓ | **×** both set, both wait | | | |
+| 4. Back off | set, test, retreat, retry | ✓ | ✓ | **×** perfectly in-step retreats | **×** | |
+| Dekker | flags + turn, nested back-off | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Peterson** | flags + give away the turn | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+<MutexLab />
+
+**Peterson (memorise):**
+
+```c
+// process i, other = 1 - i
+flag[i] = true;          // I want in
+victim = i;              // ...but you go first
+while (flag[other] && victim == i) { }   // wait while you want in and I'm the victim
+/* critical section */
+flag[i] = false;
+```
+
+Whoever writes `victim` **last** waits; exactly one write is last, so exactly one proceeds. If the other is not interested its flag is false and you enter at once.
+
+<Callout kind="warn" title="Peterson on a real CPU">
+
+Peterson assumes sequentially consistent memory. Modern CPUs and compilers reorder the store to `victim` and the load of `flag[other]`; without a memory fence (or C11 `atomic` with `seq_cst`) the textbook code can let both in. This is why real locks use hardware atomics.
+
+</Callout>
+
+<Detail>
+
+### Dekker's algorithm
+
+```c
+// process i, other j = 1 - i; flags in Ben-Ari style (want[i] = 1 means "wants in")
+want[i] = 1;
+while (want[j]) {                 // the other wants in too
+    if (turn == j) {              // ... and it is their turn: back off
+        want[i] = 0;
+        while (turn == j) { }     // wait for my turn
+        want[i] = 1;              // re-assert
+    }
+}
+/* critical section */
+turn = j;                         // hand the turn over
+want[i] = 0;
+```
+
+Attempt 4's back-off, but only the process whose turn it is *not* backs off - so no livelock, and handing the turn over afterwards prevents starvation.
+
+### Why Peterson is mutually exclusive (proof sketch)
+
+Suppose both P0 and P1 are in the CS. Each, before entering, wrote its flag and then `victim`. Say P0 wrote `victim` last, so `victim == 0` from then on. P0 then got past `while (flag[1] && victim == 0)`, so it must have read `flag[1] == false` - but P1 had set `flag[1] = true` *before* writing `victim`, which happened before P0's write. Contradiction. Deadlock-freedom: if both wait, `victim` equals one of them, and the other's condition is false.
+
+### The Lecture 5 notation
+
+The notes write the flags as `c1`, `c2` with **0 meaning "wants in"** (Ben-Ari's convention), so the Peterson loop reads `while (turn == 2 && c2 == 0)`. The sim above uses `flag = true` for the same idea - check which convention a question uses before answering.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Give the interleaving that breaks Attempt 2 (test then set).">
+
+P1 tests `flag2 == false`; P2 tests `flag1 == false`; P1 sets `flag1`; P2 sets `flag2`; both enter.
+
+</Recall>
+
+<Recall q="Why does strict alternation fail even though it is mutually exclusive?">
+
+It forces alternation: if P1 finishes its CS and never wants it again, `turn` stays at 1 and P2 can enter at most once more - progress is violated without contention.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s6" num="6" title="Basic constructs: deadlock, livelock, locks for n threads" tags="exam core" pages="Part 1 · pp. 78–90">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="78">Lecture 6</PdfRef>
+
+**Mutual exclusion** (no two at once - locks, mutexes, monitors) is a different problem from **synchronisation** (A must happen before B - semaphores, condition variables, barriers). The labs use both: Lab 1 is purely mutual exclusion; Lab 2 Ex1 ping-pong is purely ordering.
+
+### Deadlock needs all four (Coffman)
+
+1. **Mutual exclusion** - the resource is held exclusively.
+2. **Hold and wait** - holding one, waiting for another.
+3. **No preemption** - it cannot be taken away.
+4. **Circular wait** - a cycle of waiters.
+
+Break any one and deadlock is impossible. The practical fix is **lock ordering** - always acquire locks in one global order, which breaks circular wait (dining philosophers §8; Lab 4 river crossing).
+
+**Livelock**: everyone is busy (back off, retry) but nobody progresses - Attempt 4. **Starvation**: the system progresses but one thread never does - reader-priority writers in Lab 2.
+
+### From two threads to n
+
+| Algorithm | Threads | Mut. excl. | Deadlock-free | Starvation-free | FCFS |
+|---|---|---|---|---|---|
+| LockOne (flags) | 2 | ✓ | × concurrent | × | × |
+| LockTwo (victim) | 2 | ✓ | × alone | × | × |
+| Peterson | 2 | ✓ | ✓ | ✓ | ✓ |
+| Filter | n | ✓ | ✓ | ✓ | **×** |
+| Bakery | n | ✓ | ✓ | ✓ | ✓ |
+
+**Filter**: $n-1$ levels of Peterson; at level $L$ at most $n-L$ threads; the one that reaches level $n-1$ enters. Unfair - a thread can be overtaken many times.
+
+**Bakery**: take a ticket one more than the largest you can see; enter when your $(\text{label}, \text{id})$ pair is the smallest. Ties (two threads read the same max) are broken by id, so `max()` need not be atomic. FCFS, using only reads and writes - but $O(n)$ memory and unbounded labels.
+
+<Detail>
+
+### Filter lock
+
+```java
+// n threads, levels 1..n-1
+void lock(int me) {
+    for (int L = 1; L < n; L++) {
+        level[me] = L;
+        victim[L] = me;
+        while ((∃k ≠ me) level[k] >= L && victim[L] == me) { }   // spin
+    }
+}
+void unlock(int me) { level[me] = 0; }
+```
+
+At each level one thread (the last to arrive, the victim) is held back, so at most $n - L$ threads pass level $L$; at level $n-1$ only one remains.
+
+### Bakery lock
+
+```java
+void lock(int i) {
+    flag[i] = true;
+    label[i] = max(label[0], …, label[n-1]) + 1;          // take a ticket
+    while ((∃k ≠ i) flag[k] && (label[k], k) < (label[i], i)) { }
+}
+void unlock(int i) { flag[i] = false; }
+```
+
+`(a, i) < (b, j)` iff $a < b$, or $a = b$ and $i < j$. First-come-first-served because a thread that finished taking its ticket before another started gets a strictly smaller label.
+
+### Why we still need hardware atomics
+
+Both need $O(n)$ shared variables read on every lock, and Lamport/Burns–Lynch showed any read/write-only lock for $n$ threads needs at least $n$ registers. A single test-and-set or CAS word does the job in $O(1)$ space - hence real locks.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Which Coffman condition does lock ordering break, and why does it work?">
+
+Circular wait. If everyone acquires in increasing order, the highest-numbered lock holder in any wait chain can never be waiting for a lower one - no cycle can close.
+
+</Recall>
+
+<Recall q="Why is Filter not first-come-first-served?">
+
+Each level only guarantees one thread is left behind (the victim); a newly arrived thread can pass through levels ahead of a thread that has been waiting longer.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s7" num="7" title="Accelerators: GPUs and CUDA" tags="core" pages="Part 1 · pp. 91–109">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="91">Lecture 7</PdfRef>
+
+A CPU spends its transistors on latency (big caches, branch prediction, out-of-order execution) for a few fast cores. A GPU spends them on **throughput**: thousands of simple cores, executing **warps** of 32 threads in lock-step (SIMT), hiding memory latency by switching warps instead of caching.
+
+| Concept | CUDA |
+|---|---|
+| Kernel launch | `kernel<<<blocks, threadsPerBlock>>>(args)` |
+| Global index | `blockIdx.x * blockDim.x + threadIdx.x` |
+| Function qualifiers | `__global__` (host calls, device runs), `__device__`, `__host__` |
+| Memory | registers (per thread) → **shared** (per block, fast) → global (all, slow) → constant / texture |
+| Sync inside a block | `__syncthreads()` - a barrier; **no** barrier across blocks inside a kernel |
+| Host ↔ device | `cudaMalloc`, `cudaMemcpy(dst, src, n, cudaMemcpyHostToDevice)`, `cudaFree` |
+| Atomics | `atomicAdd(&x, v)` etc. on global or shared memory |
+
+**Peak performance** = cores × FLOPs/core/cycle × clock. Matrix multiplication: the naive kernel reads every operand from global memory; the **tiled** kernel loads a tile into shared memory once per block and reuses it TILE times, then `__syncthreads()` before the next tile.
+
+Branch **divergence**: if threads of one warp take different branches, the warp runs both paths serially with lanes masked off.
+
+<Detail>
+
+### Vector add - the CUDA "hello world"
+
+```c
+__global__ void add(const float *a, const float *b, float *c, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) c[i] = a[i] + b[i];             // guard: the grid may overshoot n
+}
+// host
+cudaMalloc(&d_a, n * sizeof(float));  /* … d_b, d_c */
+cudaMemcpy(d_a, a, n * sizeof(float), cudaMemcpyHostToDevice);
+int threads = 256, blocks = (n + threads - 1) / threads;
+add<<<blocks, threads>>>(d_a, d_b, d_c, n);
+cudaMemcpy(c, d_c, n * sizeof(float), cudaMemcpyDeviceToHost);
+```
+
+### Tiled matrix multiply - the shape
+
+```c
+__shared__ float As[T][T], Bs[T][T];
+for (int t = 0; t < N / T; t++) {
+    As[ty][tx] = A[row * N + t * T + tx];       // each thread loads one element
+    Bs[ty][tx] = B[(t * T + ty) * N + col];
+    __syncthreads();                            // tile complete before anyone reads it
+    for (int k = 0; k < T; k++) sum += As[ty][k] * Bs[k][tx];
+    __syncthreads();                            // finished reading before it is overwritten
+}
+C[row * N + col] = sum;
+```
+
+Global-memory reads drop by a factor of $T$. Both barriers are needed: the first is a read-after-write hazard on the tile, the second a write-after-read hazard.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Why can't a CUDA kernel synchronise all blocks with __syncthreads()?">
+
+`__syncthreads()` is a barrier for the threads of one block only. Blocks may not even be resident at the same time; a grid-wide sync needs a kernel boundary (or cooperative groups).
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s8" num="8" title="Semaphores and the classic problems" tags="exam code" pages="Part 1 · pp. 110–127">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="110">Lecture 8</PdfRef>
+
+A semaphore is an integer $S \ge 0$ with two atomic operations:
+
+| Operation | Also called | Effect |
+|---|---|---|
+| `sem_wait(&s)` | P, down, wait | if $S > 0$ decrement, else block |
+| `sem_post(&s)` | V, up, signal | increment, or wake one blocked process |
+
+**Invariants**: $S = S_0 + \#\text{post} - \#\text{wait}$; with a semaphore initialised to 1 guarding a CS, $\#\text{in CS} + S = 1$ - which proves mutual exclusion.
+
+Unlike a mutex, any thread may post a semaphore it never waited on - that is what makes it a **signalling** tool, not just a lock.
+
+### The classic problems at a glance
+
+| Problem | Semaphores | Core lesson |
+|---|---|---|
+| Mutual exclusion | one, init 1 | The semaphore *is* the critical section |
+| Rendezvous (Bill & Ben) | two, init 0 | Signal before you wait |
+| Bounded producer–consumer | `items = 0`, `spaces = N`, `mutex = 1` | Two mirrored counters bound both ends |
+| Dining philosophers | one per fork, init 1 | Global ordering breaks circular wait |
+| Readers–writers | `rw = 1`, `mutexR = 1`, counter | First reader in locks, last reader out unlocks - writers can starve |
+| Sleeping barber | `customers`, `barber`, `mutex` | Mutual exclusion and condition sync together |
+| Baboon crossing | multiplex(5) + direction lightswitch + turnstile | Lab 4 Ex1 and Ex2 in disguise |
+
+<DiningLab />
+
+**Bounded buffer with semaphores** - the order of the two waits matters:
+
+```c
+void put(int x) {               // producer
+    sem_wait(&spaces);          // 1. reserve a slot  (BEFORE the mutex)
+    sem_wait(&mutex);           // 2. then lock the buffer
+    buf[tail] = x; tail = (tail + 1) % N;
+    sem_post(&mutex);
+    sem_post(&items);           // 3. announce the item
+}
+```
+
+<Callout kind="exam" title="Swap the two waits and it deadlocks">
+
+If the producer takes `mutex` first and then blocks on `spaces` (buffer full), the consumer can never take `mutex` to free a slot. Always wait on the counting semaphore first, the mutex second. The same mistake is what deadlocked an early version of the Lab 4 river crossing (the captain waited on a semaphore while holding the mutex).
+
+</Callout>
+
+### Lab 4 patterns you must recognise
+
+| Pattern | Shape | Lab |
+|---|---|---|
+| **Lightswitch** | first in locks the room, last out unlocks it (counter + mutex) | Ex1 bridge, Ex2 passage - one direction at a time |
+| **Multiplex** | semaphore init N | at most 3 cars / N trucks on the bridge |
+| **Turnstile** | `wait(t); post(t);` | stops a waiting direction from being overtaken (anti-starvation) |
+| **Two-phase barrier** | two turnstiles | Ex5 reusable barrier |
+
+<Detail>
+
+### Proving mutual exclusion with the semaphore invariant
+
+Each process runs `wait(S); CS; post(S);` with $S_0 = 1$. Let $\#CS$ be the number of processes in their CS. Every process in its CS has done one more `wait` than `post`, so $\#CS = \#\text{wait} - \#\text{post}$. With the invariant $S = S_0 + \#\text{post} - \#\text{wait}$:
+
+$$
+S + \#CS = S_0 = 1.
+$$
+
+Since $S \ge 0$, $\#CS \le 1$. Deadlock-free: if nobody is in the CS, $S = 1$ and a waiter passes.
+
+### Readers–writers with semaphores (reader preference)
+
+```c
+sem_t rw;        // 1: the shared data
+sem_t mutexR;    // 1: protects nr
+int nr = 0;
+void reader(void) {
+    sem_wait(&mutexR);
+    if (++nr == 1) sem_wait(&rw);    // first reader locks out writers
+    sem_post(&mutexR);
+    read_data();
+    sem_wait(&mutexR);
+    if (--nr == 0) sem_post(&rw);    // last reader lets writers in
+    sem_post(&mutexR);
+}
+void writer(void) { sem_wait(&rw); write_data(); sem_post(&rw); }
+```
+
+This is the lightswitch again - and it starves writers exactly as Lab 2 Ex4 did.
+
+### Dining philosophers - the asymmetric fix
+
+```c
+void philosopher(int i) {
+    int first = min(i, (i + 1) % 5), second = max(i, (i + 1) % 5);
+    for (;;) {
+        think();
+        sem_wait(&fork[first]); sem_wait(&fork[second]);   // global order
+        eat();
+        sem_post(&fork[second]); sem_post(&fork[first]);
+    }
+}
+```
+
+Other fixes: a "butler" semaphore initialised to 4 (at most four may try to eat, so one always gets both forks), or pick up both forks atomically under a mutex.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="What does a semaphore initialised to 3 model?">
+
+A pool of 3 identical resources - at most 3 threads past `sem_wait` at once (a multiplex): the bridge capacity in Lab 4 Ex1.
+
+</Recall>
+
+<Recall q="Barbershop with M = 1 turned customers away; M = 10 did not. Why is that not a bug?">
+
+Customers that find all waiting chairs full balk by design. With more chairs the queue absorbs arrival bursts; served + turned away = C in every run, which is the correctness check.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s9" num="9" title="Mutexes, monitors, condition variables, barriers" tags="exam code" pages="Part 1 · pp. 128–140">
+
+<PdfRef file="cse/sem7/cs4533-part-1.pdf" page="128">Lecture 9</PdfRef>
+
+Busy waiting burns a core and, on one core, can stop the very thread it waits for from running. Semaphores block instead - but their state is implicit in counter values scattered through the code, and one misplaced `wait` deadlocks the program. A **monitor** packages the shared data, one lock, and named **condition variables** into one module; only its procedures touch the data.
+
+<MonitorDiagram />
+
+### Signalling disciplines
+
+| Discipline | After `signal` | Waiter re-checks? |
+|---|---|---|
+| Signal and exit | Signaller leaves the monitor at once | No |
+| Signal and wait (Hoare) | Signaller sleeps, waiter runs immediately | No - `if` is safe |
+| **Signal and continue (Mesa)** | Signaller keeps the lock; waiter re-queues for it | **Yes - use `while`** |
+
+Pthreads and Java are **Mesa**. Between the signal and the waiter getting the lock, another thread can barge in and change the state - plus POSIX allows **spurious wakeups**. Hence (Lab 2 Q1.1):
+
+```c
+pthread_mutex_lock(&m);
+while (count == N)                 // NOT if
+    pthread_cond_wait(&not_full, &m);
+...
+```
+
+### signal vs broadcast
+
+| Situation | Use |
+|---|---|
+| One waiter class, any waiter can proceed (ping-pong, 1P/1C) | `signal` is enough; `broadcast` is still correct, just wakes extra threads that re-sleep (Lab 2 Q1.2) |
+| Several kinds of waiter on **one** condition variable | `broadcast` - `signal` may wake the wrong kind and the right one sleeps forever (**lost wakeup**) |
+| Multi-producer/multi-consumer with one CV | `broadcast` (Lab 2 Q3.2) |
+| Lab 5 split-lock queue | `broadcast` - permits can change on the other lock's side between check and wait |
+
+Two condition variables (`not_full`, `not_empty`) mean a signal only ever reaches the kind of thread that can use it (Lab 2 Q2.2).
+
+### Barriers
+
+A barrier blocks every thread until the last one arrives: OpenMP's implicit barrier, CUDA's `__syncthreads()`, `pthread_barrier_wait()`. A one-counter barrier is single-use: a fast thread can loop round and pass the next barrier before slow threads have left this one. The reusable fix is **two turnstiles** (Lab 4 Ex5):
+
+```c
+void barrier_wait(barrier_t *b) {
+    sem_wait(&b->mutex);
+    if (++b->count == b->n) { sem_wait(&b->t2); sem_post(&b->t1); }  // last in: close 2, open 1
+    sem_post(&b->mutex);
+    sem_wait(&b->t1); sem_post(&b->t1);                              // phase 1
+
+    sem_wait(&b->mutex);
+    if (--b->count == 0) { sem_wait(&b->t1); sem_post(&b->t2); }     // last out: close 1, open 2
+    sem_post(&b->mutex);
+    sem_wait(&b->t2); sem_post(&b->t2);                              // phase 2
+}
+```
+
+### The construct ladder
+
+busy-wait flags → hardware atomics (TAS, CAS) → semaphores → mutex + condition variables → monitors → barriers and higher-level patterns. Each rung hides more of the rung below.
+
+<Detail>
+
+### Hoare vs Mesa on one timeline
+
+Consumer C waits on `notEmpty`. Producer P appends an item and signals. A second consumer C2 is queued at the monitor entry.
+
+| Step | Hoare (signal and wait) | Mesa (signal and continue) |
+|---|---|---|
+| P signals | C runs **now**, P sleeps | P keeps the lock; C moves to the entry queue |
+| next | C takes the item - guaranteed there | C2 may get the lock first and take the item |
+| C resumes | condition still true → `if` is fine | condition may be false → must loop with `while` |
+
+### Monitors in Java
+
+```java
+class Buffer {
+    private final int[] buf = new int[N];
+    private int head, tail, count;
+    public synchronized void put(int x) throws InterruptedException {
+        while (count == N) wait();        // one implicit condition per object
+        buf[tail] = x; tail = (tail + 1) % N; count++;
+        notifyAll();                      // producers and consumers share the one queue
+    }
+    public synchronized int take() throws InterruptedException {
+        while (count == 0) wait();
+        int x = buf[head]; head = (head + 1) % N; count--;
+        notifyAll();
+        return x;
+    }
+}
+```
+
+With only one wait set per object, `notify()` can wake a thread of the wrong kind - the Lab 2 Q2.2 problem - so Java code uses `notifyAll()`, or `ReentrantLock` with two `Condition`s.
+
+### Multiplex
+
+A semaphore initialised to $k$ admits at most $k$ threads: a connection pool, the bridge capacity in Lab 4, or `rope = 5` in the baboon problem.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="A consumer wakes from pthread_cond_wait with if(count==0) and finds the buffer empty. Name two ways this happens.">
+
+A spurious wakeup, or barging: another consumer acquired the mutex between the producer's signal and this thread's wake-up and took the item (Mesa semantics).
+
+</Recall>
+
+<Recall q="Why does a reusable barrier need two phases?">
+
+With one counter and one semaphore, a fast thread released in round k can arrive at round k+1's barrier, decrement/increment the same counter and take a token meant for a slow thread of round k - threads lap each other. The second turnstile holds everyone until all have left phase 1.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s10" num="10" title="Distributed memory: MPI" tags="core code" pages="Part 2 · pp. 9–27">
+
+<PdfRef file="cse/sem7/cs4533-part-2.pdf" page="9">Lecture 10</PdfRef>
+
+No shared memory: separate processes, each with its own address space, exchange **messages**. MPI programs are **SPMD** - one program, branching on `rank`.
+
+| Call | Purpose |
+|---|---|
+| `MPI_Init` / `MPI_Finalize` | start / stop |
+| `MPI_Comm_size(comm, &p)` / `MPI_Comm_rank(comm, &r)` | how many / who am I |
+| `MPI_Send(buf, n, type, dest, tag, comm)` | may buffer or block |
+| `MPI_Recv(buf, n, type, src, tag, comm, &st)` | always blocks; `MPI_ANY_SOURCE`, `MPI_ANY_TAG` |
+| `MPI_Reduce(in, out, n, type, op, root, comm)` | combine to root |
+| `MPI_Allreduce` | combine, everyone gets the result |
+| `MPI_Bcast`, `MPI_Scatter`, `MPI_Gather`, `MPI_Allgather` | collectives |
+
+`mpicc -g -Wall -o prog prog.c` · `mpiexec -n 4 ./prog`
+
+<MpiCollectivesDiagram />
+
+<Callout kind="warn" title="Send/Send deadlock">
+
+If two ranks both `MPI_Send` large messages to each other first and `MPI_Recv` second, each send may block waiting for a matching receive - deadlock that only appears for big messages (small ones get buffered). Fix: order them (even ranks send first), or use `MPI_Sendrecv`, or non-blocking `MPI_Isend`/`MPI_Irecv`.
+
+</Callout>
+
+**Collectives**: every rank in the communicator must call them, in the same order. Data distributions: **block** (contiguous chunks), **cyclic** (round-robin), **block-cyclic** (round-robin chunks - the balance of cyclic with the locality of block).
+
+<Detail>
+
+### Trapezoidal rule in MPI
+
+```c
+int main(void) {
+    int rank, p; double a = 0.0, b = 3.0; int n = 1024;
+    MPI_Init(NULL, NULL);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
+    double h = (b - a) / n;
+    int local_n = n / p;                              // same number of trapezoids each
+    double local_a = a + rank * local_n * h, local_b = local_a + local_n * h;
+    double local = trap(local_a, local_b, local_n, h);
+    double total;
+    MPI_Reduce(&local, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (rank == 0) printf("integral = %.15e\n", total);
+    MPI_Finalize();
+}
+```
+
+Before collectives, the notes' version had every rank `MPI_Send` its result to rank 0, which `MPI_Recv`s $p - 1$ times - correct but $O(p)$ messages serialised at the root; `MPI_Reduce` uses a tree, $O(\log p)$ steps.
+
+### Message matching
+
+A receive matches a send when the communicator, the tag (or `MPI_ANY_TAG`) and the source (or `MPI_ANY_SOURCE`) agree. Messages from one sender with the same tag are **non-overtaking**: they arrive in send order.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Trapezoidal rule in MPI: what does each rank compute, and how is the total formed?">
+
+Each rank integrates its own sub-interval of width $(b-a)/p$ with $n/p$ trapezoids, then `MPI_Reduce(..., MPI_SUM, 0, ...)` sums the partial integrals on rank 0 (or all ranks send to 0 in a loop).
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s11" num="11" title="Deadlocks: modelling, detection, avoidance, prevention" tags="exam calc" pages="Part 2 · pp. 28–40">
+
+<PdfRef file="cse/sem7/cs4533-part-2.pdf" page="28">Lecture 11</PdfRef>
+
+<RagDiagram />
+
+| Strategy | Technique | Note |
+|---|---|---|
+| Ignore | ostrich algorithm | what UNIX and Windows do in practice |
+| Detect & recover | cycle detection; E, A, C, R matrices; recover by preemption, rollback or killing | needs periodic checking |
+| **Avoid** | safe states, **Banker's algorithm** | needs every process's maximum claim in advance |
+| **Prevent** | spool (ME), request all at once (H&W), allow taking away (NP), **order resources** (CW) | ordering is the practical one |
+
+A state is **safe** if some order exists in which every process can obtain its maximum need and finish. Unsafe is *not* the same as deadlocked - it means deadlock can no longer be ruled out.
+
+**Banker's request check** for process $i$ asking for $\text{Req}$:
+1. $\text{Req} \le \text{Need}_i$ else error (asked for more than declared).
+2. $\text{Req} \le \text{Available}$ else wait.
+3. Pretend: $\text{Available} -= \text{Req}$, $\text{Alloc}_i += \text{Req}$, $\text{Need}_i -= \text{Req}$; run the safety algorithm; grant if safe, else roll back and wait.
+
+<BankerLab />
+
+<Detail>
+
+### The classic Banker's example, step by step
+
+Available (3, 3, 2). Need = Max − Allocation:
+
+| | Alloc | Max | Need |
+|---|---|---|---|
+| P0 | 0 1 0 | 7 5 3 | 7 4 3 |
+| P1 | 2 0 0 | 3 2 2 | 1 2 2 |
+| P2 | 3 0 2 | 9 0 2 | 6 0 0 |
+| P3 | 2 1 1 | 2 2 2 | 0 1 1 |
+| P4 | 0 0 2 | 4 3 3 | 4 3 1 |
+
+Safety: Work = (3,3,2). P1 needs (1,2,2) ≤ Work → Work = (5,3,2). P3 (0,1,1) → (7,4,3). P4 (4,3,1) → (7,4,5). P0 (7,4,3) → (7,5,5). P2 (6,0,0) → (10,5,7). **Safe**: ⟨P1, P3, P4, P0, P2⟩.
+
+P1 now requests (1,0,2): ≤ Need₁ (1,2,2) and ≤ Available (3,3,2). Pretend: Available (2,3,0), Alloc₁ (3,0,2), Need₁ (0,2,0). Safety finds ⟨P1, P3, P4, P0, P2⟩ again → grant. Try it in the sim above.
+
+### Detection with multiple instances
+
+Same matrices without Max: **E** (existing), **A** (available), **C** (current allocation), **R** (outstanding requests). Repeatedly find a process whose request row ≤ A, pretend it finishes (A += its C row), mark it. Unmarked processes at the end are deadlocked. Run it periodically, or when CPU utilisation drops.
+
+### Recovery
+
+Preempt a resource (if its state can be saved), roll a process back to a checkpoint, or kill processes - one in the cycle, or the cheapest to restart - until the cycle breaks.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="With single-instance resources, does a cycle in the RAG mean deadlock? With multiple instances?">
+
+Single instance: cycle ⇔ deadlock. Multiple instances: a cycle is necessary but not sufficient - another instance may be released and break it.
+
+</Recall>
+
+<Recall q="Lab 4 river crossing with H = 5, S = 3 left threads waiting forever. Deadlock?">
+
+Not a deadlock in the Coffman sense - nobody holds resources the others need. Eight people simply cannot be split into two valid boats (4H, 4S or 2H+2S), so the last group can never form. It is a *liveness* failure of the input, not of the synchronisation.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s12" num="12" title="Concurrent data structures and progress conditions" tags="exam code" pages="Part 2 · pp. 41–53">
+
+<PdfRef file="cse/sem7/cs4533-part-2.pdf" page="41">Lecture 12</PdfRef>
+
+### Blocking techniques
+
+| Technique | Idea | Cost |
+|---|---|---|
+| **Coarse-grained** | one lock for the whole structure | simple; serialises everything |
+| **Fine-grained** (hand-over-hand) | a lock per node; lock next before releasing current | parallel traversals; a lock/unlock per step |
+| Optimistic | search without locks, lock, then *validate* | re-traversal on conflict |
+| Lazy | logical delete (mark) before physical unlink | wait-free `contains` |
+
+<HandOverHandDiagram />
+
+<Callout kind="exam" title="Lab 5 Ex1 - fine-grained was ~10× SLOWER">
+
+On 2 cores with a 1000-key list, every traversal step costs a `lock` + `unlock`, and every thread starts at the head lock, so they queue behind each other in a **convoy**. The coarse version does one lock per operation and then runs at full speed. Fine-grained pays off only with many cores, long lists and operations that spread out. Release the previous lock before taking the next and a deleter can unlink the node you are standing on - you follow a freed pointer.
+
+</Callout>
+
+### Non-blocking: CAS
+
+```c
+// lock-free increment
+long old;
+do { old = counter; }
+while (!__sync_bool_compare_and_swap(&counter, old, old + 1));
+```
+
+| Lab 5 Ex2, 8 threads, $10^6$ increments each | Correct? | Time |
+|---|---|---|
+| Unsafe `counter++` at `-O2` | "OK" - the compiler folded the loop into one add | - |
+| Mutex | ✓ | 0.59 s |
+| CAS loop | ✓ | 0.40 s |
+| `__sync_fetch_and_add` | ✓ | **0.17 s** |
+
+Fetch-and-add is one instruction that always succeeds; the CAS loop re-reads and retries every time another thread got in first, and under contention most attempts fail.
+
+### Progress conditions
+
+| Condition | Guarantee | Lab 5 Ex4 snippet |
+|---|---|---|
+| **Wait-free** | every call finishes in a bounded number of its own steps | C: `fetch_and_add` |
+| **Lock-free** | some call always finishes; an individual thread may retry forever | B: CAS retry loop |
+| **Obstruction-free** | a call finishes if it runs alone long enough | - |
+| **Blocking** | a delayed lock holder stops everyone | A: mutex |
+
+Snippet D (one CAS, give up on failure) is wait-free - it always returns in a bounded number of steps - but it is **incorrect** as an increment: failed increments are silently lost.
+
+### Bounded queue with two locks
+
+Enqueuers take `enqLock`, dequeuers take `deqLock`, so one producer and one consumer run in parallel. Capacity is an atomic `permits` counter decremented by enqueue and incremented by dequeue - but that one counter is touched by both sides, so it becomes the hot spot. The **split counter** gives each side its own permits (`enqSidePermits`, `deqSidePermits`); the enqueuer only takes the dequeue lock to transfer permits when its own run out.
+
+<Detail>
+
+### The ABA problem
+
+A CAS-based stack pop reads `top = A`, `next = B`, then is delayed. Another thread pops A, pops B, pushes A back. The first thread's `CAS(&top, A, B)` succeeds - `top` is A again - but B is gone: the stack is corrupted. Fixes: a version counter next to the pointer (double-width CAS), hazard pointers, or garbage collection that never reuses A while someone holds it.
+
+### Michael–Scott lock-free queue (the shape)
+
+```c
+void enq(T v) {
+    node *n = new_node(v);
+    for (;;) {
+        node *last = tail, *next = last->next;
+        if (last != tail) continue;                      // tail moved, retry
+        if (next == NULL) {
+            if (CAS(&last->next, NULL, n)) {             // link the node
+                CAS(&tail, last, n);                     // swing tail (may fail - fine)
+                return;
+            }
+        } else CAS(&tail, last, next);                   // help a lagging enqueuer
+    }
+}
+```
+
+Two CASes per enqueue, and any thread may complete the second one for another - this **helping** is what makes it lock-free.
+
+### Optimistic and lazy lists
+
+Optimistic: traverse without locks, lock `pred` and `curr`, then **validate** by re-traversing that `pred` is still reachable and still points to `curr`. Lazy: add a `marked` bit; delete first marks (logical), then unlinks (physical), so validation is local (`!pred.marked && !curr.marked && pred.next == curr`) and `contains` needs no locks at all - it is wait-free.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Why is a CAS loop lock-free but not wait-free?">
+
+If a CAS fails, it is because another thread's CAS succeeded - so the system made progress. But a particular unlucky thread can keep losing, with no bound on its own steps.
+
+</Recall>
+
+<Recall q="Real-time system, every operation must finish in bounded time. Which progress condition?">
+
+Wait-free. Lock-free still allows an individual operation to starve; blocking allows a delayed lock holder to stall everyone.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s13" num="13" title="Solution patterns and load balancing" tags="exam code" pages="Part 2 · pp. 54–64">
+
+<PdfRef file="cse/sem7/cs4533-part-2.pdf" page="54">Lecture 13</PdfRef>
+
+Design a parallel program in four steps (Foster): **partition** into tasks, identify **communication**, **agglomerate** small tasks into bigger ones, **map** them onto processors.
+
+| If the problem looks like… | Pattern | Parallelise by | Lab |
+|---|---|---|---|
+| independent loop iterations | loop parallel (`parallel for`) | data | 3 Ex3 blur, 6 Ex1 Mandelbrot |
+| split, work, combine | fork/join | data or task | 1 Ex4 |
+| recursive sub-problems | divide & conquer | task | 3 Ex4 merge sort, 6 Ex2 tree sum |
+| a stream of items of unknown cost | producer/consumer + task queue | task | 2 Ex3, 6 Ex4 |
+| a sequence of stages over many items | pipeline | order | 6 Ex3 |
+| huge, independent records | MapReduce | data | §14 |
+
+<ScheduleLab />
+
+**Static** scheduling decides the split at loop entry - zero runtime overhead, ideal for uniform work (Lab 3 blur: all policies within noise). **Dynamic** hands chunks to whichever thread is free - balances irregular work at the cost of a shared counter per chunk (Lab 6 Mandelbrot: dynamic **1.06–1.17×** faster than static). **Guided** starts with big chunks and shrinks them.
+
+<PipelineLab />
+
+**Pipeline throughput** is set by the slowest stage: one item per $\max_k (t_k / n_k)$. Stage times 1, 10, 1 ms with one stage-2 thread → 100 items/s; with three stage-2 threads → 300 items/s (now ~3.3 ms per item, so 1 ms stages are not the limit yet).
+
+**Granularity**: Lab 6 Ex2's tree sum spawned a pthread for every subtree above a threshold. With thresholds 100–10 000 it was *slower than serial* - creating a thread costs microseconds, summing a node costs nanoseconds. Only a threshold of ~100 000 (a handful of big tasks) gave a speedup (1.16× on 118 k nodes, up to 2× on 2.4 M).
+
+**Work stealing** (Lab 6 Ex5): each worker has its own deque; it pushes and pops at the **back** (LIFO - the most recently created task is hot in cache), and thieves steal from the **front** (FIFO - the oldest, usually biggest task, and the end the owner is not touching, so they rarely collide). Result: ≈ 2× on 2 cores with a few dozen steals for 200 tasks - the owners almost never touch each other's locks.
+
+<Detail>
+
+### Foster's PCAM, applied to Lab 6 Ex1
+
+| Step | Mandelbrot |
+|---|---|
+| **P**artition | one task per pixel (4 M tasks) |
+| **C**ommunication | none between pixels - embarrassingly parallel |
+| **A**gglomeration | one task per row (2000) - big enough to amortise overhead |
+| **M**apping | `schedule(dynamic)` - rows cost very different amounts |
+
+### Choosing a chunk size
+
+Too small: every chunk pays a trip to the shared counter (and its cache-line transfer). Too large: back to static's imbalance at the end of the loop. A rule of thumb is several chunks per thread with each chunk taking well over the scheduling overhead - `guided` automates this by starting large and shrinking towards the minimum chunk.
+
+### Three ways to parallelise
+
+| By | Means | Example |
+|---|---|---|
+| **Data** | same operation, different data | blur rows, Mandelbrot, matrix multiply |
+| **Task** | different operations at once | the tree sum's subtrees, the crawler |
+| **Order** | the flow of data through stages | the pipeline, asynchronous agents |
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Web server: parse, query DB (10× slower), format. Which pattern?">
+
+Pipeline with the DB stage replicated (or a thread pool per stage). Requests are a stream of items through ordered stages; the DB stage is the bottleneck, so give it more workers.
+
+</Recall>
+
+<Recall q="Web crawler with unpredictable fan-out. Which pattern?">
+
+Task queue / work stealing: each page fetch creates a variable number of new tasks; dynamic task assignment balances the irregular, recursively generated work.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s14" num="14" title="Embarrassingly parallel problems and MapReduce" tags="core" pages="Part 2 · pp. 65–72">
+
+<PdfRef file="cse/sem7/cs4533-part-2.pdf" page="65">Lecture 14</PdfRef>
+
+An **embarrassingly parallel** problem splits into independent pieces with no communication until a final combine - Monte Carlo π (Lab 3 Ex2), counting `ERROR` lines in a 100 GB log (Lab 6 Ex6 B), the per-pixel Mandelbrot.
+
+**MapReduce** structures such work as:
+
+| Phase | Input → output | Example: word count |
+|---|---|---|
+| Map | record → list of (k, v) | line → (word, 1) for each word |
+| Shuffle & sort | group all values by key (done by the framework) | (word, [1, 1, 1, …]) |
+| Reduce | (k, [v]) → (k, v′) | (word, sum) |
+
+An optional **combiner** runs a local reduce on each mapper's output to cut network traffic (valid when the reduce is associative and commutative). Hadoop adds the distributed file system (HDFS - large blocks, replicated), moves computation to the data, and re-runs failed tasks.
+
+<Detail>
+
+### Word count, as the framework sees it
+
+```python
+def map(key, line):               # key: byte offset, value: one line
+    for w in line.split():
+        emit(w, 1)
+
+def reduce(word, counts):         # all values for one key, after shuffle & sort
+    emit(word, sum(counts))
+```
+
+### When a combiner is (not) safe
+
+A combiner is the reducer run early on each mapper's partial output. That works for `sum`, `max`, `min` and `count` - associative and commutative. It is **wrong** for `average`: the mean of partial means is not the overall mean. Emit (sum, count) pairs instead and divide in the reducer.
+
+### Inverted index - another classic
+
+Map: for each word in a document, emit (word, docId). Reduce: emit (word, sorted list of docIds). This is how a search engine's index is built.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Count lines containing ERROR in a 100 GB log - pattern and why.">
+
+Loop parallel / MapReduce: lines are independent, so split the file into blocks, count in each (map), and sum the counts (reduce). No communication until the end.
+
+</Recall>
+
+</RecallList>
+
+</Section>

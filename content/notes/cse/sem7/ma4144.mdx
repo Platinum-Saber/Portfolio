@@ -1,0 +1,1427 @@
+---
+code: MA4144
+title: Neural Networks and Fuzzy Logic
+summary: The artificial neuron and activation functions, McCulloch–Pitts logic, the perceptron, ADALINE and the Widrow–Hoff (LMS) derivation, MADALINE, multilayer perceptrons and backpropagation with its variations, probabilistic neural networks - then crisp and fuzzy sets, relations and composition, membership functions and defuzzification, classical and fuzzy logic, hedges, and Mamdani, Sugeno and Tsukamoto inference - with worked problems and two 3-hour mock papers.
+order: 5
+sources: Built from the MA4144 neural-network lessons 1–5 with the Widrow–Hoff notes (73 pages) and the fuzzy-logic lessons 1–7 (48 pages). Every section links to the pages that treat it in full; every number in a worked example was recomputed.
+updated: 2026-11-07
+files:
+  - label: Part 1 - Neural networks, lessons 1–5
+    file: cse/sem7/ma4144-part-1.pdf
+    pages: 74
+    sizeMb: 5.6
+  - label: Part 2 - Fuzzy logic, lessons 1–7
+    file: cse/sem7/ma4144-part-2.pdf
+    pages: 49
+    sizeMb: 1.8
+mocks:
+  - slug: mock-1
+    label: Mock paper 1
+  - slug: mock-2
+    label: Mock paper 2
+mockIntro: Three-hour written papers in the exam's shape - five to six structured questions mixing definitions, derivations and calculations. Work on paper, then mark yourself against the model answers.
+---
+
+<Section id="s0" num="0" title="Start here" tags="exam">
+
+The module in one line: **a neuron is a weighted sum followed by a squashing function, and a fuzzy rule is a min followed by a max - everything else is how you choose the weights, or the membership functions, and how you turn the result back into a number.** The first half (§1–§9) climbs from a single threshold unit to backpropagation and the probabilistic network. The second half (§10–§17) climbs from fuzzy sets to complete fuzzy inference systems.
+
+<NeuronDiagram />
+
+### How you are assessed
+
+| Component | Weight | When / form |
+|---|---|---|
+| CA 01 | 15 % | Week 8 - may be held in the lecture slot |
+| CA 02 | 15 % | Week 13 - may be held in the lecture slot |
+| **Written examination** | **70 %** | **3 hours, 5–6 comprehensive questions** |
+
+Both CAs are mandatory and there are no make-up assessments.
+
+### What the written paper rewards
+
+"Comprehensive" questions mix three kinds of mark, usually inside one question:
+
+| Kind of part | Typical marks | What earns them |
+|---|---|---|
+| Define / explain / compare | 3–6 | The precise definition, the reason, one example. Tables beat paragraphs. |
+| Derive | 4–8 | The chain of steps - e.g. the δ rules of backpropagation, the LMS gradient, the absolute-inhibition condition |
+| Compute | 6–12 | A full table of working: net inputs, outputs, updates, memberships, firing strengths, the centroid integral |
+
+<Callout kind="tip" title="Using this guide">
+
+**Summary** is what you revise from; **Detailed** adds derivations, proofs and longer worked examples. The blue page tags open the original notes on the right. The **Mock papers** tab has two full 3-hour papers in the exam's shape - do them on paper, then mark yourself against the model answers.
+
+</Callout>
+
+### The map
+
+| Model | Learns? | Output used for learning | Boundary | Section |
+|---|---|---|---|---|
+| McCulloch–Pitts | No - weights set by hand | - | Linear (threshold) | §2 |
+| Perceptron | Yes | Thresholded output y | Linear | §3 |
+| ADALINE | Yes (LMS) | Linear output y_in | Linear | §4–§5 |
+| MADALINE | Yes (MR-I, MR-II) | Hidden ADALINE nets | Piecewise linear | §6 |
+| MLP + backprop | Yes (gradient descent) | Smooth activations | Any (non-linear) | §7–§8 |
+| PNN | Stores samples | - | Bayes, density-based | §9 |
+| Fuzzy inference | Rules by experts (or ANFIS) | - | Smooth interpolation between rules | §16 |
+
+</Section>
+
+<Section id="s1" num="1" title="The artificial neuron" tags="exam core" pages="Part 1 · pp. 2–14">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="2">Lesson 1</PdfRef>
+
+A neural network rests on four assumptions: (a) processing happens in many simple elements (neurons); (b) signals pass between neurons over connection links; (c) each link has a **weight** that multiplies the signal; (d) each neuron applies an **activation function** to its net input. A network is characterised by three things:
+
+| Characteristic | Meaning |
+|---|---|
+| **Architecture** | Neurons arranged in layers and the pattern of connections between them |
+| **Learning (training) algorithm** | How the weights are adjusted |
+| **Activation function** | How net input becomes output - the source of non-linearity |
+
+### The neuron's maths
+
+$$
+y_{in} = b + \sum_{i=1}^{n} w_i x_i = \mathbf{w}^T\mathbf{x} + b, \qquad y = f(y_{in}).
+$$
+
+| Symbol | Role |
+|---|---|
+| $x_i$ | input signal |
+| $w_i$ | weight: large positive = important, large negative = reverses the input, near 0 = ignored |
+| $b$ | bias: a weight on a constant input 1; **shifts the activation curve horizontally**, sets the threshold |
+| $\alpha$ (or $\eta$) | learning rate: too large → unstable, too small → slow |
+| $\theta$ | threshold; can be absorbed into the bias ($b = -\theta$) |
+
+<Worked title="Lesson 1, Example 1: x = (1, 2, −1), w = (0.5, −1, 2), b = 1, step activation">
+
+$y_{in} = 1 + (0.5)(1) + (-1)(2) + (2)(-1) = -2.5$. The step function gives $y = 1$ if $y_{in} \ge 0$, so $y = 0$.
+
+</Worked>
+
+### Layers
+
+**Single-layer** networks have one layer of trainable weights straight from input to output - only linearly separable problems. **Multilayer** networks put hidden layers in between: they detect intermediate patterns, build more abstract representations and solve non-linear problems.
+
+### Learning
+
+| | Supervised | Unsupervised |
+|---|---|---|
+| Training data | input **and** target | input only |
+| Goal | learn an input → output map | find structure (groups, features) |
+| Typical use | classification, prediction | clustering, compression |
+
+A supervised training step is: forward pass → prediction → loss → backward pass (backpropagation) → weight update (gradient descent).
+
+### Activation functions
+
+<ActivationLab />
+
+| Name | $a = f(n)$ | Range | MATLAB |
+|---|---|---|---|
+| Hard limit | 0 if $n < 0$, 1 if $n \ge 0$ | $\{0, 1\}$ | `hardlim` |
+| Symmetric hard limit | −1 if $n < 0$, +1 if $n \ge 0$ | $\{-1, 1\}$ | `hardlims` |
+| Linear | $n$ | ℝ | `purelin` |
+| Saturating linear | 0, $n$, 1 (clip to [0, 1]) | [0, 1] | `satlin` |
+| Symmetric saturating linear | clip to [−1, 1] | [−1, 1] | `satlins` |
+| Log-sigmoid | $1/(1+e^{-n})$ | (0, 1) | `logsig` |
+| Tan-sigmoid | $(e^n - e^{-n})/(e^n + e^{-n})$ | (−1, 1) | `tansig` |
+| Positive linear (ReLU) | $\max(0, n)$ | [0, ∞) | `poslin` |
+| Competitive | 1 for the neuron with max $n$, 0 for the rest | $\{0, 1\}$ | `compet` |
+
+Three jobs of an activation: decide whether the neuron is active, **limit the output range**, and - the important one - **introduce non-linearity**. Without it a stack of layers collapses to one linear map.
+
+<Worked title="Lesson 1, Example 2: what does the bias do to a sigmoid?">
+
+$y = 1/(1 + e^{-(x+b)})$. The midpoint ($y = 0.5$) is where $x + b = 0$, i.e. $x = -b$.
+
+- $b = 0$: midpoint at $x = 0$.
+- $b = 2$: midpoint at $x = -2$ - the curve moves **left**.
+- $b = -2$: midpoint at $x = 2$ - the curve moves **right**.
+
+</Worked>
+
+### Strengths and limits
+
+| Advantages | Limitations |
+|---|---|
+| Learn from examples; model non-linear relations; generalise; reduce manual feature engineering | Need lots of data; expensive training; hard to interpret; sensitive to architecture and method; over-fitting |
+
+Deep networks stack many hidden layers (early = simple features, later = abstract ones); CNNs for images, RNNs for sequences, Transformers for language.
+
+<Detail>
+
+### Why non-linearity is essential - in one line
+
+Two linear layers: $\mathbf{a}^2 = W^2(W^1\mathbf{p} + \mathbf{b}^1) + \mathbf{b}^2 = (W^2W^1)\mathbf{p} + (W^2\mathbf{b}^1 + \mathbf{b}^2)$ - a single linear layer with weight $W^2W^1$. No amount of depth helps until $f$ is non-linear.
+
+### Notation table (Lesson 1, Table 3)
+
+| Symbol | Meaning | Symbol | Meaning |
+|---|---|---|---|
+| $x_i$ | activation of input unit $i$ | $w_{ij}$ | weight from unit $i$ to unit $j$ |
+| $y_j$ | output of unit $j$ | $W$ | weight matrix |
+| $s$ | input training vector | $t$ | target vector |
+| $\alpha$ | learning rate | $\theta$ | threshold |
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Name the three characteristics of a neural network.">
+
+Architecture (layers and connections), learning (training) algorithm (how weights change), activation function (net input → output).
+
+</Recall>
+
+<Recall q="A bias of +3 on a log-sigmoid neuron: where is the curve's midpoint?">
+
+At $x = -3$: the curve shifts 3 units to the left.
+
+</Recall>
+
+<Recall q="Why is the linear activation used in output layers of regression networks?">
+
+Regression needs an unbounded continuous output; a sigmoid would squash it into (0, 1).
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s2" num="2" title="McCulloch–Pitts neuron: logic by threshold" tags="exam calc" pages="Part 1 · pp. 15–20">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="15">Lesson 2</PdfRef>
+
+McCulloch (a neuroscientist) and Pitts (a logician), 1943: the first formal artificial neuron. **Binary** inputs, **fixed** weights and threshold, binary output - a threshold logic unit with **no learning**.
+
+### The six requirements
+
+1. Activation is binary.
+2. Neurons are connected by directed, weighted paths.
+3. A connection is **excitatory** if its weight is positive ($w > 0$), **inhibitory** otherwise ($-p$, $p > 0$). All excitatory connections into one neuron have the **same** weight.
+4. Each neuron has a fixed threshold $\theta$: it fires if $y_{in} \ge \theta$.
+5. The threshold is set so that **inhibition is absolute** - any active inhibitory input prevents firing.
+6. A signal takes one time step to cross one link.
+
+### The two design inequalities
+
+**Absolute inhibition** - even with all $n$ excitatory inputs on, one inhibitory input must stop the neuron:
+
+$$
+\theta > nw - p.
+$$
+
+**Fire on at least $k$ excitatory inputs** - $k$ active must reach the threshold, $k - 1$ must not:
+
+$$
+kw \ge \theta > (k-1)w.
+$$
+
+| Gate | Weights | θ | Why |
+|---|---|---|---|
+| AND (2 inputs) | 1, 1 | 2 | $k = 2$: $2 \ge \theta > 1$ |
+| OR | 1, 1 | 1 | $k = 1$: $1 \ge \theta > 0$ |
+| ANDNOT ($x_1 \wedge \bar x_2$) | $x_1$: 1, $x_2$: −p (inhibitory) | 1 | $x_2$ blocks absolutely |
+| 2-out-of-3 alarm | 1, 1, 1 | 2 | Lesson 2 Example 9 |
+
+<Worked title="Design an M-P neuron that fires when at least 3 of 4 excitatory inputs (w = 2) are on, with one inhibitory input">
+
+$k = 3$, $w = 2$: $3(2) \ge \theta > 2(2)$, so $6 \ge \theta > 4$ - take $\theta = 6$ (or 5).
+
+Absolute inhibition: $\theta > nw - p = 4(2) - p = 8 - p$. With $\theta = 6$: $p > 2$, e.g. inhibitory weight $-3$.
+
+Check: four inputs on plus the inhibitor gives $8 - 3 = 5 < 6$ - no firing. ✓
+
+</Worked>
+
+| Merits | Limitations |
+|---|---|
+| First formal neuron; showed neurons can compute logic; foundation for later models | Binary only; fixed weights - no learning; poor with noisy or continuous data; a logic model, not a trainable classifier |
+
+<Detail>
+
+### XOR from M-P neurons (two layers)
+
+$x_1 \oplus x_2 = (x_1 \wedge \bar x_2) \vee (\bar x_1 \wedge x_2)$. Use two ANDNOT units and one OR unit:
+
+| Unit | Inputs (weight) | θ |
+|---|---|---|
+| $z_1 = x_1$ ANDNOT $x_2$ | $x_1$ (+2), $x_2$ (−1) | 2 |
+| $z_2 = x_2$ ANDNOT $x_1$ | $x_2$ (+2), $x_1$ (−1) | 2 |
+| $y = z_1$ OR $z_2$ | $z_1$ (+2), $z_2$ (+2) | 2 |
+
+Check (1, 1): $z_1 = 2 - 1 = 1 < 2$ → 0, likewise $z_2 = 0$, so $y = 0$ ✓. (1, 0): $z_1 = 2$ → 1, $y = 2$ → 1 ✓. Because a signal takes one time step per link, the answer appears after **two** steps - the M-P model's notion of time.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Why must all excitatory weights into one M-P neuron be equal?">
+
+It is one of the model's requirements: firing then depends only on *how many* excitatory inputs are active, which is what makes the threshold conditions $kw \ge \theta > (k-1)w$ work.
+
+</Recall>
+
+<Recall q="Two excitatory inputs of weight 1 and θ = 1.5: which gate?">
+
+AND would need $\theta \in (1, 2]$ - yes, 1.5 works; it is AND.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s3" num="3" title="The perceptron and its learning rule" tags="exam calc" pages="Part 1 · pp. 20–31">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="20">Lesson 2 §2</PdfRef>
+
+The perceptron keeps threshold logic but makes the weights **learnable**:
+
+$$
+y_{in} = \sum_i w_i x_i + b, \qquad y = \begin{cases} 1, & y_{in} \ge 0\\ 0, & y_{in} < 0\end{cases}
+$$
+
+(For bipolar targets the notes use $y = +1$ if $y_{in} > 0$, else $-1$.)
+
+| Gate | $w_1, w_2$ | $b$ | Boundary |
+|---|---|---|---|
+| AND | 1, 1 | −1.5 | $x_1 + x_2 = 1.5$ |
+| OR | 1, 1 | −0.5 | $x_1 + x_2 = 0.5$ |
+| NOT (1 input) | −1 | 0.5 | $x = 0.5$ |
+
+### The learning rule
+
+$$
+w_i^{new} = w_i^{old} + \eta\,(t - y)\,x_i, \qquad b^{new} = b^{old} + \eta\,(t - y).
+$$
+
+If the output is right, $t - y = 0$ and nothing changes. For bipolar data the notes write the update as $w_i \leftarrow w_i + \eta\, t\, x_i$, applied **only when the pattern is misclassified**.
+
+**Decision boundary**: $w_1x_1 + w_2x_2 + b = 0$ - a line (2-D), plane (3-D) or hyperplane. A perceptron can only learn **linearly separable** functions: AND, OR, NAND yes; **XOR no** - which is why multilayer networks were developed.
+
+<PerceptronLab />
+
+<Worked title="Lesson 2, Example 7: bipolar AND, η = 1, all weights start at 0">
+
+| Epoch | Pattern $(x_1, x_2), t$ | $y_{in}$ | $y$ | Update? | $w_1, w_2, b$ after |
+|---|---|---|---|---|---|
+| 1 | (−1, −1), −1 | 0 | −1 | no | 0, 0, 0 |
+| 1 | (−1, +1), −1 | 0 | −1 | no | 0, 0, 0 |
+| 1 | (+1, −1), −1 | 0 | −1 | no | 0, 0, 0 |
+| 1 | (+1, +1), +1 | 0 | −1 | **yes** | 1, 1, 1 |
+| 2 | (−1, −1), −1 | −1 | −1 | no | 1, 1, 1 |
+| 2 | (−1, +1), −1 | 1 | +1 | **yes** | 2, 0, 0 |
+| 2 | (+1, −1), −1 | 2 | +1 | **yes** | 1, 1, −1 |
+| 2 | (+1, +1), +1 | 1 | +1 | no | 1, 1, −1 |
+| 3 | all four | −3, −1, −1, 1 | correct | no | **1, 1, −1** |
+
+Converged: $y_{in} = x_1 + x_2 - 1$, boundary $x_1 + x_2 = 1$. Run the sim above with *AND, bipolar, perceptron, η = 1* - it reproduces every row.
+
+</Worked>
+
+<Callout kind="exam" title="M-P vs perceptron in one table">
+
+| | McCulloch–Pitts | Perceptron |
+|---|---|---|
+| Inputs | binary | real or binary |
+| Weights | fixed by design | learned |
+| Inhibition | absolute | just negative weights |
+| Purpose | logic | linear classification |
+
+</Callout>
+
+<Detail>
+
+### Perceptron convergence theorem (the guarantee behind the rule)
+
+If the training set is linearly separable, the perceptron rule finds a separating weight vector in a **finite** number of updates, for any η > 0 and any start. If it is not separable (XOR), the weights cycle for ever - the sim shows this. This is the classical result usually quoted alongside Lesson 2; the notes state the consequence ("can solve only linearly separable problems").
+
+### A real-world reading (Example 8)
+
+Spam filter with $x_1$ = suspicious words, $x_2$ = many links, $x_3$ = unknown sender, $w = (0.8, 0.6, 0.7)$, $b = -1$: an email with all three gives $y_{in} = 1.1 > 0$ → spam. With only $x_1$ and $x_3$: $0.5 > 0$ → still spam; with only $x_2$: $-0.4$ → not spam.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Write the perceptron update and say when it is applied.">
+
+$w_i \leftarrow w_i + \eta(t - y)x_i$, $b \leftarrow b + \eta(t-y)$ - after every pattern, but it changes nothing when the pattern is classified correctly.
+
+</Recall>
+
+<Recall q="Show that no single perceptron computes XOR.">
+
+Suppose $w_1x_1 + w_2x_2 + b$ separates it (binary, threshold 0). (0,0)→0: $b < 0$. (1,0)→1: $w_1 + b \ge 0$. (0,1)→1: $w_2 + b \ge 0$. Adding: $w_1 + w_2 + 2b \ge 0$, so $w_1 + w_2 + b \ge -b > 0$ - but (1,1)→0 needs $w_1 + w_2 + b < 0$. Contradiction.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s4" num="4" title="ADALINE and the delta (LMS) rule" tags="exam calc" pages="Part 1 · pp. 32–37">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="32">Lesson 3</PdfRef>
+
+**ADALINE** (ADAptive LInear NEuron) - Widrow and Hoff, 1959. Same weighted sum, but it **learns from the linear output before thresholding**:
+
+$$
+z = \sum_i w_i x_i + b, \quad y = z \text{ (during training)}, \quad \text{class} = \operatorname{sign}(z) \text{ (afterwards)}.
+$$
+
+It minimises the **mean squared error** $E = \tfrac12 \sum_p (t^{(p)} - y^{(p)})^2$ by gradient descent, giving the **delta rule** (= LMS = Widrow–Hoff rule):
+
+$$
+\Delta w_i = \eta\,(t - y)\,x_i, \qquad \Delta b = \eta\,(t - y).
+$$
+
+The formula looks like the perceptron's - **the difference is which $y$**. The perceptron uses the thresholded class (so the error is 0 or ±1/±2); ADALINE uses the continuous $y_{in}$, so it knows *how far* off it is and keeps improving even when every class is already right.
+
+### Learning steps
+
+1. Initialise weights and bias (small random or 0).
+2. Present $\mathbf{x}$; compute $z = \sum w_i x_i + b$, $y = z$.
+3. $e = t - y$; update $w_i \leftarrow w_i + \eta e x_i$, $b \leftarrow b + \eta e$.
+4. Repeat over all patterns until the total error is small enough.
+
+### Choosing the learning rate
+
+| Rule | Statement |
+|---|---|
+| Stability (Hecht-Nielsen) | $0 < \alpha < 2/\lambda_{max}$ for $w \leftarrow w + \alpha e x$, where $\lambda_{max}$ is the largest eigenvalue of $R = \frac1P\sum_p \mathbf{x}^{(p)}\mathbf{x}^{(p)T}$ |
+| Same bound, other convention | $0 < \alpha < 1/\lambda_{max}$ when the update is written $w \leftarrow w + 2\alpha e x$ (§5) |
+| Practical heuristic | $0.1 \le n\eta \le 1$, i.e. $0.1/n \le \eta \le 1/n$ for $n$ inputs |
+
+<Worked title="Lesson 3, Example 1: an ADALINE on a 100-pixel patch">
+
+$n = 100$: $0.1/100 \le \eta \le 1/100$, so $0.001 \le \eta \le 0.01$ - e.g. $\eta = 0.005$. The more inputs, the more "input energy" each update injects, so η must shrink.
+
+</Worked>
+
+| Strengths | Limitations |
+|---|---|
+| Simple; minimises a squared-error objective; adaptive filtering and signal processing | Still a single linear unit: linear boundary, cannot solve XOR |
+
+<RecallList>
+
+<Recall q="The delta rule and the perceptron rule have the same formula. What is different?">
+
+The error. Perceptron: $t - y$ with $y$ the thresholded output (0 when correct, so no update). Delta rule: $t - y_{in}$ with the linear output - a graded error that keeps reducing the MSE.
+
+</Recall>
+
+<Recall q="An ADALINE has 20 inputs. Give a sensible range for η.">
+
+$0.1/20 \le \eta \le 1/20$: $0.005 \le \eta \le 0.05$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s5" num="5" title="Widrow–Hoff learning: the MSE surface and LMS derivation" tags="exam calc" pages="Part 1 · pp. 43–48">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="43">Widrow–Hoff notes</PdfRef>
+
+Stack the weights and the bias in $\mathbf{x} = [\,{}_1\mathbf{w};\, b\,]$ and the input with a 1 in $\mathbf{z} = [\,\mathbf{p};\,1\,]$, so $a = \mathbf{x}^T\mathbf{z}$. The mean square error is
+
+$$
+F(\mathbf{x}) = E[(t - \mathbf{x}^T\mathbf{z})^2] = \underbrace{E[t^2]}_{c} - 2\mathbf{x}^T\underbrace{E[t\mathbf{z}]}_{\mathbf{h}} + \mathbf{x}^T\underbrace{E[\mathbf{z}\mathbf{z}^T]}_{R}\mathbf{x}.
+$$
+
+That is a **quadratic function** $F = c + \mathbf{d}^T\mathbf{x} + \tfrac12\mathbf{x}^TA\mathbf{x}$ with $\mathbf{d} = -2\mathbf{h}$ and Hessian $A = 2R$. $\mathbf{h}$ is the input–target cross-correlation; $R$ is the input correlation matrix.
+
+| Eigenvalues of the Hessian | Shape of $F$ |
+|---|---|
+| all positive | one strong minimum |
+| all negative | one strong maximum |
+| mixed signs | saddle point |
+| all ≥ 0, some 0 | weak minimum, or no stationary point |
+| all ≤ 0, some 0 | weak maximum, or no stationary point |
+
+A correlation matrix is positive definite or semidefinite - never negative eigenvalues - so the MSE has **one global minimum** (all eigenvalues positive) or a **weak minimum / none** (some zero, depending on $\mathbf{h}$). Setting $\nabla F = 2R\mathbf{x} - 2\mathbf{h} = 0$:
+
+$$
+\mathbf{x}^* = R^{-1}\mathbf{h}.
+$$
+
+Computing $R$ and $\mathbf{h}$ is inconvenient, so use **steepest descent** $\mathbf{x}_{k+1} = \mathbf{x}_k - \alpha \nabla F(\mathbf{x}_k)$ with Widrow and Hoff's key idea: **replace the expected squared error by the current one**, $\hat F = e^2(k)$. Then
+
+$$
+\frac{\partial e^2(k)}{\partial w_{1,j}} = 2e(k)\frac{\partial e(k)}{\partial w_{1,j}} = -2e(k)p_j(k), \qquad \frac{\partial e^2(k)}{\partial b} = -2e(k),
+$$
+
+so $\hat\nabla F = -2e(k)\mathbf{z}(k)$ and the **LMS algorithm** is
+
+$$
+\mathbf{W}(k+1) = \mathbf{W}(k) + 2\alpha\,\mathbf{e}(k)\,\mathbf{p}^T(k), \qquad \mathbf{b}(k+1) = \mathbf{b}(k) + 2\alpha\,\mathbf{e}(k).
+$$
+
+**Learning rate**: stable for $\alpha < 2/\lambda_{max}$ of the Hessian $A = 2R$, i.e. $\alpha < 1/\lambda_{max}(R)$.
+
+<Worked title="Widrow–Hoff Example 3.1: p₁ = [1, −1, −1]ᵀ, t₁ = −1; p₂ = [1, 1, −1]ᵀ, t₂ = 1 (no bias), α = 0.2">
+
+**Correlation matrix** (each pattern with probability ½):
+
+$$
+R = \tfrac12\mathbf{p}_1\mathbf{p}_1^T + \tfrac12\mathbf{p}_2\mathbf{p}_2^T = \begin{bmatrix}1&0&-1\\0&1&0\\-1&0&1\end{bmatrix}, \quad \lambda = 0, 1, 2.
+$$
+
+Stability needs $\alpha < 1/\lambda_{max} = 0.5$ - so $\alpha = 0.2$ is safe. One eigenvalue is 0, so the minimum is **weak** (a line of minima); $\mathbf{h} = \tfrac12(-1)\mathbf{p}_1 + \tfrac12(1)\mathbf{p}_2 = [0, 1, 0]^T$ and $\mathbf{x} = [0, 1, 0]^T$ satisfies $R\mathbf{x} = \mathbf{h}$.
+
+**LMS iterations** from $W(0) = [0, 0, 0]$, alternating $p_1, p_2$:
+
+| $k$ | input | $a = Wp$ | $e = t - a$ | $W(k+1) = W + 2(0.2)\,e\,p^T$ |
+|---|---|---|---|---|
+| 0 | $p_1$ | 0 | −1 | [−0.4, 0.4, 0.4] |
+| 1 | $p_2$ | −0.4 | 1.4 | [0.16, 0.96, −0.16] |
+| 2 | $p_1$ | −0.64 | −0.36 | [0.016, 1.104, −0.016] |
+| 3 | $p_2$ | 1.136 | −0.136 | [−0.038, 1.050, 0.038] |
+| … | | | | → [0, 1, 0] |
+
+The network ends up classifying by the middle element of $\mathbf{p}$ alone - the only one that differs between the two patterns.
+
+</Worked>
+
+<Detail>
+
+### Gradient facts used above
+
+$\nabla(\mathbf{x}^T\mathbf{b}) = \mathbf{b}$; $\nabla(\mathbf{x}^TA\mathbf{x}) = (A + A^T)\mathbf{x} = 2A\mathbf{x}$ for symmetric $A$. So $\nabla F = -2\mathbf{h} + 2R\mathbf{x}$ and $\nabla^2 F = 2R$.
+
+### Positive-definite tests (the notes' theorems)
+
+- $A$ symmetric is positive definite ⇔ all eigenvalues $> 0$ ⇔ every leading principal minor $> 0$ (Sylvester).
+- Positive semidefinite ⇔ all eigenvalues $\ge 0$.
+- If $A$ is positive definite: it is invertible, $a_{ii} > 0$, the largest entry in absolute value is on the diagonal, and $a_{ij}^2 < a_{ii}a_{jj}$.
+
+For the example: leading minors of $R$ are 1, 1, 0 - the last is 0, so $R$ is only semidefinite, which is why the minimum is weak.
+
+### Why the bound is $1/\lambda_{max}$
+
+Along an eigenvector of $R$ the steepest-descent error obeys $\epsilon_{k+1} = (1 - 2\alpha\lambda)\epsilon_k$. Convergence needs $\lvert 1 - 2\alpha\lambda\rvert < 1$ for every $\lambda$, i.e. $\alpha < 1/\lambda_{max}$. Larger $\lambda$ = more curvature = smaller allowed step.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="What approximation turns steepest descent on the MSE into LMS?">
+
+Use the instantaneous squared error $e^2(k)$ in place of its expectation, so the gradient becomes $-2e(k)\mathbf{z}(k)$ - computable from one sample.
+
+</Recall>
+
+<Recall q="R has eigenvalues 0.5, 1.5 and 4. Largest stable α for W ← W + 2αepᵀ?">
+
+$\alpha < 1/4 = 0.25$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s6" num="6" title="MADALINE: many ADALINEs, MR-I and MR-II" tags="exam calc" pages="Part 1 · pp. 38–42">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="38">Lesson 3 §3</PdfRef>
+
+A **MADALINE** puts ADALINE units in a hidden layer (each with a bipolar step output) and combines them in an output unit. Several linear boundaries combined → a **non-linear** overall decision. The price: training the hidden weights (the credit-assignment problem, before backpropagation existed).
+
+<MadalineDiagram />
+
+| | MR-I (Widrow & Hoff, 1960) | MR-II |
+|---|---|---|
+| Which weights change | hidden ADALINEs only | all weights |
+| Output unit | fixed **OR**: $v_1 = v_2 = b_y = \tfrac12$ | not assumed to be OR |
+| Idea | push the right hidden units towards the target | trial-flip hidden outputs; keep a flip that reduces the error |
+
+### MR-I update (only when $y \ne t$)
+
+- **$t = +1$** (network said −1, needs one hidden unit on): update the hidden unit whose net input is **closest to 0** - it can flip most easily:
+
+$$
+b_J \leftarrow b_J + \alpha(1 - z_{in,J}), \quad w_{iJ} \leftarrow w_{iJ} + \alpha(1 - z_{in,J})x_i.
+$$
+
+- **$t = -1$** (network said +1, all hidden units must be off): update **every** hidden unit with **positive** net input:
+
+$$
+b_j \leftarrow b_j + \alpha(-1 - z_{in,j}), \quad w_{ij} \leftarrow w_{ij} + \alpha(-1 - z_{in,j})x_i.
+$$
+
+### MR-II
+
+If $y \ne t$: for each hidden unit with net input near 0 (say within ±0.25), starting with the closest, **flip** its output (+1 ↔ −1) and recompute the network output. If the error drops, adapt that unit's weights by the delta rule with the flipped value as target.
+
+<Worked title="MR-I on XOR, first pattern: x = (1, 1), t = −1, α = 0.5">
+
+Initial: $w_{11} = 0.05, w_{21} = 0.2, b_1 = 0.3$; $w_{12} = 0.1, w_{22} = 0.2, b_2 = 0.15$.
+
+$z_{in,1} = 0.3 + 0.05 + 0.2 = 0.55$ → $z_1 = 1$; $z_{in,2} = 0.15 + 0.1 + 0.2 = 0.45$ → $z_2 = 1$.
+
+$y_{in} = \tfrac12 + \tfrac12 + \tfrac12 = 1.5$ → $y = 1 \ne t$.
+
+$t = -1$, both net inputs positive → update both:
+
+| Unit | $\alpha(-1 - z_{in})$ | new $b$ | new $w_{1j}$ | new $w_{2j}$ |
+|---|---|---|---|---|
+| $Z_1$ | $0.5(-1.55) = -0.775$ | −0.475 | −0.725 | −0.575 |
+| $Z_2$ | $0.5(-1.45) = -0.725$ | −0.575 | −0.625 | −0.525 |
+
+</Worked>
+
+| | ADALINE | MADALINE |
+|---|---|---|
+| Layers | single | multilayer |
+| Learning | delta / LMS | MR-I or MR-II |
+| Output | linear + bipolar threshold | non-linear overall |
+| Capability | linear classification | more powerful |
+| Training | simple | harder (hidden units) |
+
+<RecallList>
+
+<Recall q="In MR-I with t = +1, why update only the unit closest to zero?">
+
+One active hidden unit is enough for the OR output to give +1, and the unit whose net input is nearest 0 needs the smallest weight change to flip - least disturbance to what is already learned.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s7" num="7" title="Multilayer perceptrons and backpropagation" tags="exam calc core" pages="Part 1 · pp. 49–63">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="49">Lesson 4</PdfRef>
+
+An MLP is a cascade $\mathbf{a}^{m+1} = f^{m+1}(W^{m+1}\mathbf{a}^m + \mathbf{b}^{m+1})$ with $\mathbf{a}^0 = \mathbf{p}$. Shorthand $R - S^1 - S^2 - \dots$: inputs, then neurons per layer - **2-2-1** is 2 inputs, 2 hidden, 1 output.
+
+<XorDiagram />
+
+Hidden layers **transform the input space** so the classes become separable (XOR), and with sigmoid hidden units and a linear output a two-layer network can approximate a very wide class of functions (e.g. $g(p) = 1 + \sin(\pi p/4)$ on [−2, 2] with a 1-2-1 logsig/purelin network).
+
+<Worked title="Lesson 4, Example 3: forward pass of a 2-2-1 network (ReLU hidden, sigmoid output)">
+
+$x = (1.0, 0.5)$. Hidden 1: $z_1 = 0.2(1) + 0.7(0.5) - 0.1 = 0.45$ → $h_1 = 0.45$. Hidden 2: $z_2 = -0.4(1) + 0.6(0.5) + 0.2 = 0.1$ → $h_2 = 0.1$.
+
+Output: $z_o = 0.9(0.45) - 0.5(0.1) + 0.1 = 0.455$, $y = \sigma(0.455) = 1/(1 + e^{-0.455}) \approx 0.612 > 0.5$ → **class 1**.
+
+</Worked>
+
+**Hidden neurons**: too few → under-fitting; too many → over-fitting (memorising). Use the simplest network that works. Output activation by task: sigmoid/softmax for classification, linear for regression.
+
+### Backpropagation
+
+Three stages: **feedforward**, **backpropagate the error**, **update weights**. After training only the feedforward stage is used. Notation: $v_{ij}$ input→hidden, $w_{jk}$ hidden→output, $v_{0j}$, $w_{0k}$ biases.
+
+<BackpropDiagram />
+
+| Step | Formula |
+|---|---|
+| Hidden | $z_{in,j} = v_{0j} + \sum_i x_i v_{ij}$, $z_j = f(z_{in,j})$ |
+| Output | $y_{in,k} = w_{0k} + \sum_j z_j w_{jk}$, $y_k = f(y_{in,k})$ |
+| Output error term | $\delta_k = (t_k - y_k)\,f'(y_{in,k})$ |
+| Output updates | $\Delta w_{jk} = \alpha\delta_k z_j$, $\Delta w_{0k} = \alpha\delta_k$ |
+| Hidden error term | $\delta_{in,j} = \sum_k \delta_k w_{jk}$, $\delta_j = \delta_{in,j}\,f'(z_{in,j})$ |
+| Hidden updates | $\Delta v_{ij} = \alpha\delta_j x_i$, $\Delta v_{0j} = \alpha\delta_j$ |
+
+Activation requirements: continuous, differentiable, monotonically non-decreasing, easy to differentiate:
+
+| Function | $f(x)$ | $f'(x)$ | Range |
+|---|---|---|---|
+| Binary sigmoid | $1/(1 + e^{-x})$ | $f(1 - f)$ | (0, 1) |
+| Bipolar sigmoid | $2/(1 + e^{-x}) - 1$ | $\tfrac12(1 + f)(1 - f)$ | (−1, 1) |
+
+<BackpropLab />
+
+<Worked title="One backpropagation step (binary sigmoid, α = 0.25): x = (0, 1), t = 1">
+
+Weights: $v_{11} = 0.6, v_{12} = -0.1, v_{21} = -0.3, v_{22} = 0.4$, $v_{01} = 0.3, v_{02} = 0.5$; $w_1 = 0.4, w_2 = 0.1, w_0 = -0.2$.
+
+**Forward.** $z_{in,1} = 0.3 + 0(0.6) + 1(-0.3) = 0$ → $z_1 = 0.5$. $z_{in,2} = 0.5 + 0(-0.1) + 1(0.4) = 0.9$ → $z_2 = 0.7109$.
+$y_{in} = -0.2 + 0.5(0.4) + 0.7109(0.1) = 0.0711$ → $y = 0.5178$.
+
+**Output δ.** $\delta = (1 - 0.5178)(0.5178)(1 - 0.5178) = 0.1204$.
+$\Delta w_1 = 0.25(0.1204)(0.5) = 0.0151$, $\Delta w_2 = 0.25(0.1204)(0.7109) = 0.0214$, $\Delta w_0 = 0.0301$.
+
+**Hidden δ** (using the *old* $w$). $\delta_{in,1} = 0.1204(0.4) = 0.0482$, $\delta_1 = 0.0482(0.5)(0.5) = 0.0120$; $\delta_{in,2} = 0.1204(0.1) = 0.0120$, $\delta_2 = 0.0120(0.7109)(0.2891) = 0.00247$.
+$\Delta v_{11} = \Delta v_{12} = 0$ (since $x_1 = 0$), $\Delta v_{21} = 0.25(0.0120)(1) = 0.0030$, $\Delta v_{22} = 0.00062$, $\Delta v_{01} = 0.0030$, $\Delta v_{02} = 0.00062$.
+
+**Check.** With the new weights $y = 0.5311$: the error $\tfrac12(t - y)^2$ fell from 0.1163 to 0.1099. ✓
+
+</Worked>
+
+### Practical choices
+
+- **Initial weights small and random.** All-equal (e.g. zero) weights give identical hidden units with identical gradients - the **symmetry problem**. Too large → sigmoid **saturation** ($f' \approx 0$, vanishing gradient). Too small → signals and gradients shrink to nothing.
+- **Nguyen–Widrow initialisation**: $\beta = 0.7\,p^{1/n}$ ($p$ hidden units, $n$ inputs). For each hidden unit: random weights → normalise to length 1 → rescale to length β; bias uniform in [−β, β]. Units start in their sensitive region and tile the input space.
+- **Stop** on small total error, a maximum number of epochs, or when **validation error starts rising** (over-training).
+
+| Advantages | Limitations |
+|---|---|
+| Learns complex non-linear maps; general supervised method; fast once trained | Slow training; depends on initialisation; saturation; poor input/target representation hurts; over-training |
+
+<Detail>
+
+### Deriving the δ rules (Lesson 4 §1.6.4)
+
+With $E = \tfrac12\sum_k (t_k - y_k)^2$ and gradient descent $\Delta w = -\alpha\,\partial E/\partial w$:
+
+**Output weight**: $\dfrac{\partial E}{\partial w_{jk}} = \dfrac{\partial E}{\partial y_k}\dfrac{\partial y_k}{\partial y_{in,k}}\dfrac{\partial y_{in,k}}{\partial w_{jk}} = -(t_k - y_k)\,f'(y_{in,k})\,z_j = -\delta_k z_j$, so $\Delta w_{jk} = \alpha\delta_k z_j$.
+
+**Hidden weight**: $z_j$ affects *every* output, so
+
+$$
+\frac{\partial E}{\partial z_j} = \sum_k \frac{\partial E}{\partial y_{in,k}}\frac{\partial y_{in,k}}{\partial z_j} = -\sum_k \delta_k w_{jk},
+$$
+
+and $\dfrac{\partial E}{\partial v_{ij}} = \dfrac{\partial E}{\partial z_j}\,f'(z_{in,j})\,x_i = -\Big(f'(z_{in,j})\sum_k\delta_k w_{jk}\Big)x_i = -\delta_j x_i$, so $\Delta v_{ij} = \alpha\delta_j x_i$. Biases are the same with input 1.
+
+Backprop is therefore *exactly* gradient descent on the squared error; "back-propagation" is just the chain rule reusing the $\delta_k$ already computed.
+
+### Why the sigmoid derivative is $f(1 - f)$
+
+$f = (1 + e^{-x})^{-1}$, $f' = e^{-x}(1 + e^{-x})^{-2} = f \cdot \dfrac{e^{-x}}{1 + e^{-x}} = f(1 - f)$. For the bipolar sigmoid $g = 2f - 1$: $g' = 2f' = 2f(1-f)$ and with $f = (1+g)/2$ this is $\tfrac12(1+g)(1-g)$.
+
+### Nguyen–Widrow, worked: 2 inputs, 4 hidden units
+
+$\beta = 0.7 \cdot 4^{1/2} = 1.4$. A hidden unit drawn as $(0.3, -0.4)$ has norm 0.5, so it becomes $(1.4)(0.3, -0.4)/0.5 = (0.84, -1.12)$; its bias is drawn from $[-1.4, 1.4]$.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Write δ for an output unit and a hidden unit with binary sigmoids.">
+
+$\delta_k = (t_k - y_k)\,y_k(1 - y_k)$; $\delta_j = z_j(1 - z_j)\sum_k \delta_k w_{jk}$.
+
+</Recall>
+
+<Recall q="Why can't all weights start at zero?">
+
+Every hidden unit computes the same output and receives the same gradient, so they stay identical for ever (symmetry) - the hidden layer acts like one unit.
+
+</Recall>
+
+<Recall q="Nguyen–Widrow β for 3 inputs and 8 hidden units?">
+
+$0.7 \cdot 8^{1/3} = 0.7 \cdot 2 = 1.4$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s8" num="8" title="Variations of backpropagation" tags="exam calc" pages="Part 1 · pp. 64–70">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="64">Lesson 4 ctd</PdfRef>
+
+| Variation | Rule | Why |
+|---|---|---|
+| **Momentum** | $\Delta w_{jk}(t+1) = \alpha\delta_k z_j + \mu\,\Delta w_{jk}(t)$, $0 < \mu < 1$ | Speeds up along consistent directions, damps noise, rolls through shallow bumps |
+| **Batch updating** | $\Delta w^{batch} = \sum_{r=1}^P \Delta w^{(r)}$ (or the average) | One smoother update per epoch; less influence from any single pattern |
+| **Delta-bar-delta** | a separate, adapting learning rate $\alpha_i(t)$ per weight | Large steps on plateaus, small steps across ravines |
+| **Custom / slope sigmoids** | bounds $[a, b]$, gain σ, learnable σ_j | Match the target range; control steepness |
+| **Two hidden layers** | δ passed back twice | Some classification tasks organise more easily |
+
+### Delta-bar-delta
+
+With $g_i(t) = \partial E/\partial w_i$ and a smoothed gradient $\bar\delta_i(t) = (1 - \theta)g_i(t) + \theta\bar\delta_i(t-1)$:
+
+$$
+\Delta\alpha_i(t) = \begin{cases}\kappa, & \bar\delta_i(t-1)\,g_i(t) > 0 \text{ (same sign: speed up)}\\ -\phi\,\alpha_i(t-1), & \bar\delta_i(t-1)\,g_i(t) < 0 \text{ (sign flip: slow down)}\\ 0, & \text{otherwise}\end{cases}
+$$
+
+then $w_i(t+1) = w_i(t) - \alpha_i(t)g_i(t)$. Increase **additively** (κ - avoids explosive steps), decrease **multiplicatively** (φ - damps oscillation fast). Drawbacks: three extra hyperparameters (κ, φ, θ), no convergence guarantee on non-convex surfaces. It is the ancestor of Rprop, RMSprop and Adam.
+
+<Worked title="Momentum: two consecutive updates of one weight">
+
+α = 0.2, μ = 0.9, and suppose $\delta_k z_j = 0.5$ at both steps, with $\Delta w(0) = 0$.
+
+$\Delta w(1) = 0.2(0.5) + 0.9(0) = 0.1$. $\Delta w(2) = 0.2(0.5) + 0.9(0.1) = 0.19$. With a constant gradient the step tends to $\alpha g/(1 - \mu) = 0.1/0.1 = 1.0$ - **10 times** the plain step.
+
+</Worked>
+
+<Worked title="Delta-bar-delta: one learning-rate update">
+
+κ = 0.01, φ = 0.2, θ = 0.7, $\alpha_i(t-1) = 0.1$, $\bar\delta_i(t-1) = 0.4$.
+
+- If $g_i(t) = 0.3$: product > 0 → $\alpha_i(t) = 0.1 + 0.01 = 0.11$; new $\bar\delta_i(t) = 0.3(0.3) + 0.7(0.4) = 0.37$.
+- If $g_i(t) = -0.3$: product < 0 → $\alpha_i(t) = 0.1 - 0.2(0.1) = 0.08$; $\bar\delta_i(t) = 0.3(-0.3) + 0.7(0.4) = 0.19$.
+
+</Worked>
+
+### Alternative activations
+
+**Scaled sigmoid** for targets in $[a, b]$: $f(x) = a + (b - a)\sigma(x)$, with
+
+$$
+f'(x) = \frac{(y - a)(b - y)}{b - a}, \quad y = f(x),
+$$
+
+a function of the output only - peak $(b - a)/4$ at $y = (a+b)/2$, zero at the bounds. $[0,1]$ gives $y(1-y)$; $[-1, 1]$ gives $\tfrac12(1 - y^2)$.
+
+**Slope (gain) σ**: $f(x) = 1/(1 + e^{-\sigma x})$, $f' = \sigma f(1 - f)$. σ → ∞ approaches a step; σ → 0 flattens to 0.5. Deltas scale with σ and weight updates with $\sigma^2$.
+
+**Learnable slopes**: $\partial E/\partial\sigma_j = z_j\delta_j/\sigma_j$, so $\Delta\sigma_j = -\eta_\sigma z_j\delta_j/\sigma_j$. Keep $\sigma_j > 0$ (e.g. $\sigma_j = e^{s_j}$) and $\eta_\sigma \ll \eta_w$.
+
+| Function | $f'(x)$ | Property |
+|---|---|---|
+| Bipolar sigmoid $\frac{1 - e^{-\sigma x}}{1 + e^{-\sigma x}}$ | $\frac{\sigma}{2}(1 - f^2)$ | zero-centred outputs, no directional bias |
+| Arctangent | $1/(1 + x^2)$ | polynomial tails keep gradient for large $\lvert x\rvert$ |
+| Identity | 1 | regression output, never saturates |
+| Gaussian (RBF) $e^{-\lVert x - c\rVert^2/2r^2}$ | $-\frac{x - c}{r^2}f$ | local response to a region |
+
+### Two hidden layers
+
+$\delta_k = (t_k - y_k)f'(y_{in,k})$, $\delta_h = f'(u_{in,h})\sum_k\delta_k w_{hk}$, $\delta_j = f'(z_{in,j})\sum_h\delta_h u_{jh}$; updates $\Delta w_{hk} = \alpha\delta_k u_h$, $\Delta u_{jh} = \alpha\delta_h z_j$, $\Delta v_{ij} = \alpha\delta_j x_i$. One hidden layer is theoretically sufficient; two can be convenient (first layer partitions the space into regions, second groups the regions into clusters).
+
+<RecallList>
+
+<Recall q="Why is delta-bar-delta's increase additive but its decrease multiplicative?">
+
+Additive increases grow the rate slowly so it can't explode; multiplicative decreases cut it fast when the gradient sign flips (overshooting a valley).
+
+</Recall>
+
+<Recall q="Derivative of f(x) = 2 + 3σ(x) in terms of y = f(x)?">
+
+$a = 2$, $b = 5$: $f' = (y - 2)(5 - y)/3$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s9" num="9" title="Probabilistic neural networks" tags="exam calc" pages="Part 1 · pp. 71–74">
+
+<PdfRef file="cse/sem7/ma4144-part-1.pdf" page="71">Lesson 5</PdfRef>
+
+A PNN is a **Bayes classifier with Parzen-window density estimates, laid out as a network**. It stores the training samples instead of learning weights.
+
+<PnnDiagram />
+
+| Layer | Computes |
+|---|---|
+| Input | the feature vector $\mathbf{x} \in \mathbb{R}^d$ |
+| Pattern | one unit per training sample $\mathbf{x}_{kj}$: $\phi_{kj}(\mathbf{x}) = \dfrac{1}{(2\pi)^{d/2}\sigma^d}\exp\!\Big(-\dfrac{\lVert\mathbf{x} - \mathbf{x}_{kj}\rVert^2}{2\sigma^2}\Big)$ |
+| Summation | one unit per class: $\hat f_k(\mathbf{x}) = \dfrac{1}{N_k}\sum_j \phi_{kj}(\mathbf{x})$ |
+| Output | the class with the largest $P(C_k)\,L_k\,\hat f_k(\mathbf{x})$ |
+
+Two classes: decide **A** if $h_A C_A f_A(\mathbf{x}) > h_B C_B f_B(\mathbf{x})$ ($h$ = priors, $C$ = misclassification costs); the boundary is where they are equal. With equal priors and costs, $\hat y = \arg\max_k \hat f_k(\mathbf{x})$.
+
+**Training**: present a sample → create a pattern unit → store the sample as its weights → connect it to its class's summation unit. That's all.
+
+<PnnLab />
+
+<Worked title="1-D PNN: class A = {1, 2}, class B = {4, 5}, σ = 1, equal priors and costs">
+
+For $x = 2.8$ (the $1/\sqrt{2\pi}$ factor is common and can be dropped when comparing):
+
+$\hat f_A \propto \tfrac12[e^{-(1.8)^2/2} + e^{-(0.8)^2/2}] = \tfrac12[0.198 + 0.726] = 0.462$
+
+$\hat f_B \propto \tfrac12[e^{-(1.2)^2/2} + e^{-(2.2)^2/2}] = \tfrac12[0.487 + 0.089] = 0.288$
+
+So **A** (with the constant: 0.184 vs 0.115). At $x = 3$ the two are equal (0.148 each) - the boundary sits halfway, as symmetry demands. If missing class B cost twice as much ($C_B = 2C_A$), at $x = 2.8$ we compare 0.462 with $2 \times 0.288 = 0.576$ and choose **B**.
+
+</Worked>
+
+| Strengths | Limitations |
+|---|---|
+| Near-instant training; probabilistic outputs; asymptotically Bayes-optimal; distant outliers have little influence | One unit per sample - memory grows with the data; slow inference on large sets; sensitive to σ (too small over-fits, too large over-smooths) |
+
+<RecallList>
+
+<Recall q="What happens to a PNN's decision boundary as σ → 0 and as σ grows large?">
+
+σ → 0: each point gets a tiny bump - a nearest-neighbour classifier, jagged over-fitted boundary. Large σ: densities flatten, the boundary smooths (towards a straight line between class means) - over-smoothing.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s10" num="10" title="Classical sets and fuzzy sets" tags="exam core" pages="Part 2 · pp. 2–6">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="2">Fuzzy Lesson 1</PdfRef>
+
+A **crisp** set has a sharp boundary: membership is the characteristic function $\chi_A(x) \in \{0, 1\}$. A **fuzzy** set has a vague boundary: $\mu_{\tilde A}(x) \in [0, 1]$ - "old" at 40 might be 0.5.
+
+| Operation | Crisp | Fuzzy (standard) |
+|---|---|---|
+| Union | $\chi_{A\cup B} = \max(\chi_A, \chi_B)$ | $\mu_{\tilde A\cup\tilde B} = \mu_{\tilde A} \vee \mu_{\tilde B}$ |
+| Intersection | $\min$ | $\mu_{\tilde A} \wedge \mu_{\tilde B}$ |
+| Complement | $1 - \chi_A$ | $1 - \mu_{\tilde A}$ |
+| Containment | $\chi_A \le \chi_B$ | $\mu_{\tilde A} \le \mu_{\tilde B}$ |
+
+Properties that carry over to fuzzy sets: commutativity, associativity, distributivity, idempotency, identity, involution, transitivity, **De Morgan** ($\overline{A \cap B} = \bar A \cup \bar B$, $\overline{A \cup B} = \bar A \cap \bar B$).
+
+**What breaks**: the excluded-middle axioms. Crisp: $A \cup \bar A = X$ and $A \cap \bar A = \emptyset$. Fuzzy: $\tilde A \cup \bar{\tilde A} \ne X$, $\tilde A \cap \bar{\tilde A} \ne \emptyset$ (at $\mu = 0.5$ both give 0.5).
+
+**Notation.** Discrete: $\tilde A = \Big\{\dfrac{\mu_{\tilde A}(x_1)}{x_1} + \dfrac{\mu_{\tilde A}(x_2)}{x_2} + \dots\Big\}$; continuous: $\tilde A = \Big\{\displaystyle\int \dfrac{\mu_{\tilde A}(x)}{x}\Big\}$. The bar is a delimiter, "+" means "collect", and ∫ means "collect continuously" - none of it is arithmetic.
+
+<Worked title="Operations on two discrete fuzzy sets">
+
+$X = \{1, 2, 3, 4\}$, $\tilde A = \{0.2/1 + 0.7/2 + 1/3 + 0.4/4\}$, $\tilde B = \{0.5/1 + 0.3/2 + 0.6/3 + 0.9/4\}$.
+
+| $x$ | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| $\tilde A\cup\tilde B$ | 0.5 | 0.7 | 1 | 0.9 |
+| $\tilde A\cap\tilde B$ | 0.2 | 0.3 | 0.6 | 0.4 |
+| $\bar{\tilde A}$ | 0.8 | 0.3 | 0 | 0.6 |
+| $\tilde A \cup \bar{\tilde A}$ | 0.8 | 0.7 | 1 | 0.6 ≠ 1 |
+| $\tilde A \cap \bar{\tilde A}$ | 0.2 | 0.3 | 0 | 0.4 ≠ 0 |
+| $\overline{\tilde A\cap\tilde B}$ | 0.8 | 0.7 | 0.4 | 0.6 |
+| $\bar{\tilde A}\cup\bar{\tilde B}$ | max(0.8, 0.5) = 0.8 | max(0.3, 0.7) = 0.7 | max(0, 0.4) = 0.4 | max(0.6, 0.1) = 0.6 ✓ De Morgan |
+
+</Worked>
+
+<Detail>
+
+### Crisp vocabulary worth having ready
+
+Universe of discourse $X$; power set $P(X)$ (all subsets) with $2^{n_X}$ members; cardinal number $n_X$; null set ∅ (membership 0 everywhere) and whole set $X$ (membership 1). The **shallow arch** example: survival = $E_1 \cap E_2$, collapse = $\overline{E_1 \cap E_2} = \bar E_1 \cup \bar E_2$ - "fails if either member fails" is De Morgan in engineering words.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Which crisp set laws fail for fuzzy sets, and why?">
+
+The law of the excluded middle ($A \cup \bar A = X$) and of contradiction ($A \cap \bar A = \emptyset$): an element with membership 0.5 is half in and half out, so max(0.5, 0.5) = 0.5 ≠ 1 and min = 0.5 ≠ 0.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s11" num="11" title="Crisp and fuzzy relations, composition, similarity" tags="exam calc" pages="Part 2 · pp. 7–12">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="7">Fuzzy Lesson 2</PdfRef>
+
+The **Cartesian product** $X \times Y = \{(x, y) : x \in X, y \in Y\}$; a relation is a subset of it, written as a **relation matrix**. For crisp relations $n_{X\times Y} = n_X n_Y$ and the power set has $2^{n_X n_Y}$ relations; fuzzy relations have infinite cardinality. Special cases on $A^2$: the **universal** relation $U_A$ (all pairs) and the **identity** relation $I_A$ (the diagonal).
+
+Union, intersection, complement and containment act entry-wise (max, min, 1 − ·, ≤). Fuzzy Cartesian product of $\tilde A$ on X and $\tilde B$ on Y: $\mu_{\tilde R}(x, y) = \min(\mu_{\tilde A}(x), \mu_{\tilde B}(y))$.
+
+### Composition $T = R \circ S$ (X → Y → Z)
+
+$$
+\text{max–min: } \mu_T(x, z) = \bigvee_{y}\big(\mu_R(x, y) \wedge \mu_S(y, z)\big), \qquad \text{max–product: } \mu_T(x, z) = \bigvee_{y}\big(\mu_R(x, y)\cdot\mu_S(y, z)\big).
+$$
+
+It is matrix multiplication with "×" replaced by min (or product) and "+" by max. **Not commutative**: $R\circ S \ne S\circ R$ in general.
+
+<Worked title="Max–min and max–product composition">
+
+$R = \begin{bmatrix}0.7 & 0.5 & 0\\ 0.8 & 0.4 & 0.9\end{bmatrix}$ (X × Y), $S = \begin{bmatrix}0.9 & 0.1\\ 0.3 & 0.6\\ 0.5 & 0.7\end{bmatrix}$ (Y × Z).
+
+$\mu_T(x_1, z_1) = \max(\min(0.7, 0.9), \min(0.5, 0.3), \min(0, 0.5)) = \max(0.7, 0.3, 0) = 0.7$.
+
+$\mu_T(x_2, z_2) = \max(\min(0.8, 0.1), \min(0.4, 0.6), \min(0.9, 0.7)) = \max(0.1, 0.4, 0.7) = 0.7$.
+
+Max–min: $T = \begin{bmatrix}0.7 & 0.5\\ 0.8 & 0.7\end{bmatrix}$. Max–product: $T = \begin{bmatrix}0.63 & 0.30\\ 0.72 & 0.63\end{bmatrix}$ (e.g. $(x_2, z_2)$: $\max(0.08, 0.24, 0.63)$).
+
+</Worked>
+
+### Tolerance and equivalence relations
+
+| Property | Crisp | Fuzzy |
+|---|---|---|
+| Reflexive | $\chi_R(x_i, x_i) = 1$ | $\mu_R(x_i, x_i) = 1$ |
+| Symmetric | $\chi_R(x_i, x_j) = \chi_R(x_j, x_i)$ | same |
+| Transitive | $(x_i, x_j), (x_j, x_k) \in R \Rightarrow (x_i, x_k) \in R$ | $\mu_R(x_i, x_k) \ge \min(\lambda_1, \lambda_2)$ |
+
+**Tolerance** = reflexive + symmetric. **Equivalence** = reflexive + symmetric + transitive. A tolerance relation becomes an equivalence relation after **at most $n - 1$ compositions with itself**: $R^{n-1} = R\circ R\circ\dots\circ R$.
+
+### Building a relation from data
+
+$$
+\text{cosine amplitude: } r_{ij} = \frac{\big\lvert\sum_k x_{ik}x_{jk}\big\rvert}{\sqrt{\sum_k x_{ik}^2\sum_k x_{jk}^2}}, \qquad \text{max–min: } r_{ij} = \frac{\sum_k \min(x_{ik}, x_{jk})}{\sum_k\max(x_{ik}, x_{jk})}.
+$$
+
+Both give a reflexive, symmetric $n \times n$ matrix - a **tolerance** relation.
+
+<Worked title="Cosine amplitude, then the transitive closure">
+
+Four samples: $x_1 = (0.3, 0.6, 0.1)$, $x_2 = (0.2, 0.4, 0.4)$, $x_3 = (0.1, 0.6, 0.3)$, $x_4 = (0.7, 0.1, 0.2)$.
+
+$r_{12} = \dfrac{0.06 + 0.24 + 0.04}{\sqrt{0.46 \times 0.36}} = \dfrac{0.34}{0.407} = 0.836$, and so on:
+
+$$
+R = \begin{bmatrix}1 & 0.836 & 0.913 & 0.582\\ 0.836 & 1 & 0.934 & 0.590\\ 0.913 & 0.934 & 1 & 0.381\\ 0.582 & 0.590 & 0.381 & 1\end{bmatrix}
+$$
+
+Not transitive: $r_{12} = 0.836 < \min(r_{13}, r_{32}) = \min(0.913, 0.934) = 0.913$. One max–min composition gives
+
+$$
+R^2 = \begin{bmatrix}1 & 0.913 & 0.913 & 0.590\\ 0.913 & 1 & 0.934 & 0.590\\ 0.913 & 0.934 & 1 & 0.590\\ 0.590 & 0.590 & 0.590 & 1\end{bmatrix}
+$$
+
+and $R^3 = R^2$ - an **equivalence** relation (within the $n - 1 = 3$ bound). Its λ-cut at 0.9 groups $\{x_1, x_2, x_3\}$ and $\{x_4\}$.
+
+The max–min similarity for the same pair: $r_{12} = \dfrac{0.2 + 0.4 + 0.1}{0.3 + 0.6 + 0.4} = \dfrac{0.7}{1.3} = 0.538$.
+
+</Worked>
+
+<Detail>
+
+### Other composition operators ($B = A \circ R$)
+
+| Name | $\mu_B(y)$ |
+|---|---|
+| min–max | $\min_x \max[\mu_A(x), \mu_R(x, y)]$ |
+| max–max | $\max_x \max[\mu_A(x), \mu_R(x, y)]$ |
+| min–min | $\min_x \min[\mu_A(x), \mu_R(x, y)]$ |
+| max–average | $\tfrac12\max_x[\mu_A(x) + \mu_R(x, y)]$ |
+| sum–product | $f\big(\sum_x \mu_A(x)\,\mu_R(x, y)\big)$, $f$ a logistic function |
+
+Sum–product is exactly a neural layer: weighted sum then squashing function.
+
+### Five ways to get relation values
+
+Cartesian product; closed-form expression; lookup table; linguistic rules of knowledge; similarity methods on data (cosine amplitude, max–min).
+
+### A continuous crisp relation
+
+$R = \{(x, y) : y \ge 2x\}$ has $\chi_R = 1$ above the line $y = 2x$ and 0 below - a half-plane.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Compose R = [0.6 0.9] (1×2) with S = [[0.3, 1],[0.8, 0.2]] by max–min.">
+
+$z_1$: $\max(\min(0.6, 0.3), \min(0.9, 0.8)) = 0.8$; $z_2$: $\max(\min(0.6, 1), \min(0.9, 0.2)) = 0.6$. So $[0.8, 0.6]$.
+
+</Recall>
+
+<Recall q="How many compositions can it take to make a 6-element tolerance relation transitive?">
+
+At most $n - 1 = 5$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s12" num="12" title="Membership functions, λ-cuts and defuzzification" tags="exam calc" pages="Part 2 · pp. 13–18">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="13">Fuzzy Lesson 3</PdfRef>
+
+| Feature | Definition |
+|---|---|
+| **Core** | $\{x : \mu(x) = 1\}$ |
+| **Support** | $\{x : \mu(x) > 0\}$ |
+| **Boundary** | $\{x : 0 < \mu(x) < 1\}$ |
+| **Normal** | at least one $\mu = 1$ (one such point = the **prototype**); otherwise **subnormal** |
+| **Height** | $\text{hgt}(\tilde A) = \max_x\mu(x)$ |
+| **Crossover points** | $\mu(x) = 0.5$ |
+| **Convex** | $x < y < z \Rightarrow \mu(y) \ge \min(\mu(x), \mu(z))$ - increasing, decreasing, or up-then-down |
+| **Fuzzy number** | a convex, normal fuzzy set on ℝ with a single-point core |
+
+The intersection of two convex fuzzy sets is convex. **Interval-valued** sets give each $x$ a membership interval $[\alpha_1, \alpha_2]$; making those intervals fuzzy gives **type-2** fuzzy sets.
+
+**Fuzzification** turns a crisp quantity into a fuzzy one (recognising its imprecision). **Defuzzification** turns a fuzzy quantity into a crisp one.
+
+### λ-cuts (alpha-cuts)
+
+$A_\lambda = \{x : \mu_{\tilde A}(x) \ge \lambda\}$ - a crisp set. Properties: $(\tilde A\cup\tilde B)_\lambda = A_\lambda\cup B_\lambda$; $(\tilde A\cap\tilde B)_\lambda = A_\lambda\cap B_\lambda$; $(\bar{\tilde A})_\lambda \ne \bar A_\lambda$ (except at λ = 0.5); $\lambda \le \alpha \Rightarrow A_\alpha \subseteq A_\lambda$, $A_0 = X$. Core = $A_1$; support = $A_{0^+}$. For relations, $R_\lambda = \{(x, y) : \mu_R(x, y) \ge \lambda\}$.
+
+<HedgeLab />
+
+### Defuzzification to a scalar
+
+| Method | Formula | Notes |
+|---|---|---|
+| Max membership (height) | $\mu_C(z^*) \ge \mu_C(z)\ \forall z$ | peaked outputs only |
+| **Centroid** (centre of gravity) | $z^* = \dfrac{\int \mu_C(z)\,z\,dz}{\int\mu_C(z)\,dz}$ | most used, most physical; costly |
+| **Weighted average** | $z^* = \dfrac{\sum \mu_C(\bar z)\,\bar z}{\sum\mu_C(\bar z)}$, $\bar z$ = centroid of each symmetric set | fast; symmetric sets only |
+| Mean of maxima | $z^* = (a + b)/2$ over the plateau of maxima | |
+| **Centre of sums** | $z^* = \dfrac{\sum_k \bar z_k\int\mu_{C_k}dz}{\sum_k\int\mu_{C_k}dz}$ | sum not union - overlaps counted twice; weights = **areas** |
+| Centre of largest area | centroid of the largest convex sub-region | for non-convex outputs |
+
+<Worked title="Same output, four defuzzifications">
+
+Output = union of $C_1$: triangle on [0, 6], peak at 3, **clipped at 0.5**, and $C_2$: triangle on [4, 10], peak at 7, clipped at 1 (unclipped).
+
+- **Weighted average**: centroids $\bar z_1 = 3$, $\bar z_2 = 7$, heights 0.5 and 1: $z^* = \dfrac{0.5(3) + 1(7)}{1.5} = 5.67$.
+- **Centre of sums** (areas): $C_1$ clipped trapezoid area $= \tfrac12(6 + 3)(0.5) = 2.25$; $C_2$ area $= \tfrac12(6)(1) = 3$: $z^* = \dfrac{2.25(3) + 3(7)}{5.25} = 5.29$.
+- **Max membership / mean of maxima**: the only point with $\mu = 1$ is $z = 7$.
+- **Centroid** of the union (the overlap on [4, 6] counted once) needs the integral; numerically $z^* \approx 5.31$ - close to the centre of sums, because the two sets overlap only a little. The weighted average is furthest off: it ignores that $C_1$ is wide and flat.
+
+</Worked>
+
+<Callout kind="exam" title="The difference examiners ask about">
+
+Weighted average weights each set by its **height**; centre of sums by its **area**; the centroid integrates the **union** (overlaps once), centre of sums the **sum** (overlaps twice).
+
+</Callout>
+
+<RecallList>
+
+<Recall q="μ = {0.2/1 + 0.6/2 + 1/3 + 0.7/4 + 0.3/5}. Give the core, support, the 0.5-cut and the height.">
+
+Core $\{3\}$; support $\{1, 2, 3, 4, 5\}$; $A_{0.5} = \{2, 3, 4\}$; height 1 (normal).
+
+</Recall>
+
+<Recall q="Why is the weighted-average method restricted to symmetric output sets?">
+
+It represents each set by one point $\bar z$ (where its peak is); that equals the set's centroid only if the set is symmetric about its peak.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s13" num="13" title="Classical logic: propositions, implication, inference" tags="exam" pages="Part 2 · pp. 19–28">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="19">Fuzzy Lesson 4</PdfRef>
+
+A proposition $P$ has truth value $T(P) \in \{0, 1\}$; its truth set and falsity set partition the universe. With $P$: "$x \in A$" and $Q$: "$x \in B$":
+
+| Connective | Truth value | Set form |
+|---|---|---|
+| $P \vee Q$ | $\max(T(P), T(Q))$ | $A \cup B$ |
+| $P \wedge Q$ | $\min(T(P), T(Q))$ | $A \cap B$ |
+| $\bar P$ | $1 - T(P)$ | $\bar A$ |
+| $P \Rightarrow Q$ | $\max(1 - T(P), T(Q))$ | $\bar A \cup B$ |
+| $P \Leftrightarrow Q$ | 1 if $T(P) = T(Q)$, else 0 | |
+
+$P \Rightarrow Q$ is false only when $P$ is true and $Q$ false (**vacuous truth** otherwise).
+
+**Implication across two universes** - "IF $x \in A$ THEN $y \in B$" is the relation on $X \times Y$
+
+$$
+R = (A \times B) \cup (\bar A \times Y), \qquad \chi_R(x, y) = \max\big(\min(\chi_A(x), \chi_B(y)),\ 1 - \chi_A(x)\big),
+$$
+
+and "IF A THEN B ELSE C" is $R = (A \times B) \cup (\bar A \times C)$, $\chi_R = \max(\min(\chi_A, \chi_B), \min(1 - \chi_A, \chi_C))$.
+
+**Inference (modus ponens by composition)**: given a new antecedent $A'$, $B' = A' \circ R$.
+
+| Term | Statement |
+|---|---|
+| Tautology | true under every assignment - modus ponens $(A \wedge (A \Rightarrow B)) \Rightarrow B$, modus tollens $(\bar B \wedge (A \Rightarrow B)) \Rightarrow \bar A$ |
+| Contradiction | false under every assignment - $B \cap \bar B$ |
+| Contrapositive | $\bar Q \Rightarrow \bar P$ - **equivalent** to $P \Rightarrow Q$ |
+| Converse / inverse | $Q \Rightarrow P$ / $\bar P \Rightarrow \bar Q$ - equivalent to each other, **not** to $P \Rightarrow Q$ |
+| Dual | swap ∧↔∨ and 0↔1; duals of valid identities are valid |
+| XOR | $P \oplus Q = (P \wedge \bar Q) \vee (\bar P \wedge Q)$ - symmetric difference |
+| XNOR | $\overline{P \oplus Q}$ - equivalence |
+
+**Proof by contradiction**: to show $(P_1 \wedge \dots \wedge P_n) \Rightarrow Q$, show $P_1 \wedge \dots \wedge P_n \wedge \bar Q$ is a contradiction.
+
+<Worked title="Crisp IF–THEN as a relation, then inference">
+
+$X = \{1, 2, 3, 4\}$, $Y = \{a, b, c\}$, $A = \{2, 3\}$, $B = \{b\}$. $\chi_R = 1$ for $x \notin A$ (any $y$) and for $x \in A, y \in B$:
+
+| | a | b | c |
+|---|---|---|---|
+| 1 | 1 | 1 | 1 |
+| 2 | 0 | 1 | 0 |
+| 3 | 0 | 1 | 0 |
+| 4 | 1 | 1 | 1 |
+
+$A' = \{3\}$ ($A' \subseteq A$): $B' = A' \circ R$ = row 3 = $\{b\}$ = $B$ ✓. $A' = \{1\}$ ($A' \subseteq \bar A$): $B' = Y$ - the rule says nothing, anything goes. $A' = \{1, 2\}$ (overlaps both): $B' = Y$.
+
+</Worked>
+
+<Detail>
+
+### Modus tollens by truth table
+
+| A | B | Ā | B̄ | A ⇒ B | B̄ ∧ (A ⇒ B) | (B̄ ∧ (A ⇒ B)) ⇒ Ā |
+|---|---|---|---|---|---|---|
+| 0 | 0 | 1 | 1 | 1 | 1 | 1 |
+| 0 | 1 | 1 | 0 | 1 | 0 | 1 |
+| 1 | 0 | 0 | 1 | 0 | 0 | 1 |
+| 1 | 1 | 0 | 0 | 1 | 0 | 1 |
+
+The last column is all 1: a tautology.
+
+### Four steps to check an argument
+
+Formulate in words → decompose into atomic propositions → algebraise with connectives → evaluate by truth table or Boolean algebra (or show the negated conclusion gives a contradiction).
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Is 'if it rains the ground is wet' equivalent to 'if the ground is wet it rained'?">
+
+No - that is the converse. The equivalent statement is the contrapositive: 'if the ground is not wet, it did not rain'.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s14" num="14" title="Fuzzy logic: implication operators and composition" tags="exam calc" pages="Part 2 · pp. 28–31">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="28">Fuzzy Lesson 5</PdfRef>
+
+A fuzzy proposition $\tilde P$: "$x$ is $\tilde A$" has truth $T(\tilde P) = \mu_{\tilde A}(x) \in [0, 1]$. Connectives: NOT $1 - T$, OR max, AND min, and Zadeh's implication $T(\tilde P \Rightarrow \tilde Q) = \max(1 - T(\tilde P), T(\tilde Q))$.
+
+The rule "IF $x$ is $\tilde A$ THEN $y$ is $\tilde B$" is the fuzzy relation
+
+$$
+\mu_{\tilde R}(x, y) = \max\big(\min(\mu_{\tilde A}(x), \mu_{\tilde B}(y)),\ 1 - \mu_{\tilde A}(x)\big)
+$$
+
+and with ELSE $\tilde C$: $\max(\min(\mu_A, \mu_B), \min(1 - \mu_A, \mu_C))$.
+
+### Implication operators
+
+| Name | $\mu_R(x, y)$ |
+|---|---|
+| Dienes–Rescher $Q_D$ | $\max(\mu_B, 1 - \mu_A)$ |
+| Łukasiewicz $Q_L$ | $\min(1, 1 - \mu_A + \mu_B)$ |
+| Zadeh $Q_Z$ | $\max(\min(\mu_A, \mu_B), 1 - \mu_A)$ |
+| Gödel $Q_G$ | 1 if $\mu_A \le \mu_B$, else $\mu_B$ |
+| Mamdani min $Q_{MM}$ | $\min(\mu_A, \mu_B)$ |
+| Mamdani product $Q_{MP}$ | $\mu_A\,\mu_B$ |
+
+**Lemma**: $\mu_{Q_Z} \le \mu_{Q_D} \le \mu_{Q_L}$ everywhere. (At $\mu_A = 0.5, \mu_B = 0.6$: 0.5 ≤ 0.6 ≤ 1.)
+
+### Compositional rule of inference
+
+$\tilde B' = \tilde A' \circ \tilde R$ with max–min (Mamdani), max–product, or sum–product $\min(1, \sum_x \mu_{A'}\mu_R)$ (ANFIS). Composition is associative, distributes over union, is monotone, and $(R\circ S)^{-1} = S^{-1}\circ R^{-1}$.
+
+**No inverse**: in general $\tilde A \circ \tilde R \ne \tilde B$ - min and max lose information, so the inferred set is more diffuse than the original consequent.
+
+<Worked title="Build R with Zadeh's implication and infer">
+
+$\tilde A = \{0.2/x_1 + 1/x_2 + 0.5/x_3\}$, $\tilde B = \{0.3/y_1 + 1/y_2 + 0.6/y_3\}$.
+
+Row $x_1$ ($\mu_A = 0.2$, $1 - \mu_A = 0.8$): $\max(\min(0.2, \mu_B), 0.8) = 0.8$ for every $y$. Row $x_2$ ($\mu_A = 1$): $\mu_B$ itself. Row $x_3$ ($0.5$): $\max(\min(0.5, \mu_B), 0.5) = 0.5$.
+
+$$
+\tilde R = \begin{bmatrix}0.8 & 0.8 & 0.8\\ 0.3 & 1 & 0.6\\ 0.5 & 0.5 & 0.5\end{bmatrix}
+$$
+
+**Input $\tilde A' = \{0/x_1 + 0.6/x_2 + 1/x_3\}$**: $\mu_{B'}(y_1) = \max(\min(0, 0.8), \min(0.6, 0.3), \min(1, 0.5)) = 0.5$; $y_2$: $\max(0, 0.6, 0.5) = 0.6$; $y_3$: $\max(0, 0.6, 0.5) = 0.6$. So $\tilde B' = \{0.5, 0.6, 0.6\}$.
+
+**Feed the original $\tilde A$ back in**: $\tilde A \circ \tilde R = \{0.5, 1, 0.6\} \ne \tilde B = \{0.3, 1, 0.6\}$ - the "no inverse" property in action. With the Mamdani min relation $\min(\mu_A, \mu_B)$ instead, $\tilde A' \circ R = \{0.3, 0.6, 0.6\}$.
+
+</Worked>
+
+<RecallList>
+
+<Recall q="μA = 0.8, μB = 0.3: evaluate Zadeh, Dienes–Rescher, Łukasiewicz, Gödel and Mamdani min.">
+
+Zadeh max(min(0.8, 0.3), 0.2) = 0.3; D–R max(0.3, 0.2) = 0.3; Łukasiewicz min(1, 0.5) = 0.5; Gödel 0.8 > 0.3 → 0.3; Mamdani 0.3.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s15" num="15" title="Linguistic variables and hedges" tags="exam calc" pages="Part 2 · pp. 32–34">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="32">Fuzzy Lesson 6</PdfRef>
+
+A **linguistic variable** is a 4-tuple $(X, T, U, M)$: name (Speed), term set (slow, medium, fast), universe ([0, 120] km/h), and semantic rule mapping each term to a membership function. Example 6.1 on age:
+
+$$
+\mu_{young}(y) = \begin{cases}1, & y \le 25\\ \big[1 + ((y - 25)/5)^2\big]^{-1}, & y > 25\end{cases}
+\qquad
+\mu_{old}(y) = 1 - \big[1 + ((y - 50)/5)^2\big]^{-1}, \ 50 \le y \le 100.
+$$
+
+Connectives: OR = max, AND = min, NOT = $1 - \mu$.
+
+| Hedge | Operator | Effect |
+|---|---|---|
+| very (concentration) | $\mu^2$ | shrinks partial membership: 0.9 → 0.81, 0.1 → 0.01 |
+| very very | $\mu^4$ | stronger concentration |
+| plus | $\mu^{1.25}$ | mild concentration |
+| more or less / slightly (dilation) | $\mu^{0.5}$ | expands: 0.81 → 0.9, 0.01 → 0.1 |
+| minus | $\mu^{0.75}$ | mild dilation |
+| intensification INT | $2\mu^2$ for $\mu \le 0.5$; $1 - 2(1 - \mu)^2$ above | raises contrast around μ = 0.5 |
+
+**Precedence** (Zadeh): hedges and NOT first (right to left), then AND, then OR; parentheses override. "plus very minus small" = plus(very(minus(small))).
+
+<Worked title="Evaluate 'not very young AND more or less old' at ages 30 and 55">
+
+Age 30: $\mu_{young} = 1/(1 + 1) = 0.5$; very young $= 0.25$; not very young $= 0.75$. $\mu_{old}(30) = 0$ (below 50); more or less old $= 0$. AND: $\min(0.75, 0) = 0$.
+
+Age 55: $\mu_{young} = 1/(1 + 36) = 0.027$; very young ≈ 0.0007; not very young ≈ 0.999. $\mu_{old} = 1 - 1/2 = 0.5$; more or less old $= \sqrt{0.5} = 0.707$. AND: $\min(0.999, 0.707) = $ **0.707**.
+
+</Worked>
+
+<RecallList>
+
+<Recall q="Apply INT to μ = 0.3 and μ = 0.8.">
+
+$2(0.3)^2 = 0.18$; $1 - 2(0.2)^2 = 0.92$. Low values go down, high values go up.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s16" num="16" title="Fuzzy rule-based systems: Mamdani, Sugeno, Tsukamoto" tags="exam calc core" pages="Part 2 · pp. 35–47">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="35">Fuzzy Lesson 7</PdfRef>
+
+**Shallow** knowledge = rules of thumb ("if fever and cough, suspect flu"); **deep** knowledge = models of why. Fuzzy rule bases keep the rule form of shallow knowledge but make it a mathematical model that interpolates between rules.
+
+**Canonical form**: IF $x$ is $\tilde A^s$ THEN $y$ is $\tilde B^s$, $s = 1, \dots, r$. Compound antecedents reduce to one set:
+
+| Connective | Composite membership |
+|---|---|
+| AND | $\min(\mu_{A_1}, \mu_{A_2}, \dots)$ - the weakest link |
+| OR | $\max(\dots)$ - the strongest alternative |
+| mixed | evaluate the expression tree bottom-up; **AND binds tighter than OR** |
+
+Example 7.4: grades 0.40, 0.60, 0.80 for "$A_1$ and $A_2$ or $A_3$" → $\max(\min(0.4, 0.6), 0.8) = 0.8$; but "$A_1$ and ($A_2$ or $A_3$)" → $\min(0.4, 0.8) = 0.4$. Grouping matters.
+
+**Aggregating rules**: conjunctive (all must hold) $\mu_y = \min_r \mu_{y^r}$; disjunctive (at least one) $\mu_y = \max_r\mu_{y^r}$ - the usual choice.
+
+<FisDiagram />
+
+### The three inference systems
+
+| | Mamdani (1975) | Sugeno / TSK (1985) | Tsukamoto (1979) |
+|---|---|---|---|
+| Consequent | fuzzy set (clipped or scaled) | crisp function $z = f(x, y)$ (zero order: constant; first order: linear) | **monotonic** membership function |
+| Rule output | fuzzy set | crisp $z_i$ | crisp $y_i = \mu_{C_i}^{-1}(\alpha_i)$ |
+| Overall output | aggregate (max) then defuzzify | $z^* = \dfrac{\sum w_i z_i}{\sum w_i}$ | $y^* = \dfrac{\sum\alpha_i y_i}{\sum\alpha_i}$ |
+| Defuzzification | needed (slow) | not needed | not needed |
+| Typical use | expert knowledge, control | data-driven modelling, optimisation, ANFIS | specific situations |
+
+Mamdani firing strength: $\alpha_i = \min(\mu_{A_i}(x_0), \mu_{B_i}(y_0))$; implication by **truncation** $\min(\alpha_i, \mu_{C_i}(z))$ or **scaling** $\alpha_i\mu_{C_i}(z)$; aggregation $\max_i$; defuzzify (centroid, centre of sums, mean of maxima).
+
+<FuzzyTipLab />
+
+<Worked title="Example 7.7 (Mamdani): food x₀ = 7.5, service y₀ = 4.0">
+
+**(i) Fuzzify.** $\mu_{Del}(7.5) = (7.5 - 5)/3 = 0.833$, $\mu_{NOT\,Del} = 0.167$; $\mu_{Poor}(4) = 1 - 4/5 = 0.2$, $\mu_{Good}(4) = 4/5 = 0.8$.
+
+**(ii) Fire.** R1 (OR): $\alpha_1 = \max(0.833, 0.8) = 5/6$. R2 (AND): $\alpha_2 = \min(0.167, 0.2) = 1/6$.
+
+**(iii) Aggregate** (min implication, max aggregation):
+
+$$
+\mu_C(z) = \begin{cases}1/6, & 0 \le z \le 25/3\\ 1 - z/10, & 25/3 \le z \le 10\\ (z - 10)/10, & 10 \le z \le 55/3\\ 5/6, & 55/3 \le z \le 20\end{cases}
+$$
+
+(Low clipped at 1/6 meets $1 - z/10$ at $z = 25/3$; High reaches 5/6 at $z = 55/3$.)
+
+**(iv) Centroid**, piece by piece:
+
+| Piece | $\int\mu\,dz$ | $\int z\mu\,dz$ |
+|---|---|---|
+| [0, 25/3], 1/6 | 25/18 | 625/108 |
+| [25/3, 10], $1 - z/10$ | 5/36 | 100/81 |
+| [10, 55/3], $(z - 10)/10$ | 125/36 | 4375/81 |
+| [55/3, 20], 5/6 | 25/18 | 2875/108 |
+| **Total** | **115/18** | **7100/81** |
+
+$z^* = \dfrac{7100/81}{115/18} = \dfrac{2840}{207} \approx$ **13.72 %**. (With product implication instead: $z^* = 130/9 \approx 14.44$ %.)
+
+</Worked>
+
+<Worked title="Example 7.8 (Sugeno): x = 4, y = 2">
+
+$w_1 = \min(0.6, 0.8) = 0.6$, $w_2 = \min(0.5, 0.4) = 0.4$. $z_1 = 3(4) + 2(2) + 4 = 20$, $z_2 = 2(4) + 5(2) + 12 = 30$.
+
+$$
+z^* = \frac{0.6(20) + 0.4(30)}{0.6 + 0.4} = \mathbf{24}.
+$$
+
+With the product T-norm: $w_1 = 0.48$, $w_2 = 0.20$, $z^* = (9.6 + 6)/0.68 = 22.94$.
+
+</Worked>
+
+<Worked title="Example 7.9 (Tsukamoto): same inputs as 7.7">
+
+$\alpha_1 = 5/6$, $\alpha_2 = 1/6$ (as before). Monotonic consequents: $\mu_{High}(y) = y/20 \Rightarrow y_1 = 20\alpha_1 = 16.67$; $\mu_{Low}(y) = (20 - y)/20 \Rightarrow y_2 = 20(1 - \alpha_2) = 16.67$.
+
+$y^* = \dfrac{(5/6)(16.67) + (1/6)(16.67)}{1} = $ **16.67 %** - here both rules happen to map to the same value.
+
+</Worked>
+
+<Detail>
+
+### ANFIS - TSK as a five-layer network
+
+Layer 1 fuzzifies with adaptive MFs; layer 2 multiplies to get firing strengths; layer 3 normalises; layer 4 computes $\bar w_i(p_{i0} + p_{i1}x_1 + \dots)$; layer 5 sums. Because the output is **linear in the consequent parameters**, training is hybrid: a forward pass solves them by least squares (globally optimal for fixed premises), a backward pass tunes the premise MF parameters by gradient descent - far faster than gradient descent alone.
+
+### Example 7.10 (heat exchanger) - the crisp baseline
+
+$AU = wC_p\ln\big(\tfrac{T_s - T_1}{\Delta T_{app}}\big) = 1300 \times 1.7543 \times \ln(72.55/6.5) = 2280.6 \times 2.4125 \approx 5502$ kW/K. The fuzzy parts (ii)–(iv) depend on the membership functions given in class; the procedure is exactly the three systems above with rule 2 using OR (max) and rules 1 and 3 AND (min).
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Two rules fire at 0.3 and 0.9 with Sugeno outputs 10 and 40. Output?">
+
+$(0.3 \cdot 10 + 0.9 \cdot 40)/1.2 = 39/1.2 = 32.5$.
+
+</Recall>
+
+<Recall q="Why does Tsukamoto need monotonic consequents?">
+
+So that each firing strength α maps to exactly one output value $y = \mu^{-1}(\alpha)$; a non-monotonic set would have no unique inverse.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s17" num="17" title="T-norms, S-norms and complements" tags="core" pages="Part 2 · pp. 48–49">
+
+<PdfRef file="cse/sem7/ma4144-part-2.pdf" page="48">Appendix</PdfRef>
+
+A **T-norm** (fuzzy AND) and an **S-norm** (fuzzy OR) both satisfy commutativity, associativity and monotonicity; boundary conditions $T(x, 1) = x$ and $S(x, 0) = x$. They are dual: $S(a, b) = 1 - T(1 - a, 1 - b)$.
+
+| T-norm | $T(a, b)$ | Dual S-norm | $S(a, b)$ |
+|---|---|---|---|
+| Minimum (Zadeh) | $\min(a, b)$ | Maximum | $\max(a, b)$ |
+| Algebraic product | $ab$ | Algebraic (probabilistic) sum | $a + b - ab$ |
+| Bounded difference (Łukasiewicz) | $\max(0, a + b - 1)$ | Bounded sum | $\min(1, a + b)$ |
+| Drastic product | $a$ if $b = 1$; $b$ if $a = 1$; else 0 | Drastic sum | $a$ if $b = 0$; $b$ if $a = 0$; else 1 |
+
+**Ordering**:
+
+$$
+T_D \le \max(0, a + b - 1) \le ab \le \min(a, b) \le \max(a, b) \le a + b - ab \le \min(1, a + b) \le S_D.
+$$
+
+Every T-norm lies below min and every S-norm above max; **averaging operators** (weighted generalised mean, OWA) sit in between.
+
+**Complements** ($N(0) = 1$, $N(1) = 0$, non-increasing): standard $1 - a$; Sugeno $\dfrac{1 - a}{1 + sa}$ ($s > -1$); Yager $(1 - a^w)^{1/w}$ ($w > 0$). Yager T-norm: $T_p = 1 - \min\big(1, ((1-a)^p + (1-b)^p)^{1/p}\big)$, which tends to min as $p \to \infty$.
+
+<Worked title="All the norms at a = 0.6, b = 0.7">
+
+| | value | | value |
+|---|---|---|---|
+| drastic product | 0 | max | 0.7 |
+| bounded difference | 0.3 | algebraic sum | 0.88 |
+| product | 0.42 | bounded sum | 1 |
+| min | 0.6 | drastic sum | 1 |
+
+In order: 0 ≤ 0.3 ≤ 0.42 ≤ 0.6 ≤ 0.7 ≤ 0.88 ≤ 1 ≤ 1 ✓. Sugeno complement of 0.6 with $s = 1$: $0.4/1.6 = 0.25$; Yager with $w = 2$: $\sqrt{1 - 0.36} = 0.8$.
+
+</Worked>
+
+</Section>

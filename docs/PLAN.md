@@ -991,6 +991,18 @@ still gives you the whole portfolio.
 
 Append here whenever a non-obvious call gets made. Format: date - decision - why.
 
+- **2026-11-07** - CS4533 added as the second guide, with two new mechanisms rather than one long page: course *parts* (a Labs tab) and *mock papers* (JSON, client-side marking). Lab code shown in the guide is read from the exact files that were compiled and run; numbers quoted in the labs tab are from those runs on a 2-core box and vary by machine, so the text gives ranges, not single figures.
+- **2026-11-07 (later)** - **`npm audit` to zero with `overrides`, not `audit fix --force`.** `--force` would have *downgraded* `@opennextjs/cloudflare` to 0.3.0 and `eslint-config-next` to 15. All 19 findings were transitive pins, so `package.json` `overrides` lift them to patched releases: glob ^14.0.4 (pinned 10.3.3 by `@node-minify/core` inside OpenNext), minimatch ^11.0.5 (glob, typescript-eslint), brace-expansion ^1.1.21 (ESLint plugins via minimatch 3), postcss-selector-parser ^6.1.5 (exact pin in `@tailwindcss/typography`), katex → the direct dep (rehype-katex/remark-math). The callers use only `glob`/`globSync`/`minimatch()`, unchanged across those majors. Verified: clean `npm ci`, tsc, ESLint, `next build`, OpenNext build, preview smoke test. When a parent ships its own fix, drop that override.
+  - Same day, OpenNext 1.20.16 began refusing `run_worker_first` unless `assets.html_handling` is `"none"` (exact-path assets only, so `/x` cannot reach `x.html` past the middleware). Set in `wrangler.jsonc`; `public/` has no HTML, so nothing visible changed.
+
+- **2026-11-07** - **`/notes/cse/*`: members-only study guides behind a `@cse.mrt.ac.lk` sign-in.** Full write-up: [`NOTES.md`](./NOTES.md).
+  - **Google OIDC by hand, a signed cookie, no database.** No auth library, and nothing touches Supabase: a paused project must never lock students out. The domain rule lives in one function (`isAllowedEmail`), re-checked on every request.
+  - **Edge `middleware.ts`, not `proxy.ts`.** Next 16's proxy is Node-only, which OpenNext's Cloudflare adapter calls experimental. The matcher covers the notes paths only, so the rest of the site is untouched.
+  - **Pages stay prerendered.** The gate hands over prebuilt HTML/RSC; guide text must stay in server components, because client chunks are public.
+  - **PDFs behind `run_worker_first`.** They ship as assets but are served only through `/api/notes/files` via the `ASSETS` binding. Verified in local workerd: anon 401, member 200, byte-identical.
+  - **Neo-brutalist, not the console language.** A separate product for a different audience; its CSS is scoped under `.nb` and loaded only on notes routes.
+  - **First guide: EN3330 Engineering Optimization** - 14 sections from the two-part notes, with 7 canvas simulations and 3 SVG diagrams.
+
 - **2026-10-24 (later)** - **`/chibi-agent` v2: the sprite art, chips that read, and the graph as a tree.** This supersedes the Live2D parts of the entry below.
   - **Her art is now the casual-coat image pack** her overlay runs on the Chibi-Agent `svg-rig` branch (`chibi_overlay/sprites.py`), not the robe Live2D rig.
     - `scripts/sync-raphael.mjs` cuts the pack into one full base plus feathered patches: blink, three mouth shapes, the thinking face and 8×2 gaze eyes. Each patch is the measured box where that redraw differs from the master.

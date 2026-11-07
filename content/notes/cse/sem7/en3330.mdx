@@ -1,0 +1,907 @@
+---
+code: EN3330
+title: Engineering Optimization
+summary: Formulation and optimality, gradients and Hessians, one-D search, line search and the Wolfe conditions, Newton, quasi-Newton and trust regions, first-order and adaptive methods, Python, stochastic methods and cross-entropy, then Lagrange, KKT, duality, penalties, barriers and constrained Newton - with worked problems, recall prompts and the full notes.
+order: 1
+sources: Built from the two-part EN3330 study notes (200 pages). Every section links to the pages that treat it in full.
+updated: 2026-11-07
+files:
+  - label: Part 1 - Chapters 1–6, unconstrained
+    file: cse/sem7/en3330-part-1.pdf
+    pages: 144
+    sizeMb: 6.5
+  - label: Part 2 - Chapters 7–9, constrained
+    file: cse/sem7/en3330-part-2.pdf
+    pages: 56
+    sizeMb: 2.2
+mockIntro: One mock paper and the two most recent final papers (2024 and 2025), each with fully worked answers. Two hours, four questions of 25 marks - work on paper, then mark yourself against the answers.
+mocks:
+  - slug: mock-1
+    label: Mock paper
+  - slug: past-2025
+    label: 2025 paper
+  - slug: past-2024
+    label: 2024 paper
+---
+
+<Section id="s0" num="0" title="Start here" tags="exam">
+
+The module in one line: **state the problem properly, check the assumptions, then pick a method by how much derivative information it needs.** Everything in Chapters 3–9 is one loop - choose a direction, choose a step, move, test a stopping rule - and the methods differ only in how they make those two choices.
+
+<LoopDiagram />
+
+### How you are assessed
+
+| Component | Weight |
+|---|---|
+| Assignment 1 | 10 % |
+| Assignment 2 | 15 % |
+| Mid-term exam (closed book, in person) | 30 % |
+| Assignment 3 | 15 % |
+| **Final written exam** (closed book, in person) | **30 %** |
+
+Continuous assessment is 70 % of the module. Textbooks: Kochenderfer & Wheeler, *Algorithms for Optimization* (the notation used here); Boyd & Vandenberghe, *Convex Optimization*; Antoniou & Lu, *Practical Optimization*.
+
+### The map
+
+$$
+x^{(k+1)} = x^{(k)} - \alpha^{(k)} S^{(k)} g^{(k)}
+$$
+
+| Method | $S^{(k)}$ | Uses |
+|---|---|---|
+| Gradient descent | $I$ | $\nabla f$ |
+| Newton | $H^{-1}$ | $\nabla f$, $\nabla^2 f$ |
+| Quasi-Newton (DFP, BFGS) | $Q^{(k)} \approx H^{-1}$ | $\nabla f$ only |
+| Adaptive (Adagrad … Adam) | per-coordinate scaling | $\nabla f$ history |
+
+<Callout kind="tip" title="Using this guide">
+
+**Summary** view is what you revise from. **Detailed** view adds derivations and longer worked examples. Tick **Mark done** on a section once you can answer its recall prompts without opening them - the panel keeps count, in this browser only. The blue page tags open the full notes at the right page.
+
+</Callout>
+
+</Section>
+
+<Section id="s1" num="1" title="Formulation, feasibility and optimality" tags="exam core" pages="Part 1 · pp. 1–17">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="9">Chapter 1</PdfRef>
+
+"What is the best speed?" has no answer until you say *best for what*. An optimization problem needs three things written down:
+
+- **Decision variables** $x \in \mathbb{R}^n$ - what you are allowed to choose.
+- **Objective** $f_0(x)$ - the single number you minimize (maximize $f$ = minimize $-f$).
+- **Constraints** - what any acceptable $x$ must satisfy.
+
+$$
+\begin{aligned}
+\text{minimize}\quad & f_0(x) \\
+\text{subject to}\quad & f_i(x) \le b_i, \quad i = 1,\dots,m \\
+& g_i(x) = 0, \quad i = 1,\dots,p
+\end{aligned}
+$$
+
+The constraints define the **feasible region**. A **feasible point** satisfies every constraint; an **optimal point** is a feasible point with the best objective among all feasible points. A problem can be infeasible, unbounded below, or have a finite infimum that is never attained.
+
+<FeasibleDiagram />
+
+<Callout kind="exam" title="Constraints move the optimizer">
+
+$f(x) = (x_1-2)^2 + (x_2+3)^2 + 1$ has unconstrained minimum $(2,-3)$, value 1. On $x_1, x_2 \ge 0,\ x_1 + x_2 \le 2$ the minimizer moves to $(2, 0)$, value 10 - the closest feasible point. Strict constraints ($-x_1 < 0$) give an open region whose infimum is never attained, so there is **no** optimal solution.
+
+</Callout>
+
+### Optimality conditions (unconstrained, interior)
+
+| Condition | Statement | Status |
+|---|---|---|
+| FONC | $\nabla f(x^*) = 0$ | Necessary - also true at maxima and saddles |
+| SONC | $\nabla^2 f(x^*) \succeq 0$ | Necessary - a singular Hessian can be inconclusive |
+| SOSC | $\nabla f(x^*) = 0$ and $\nabla^2 f(x^*) \succ 0$ | **Sufficient** for a strict local minimum |
+
+A function has at most one global minimum **value** but may have many global **minimizers**: $\sin^2 x$ attains 0 at every $x = k\pi$. Only **convexity** upgrades a local minimum to a global one, which is why convex formulations are preferred: every local minimum is global, efficient algorithms with guarantees exist, and certificates (duality) are available.
+
+<Detail>
+
+### Engineering examples in the notes
+
+- **Wireless power control** - variables: transmit powers $p_i$; objective: total power $\sum p_i$; constraints: each receiver's SINR at least its threshold, and $p_i \ge 0$.
+- **Total-variation inpainting** - variables: the unknown pixels; objective: total variation (sum of gradient magnitudes); equality constraints: known pixels keep their values.
+- **SVM** - variables: hyperplane $(w, b)$; objective: $\tfrac12\|w\|^2$ (maximize the margin); constraints: every training point on the correct side, $y_i(w^T x_i + b) \ge 1$.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Give a point that satisfies both FONC and SONC but is not a minimum.">
+
+$f(x) = x^3$ at $x = 0$: $f'(0) = 0$, $f''(0) = 0 \ge 0$, but it is an inflection point. In 2-D, $x_1^4 - x_2^4$ at the origin.
+
+</Recall>
+
+<Recall q="Why does SOSC not need SONC to be checked separately?">
+
+Positive definite implies positive semidefinite - SOSC is strictly stronger, and it is the only one of the three that certifies a minimum.
+
+</Recall>
+
+<Recall q="Three reasons convex problems are preferred.">
+
+Every local minimum is global; reliable polynomial-time algorithms with stopping certificates exist; duality gives verifiable lower bounds (and KKT becomes sufficient).
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s2" num="2" title="Geometry: gradient, Hessian, numerical derivatives" tags="exam calc" pages="Part 1 · pp. 18–36">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="26">Chapter 2</PdfRef>
+
+Notation: bold lower-case are **column** vectors, so $[a, b, c] = [a\ b\ c]^T$. $\|a\| = \sqrt{a^T a}$.
+
+- **Level set** $\{x : f(x) = c\}$; a contour plot draws several. $x^2 + y^2$ gives circles (a bowl); $x^2 - y^2$ gives hyperbolas (a saddle).
+- **Gradient** $\nabla f$ is perpendicular to the level set and points along steepest **ascent**; it vanishes at every critical point.
+- **Directional derivative** $\nabla_d f = \nabla f^T d$. With $\|d\| = 1$ it is largest along $\nabla f/\|\nabla f\|$ and smallest (most negative) along $-\nabla f/\|\nabla f\|$ - which is what justifies steepest descent.
+- **Hessian** $H_{ij} = \partial^2 f / \partial x_i \partial x_j$ - symmetric whenever the second partials are continuous (Schwarz/Clairaut).
+
+### Classifying a critical point by $H$
+
+| $H$ at a critical point | Conclusion |
+|---|---|
+| positive definite | strict local minimum |
+| negative definite | strict local maximum |
+| indefinite | saddle |
+| semidefinite and singular | inconclusive - look at higher order |
+
+For a $2\times 2$ symmetric matrix you do not need eigenvalues: $\det H < 0$ means indefinite; $\det H > 0$ with $H_{11} > 0$ means positive definite.
+
+<Worked title="Hessian of x₁³x₂ + x₁x₂³ at [1, 2], and classify">
+
+$$
+H = \begin{bmatrix} 6x_1x_2 & 3x_1^2 + 3x_2^2 \\ 3x_1^2 + 3x_2^2 & 6x_1x_2 \end{bmatrix}
+\;\Rightarrow\;
+H(1,2) = \begin{bmatrix} 12 & 15 \\ 15 & 12 \end{bmatrix}
+$$
+
+$\det = 144 - 225 = -81 < 0$, so $H$ is indefinite there (eigenvalues 27 and $-3$).
+
+</Worked>
+
+### Numerical differentiation
+
+| Formula | Error |
+|---|---|
+| Forward $\dfrac{f(x+h) - f(x)}{h}$ | $O(h)$ |
+| Central $\dfrac{f(x+h) - f(x-h)}{2h}$ | $O(h^2)$ |
+| Backward $\dfrac{f(x) - f(x-h)}{h}$ | $O(h)$ |
+| Complex step $\dfrac{\operatorname{Im} f(x + ih)}{h}$ | $O(h^2)$, no subtraction |
+
+Finite differences subtract two nearly equal numbers, so for tiny $h$ round-off (subtractive cancellation) dominates. The complex step has **no subtraction**, so $h$ can be taken as small as $10^{-20}$ and the derivative is accurate to machine precision.
+
+<RecallList>
+
+<Recall q="Classify the critical point with H = [[5, 8], [8, 10]] without eigenvalues.">
+
+$\det = 50 - 64 = -14 < 0$ → indefinite → **saddle point**.
+
+</Recall>
+
+<Recall q="Why do FONC + SONC only give candidates?">
+
+Both are necessary conditions: they are satisfied by every local minimum but also by some non-minima (inflection points, degenerate saddles). Only SOSC (positive definite) confirms.
+
+</Recall>
+
+<Recall q="Why does the complex step method beat central differences for small Δx?">
+
+It needs no subtraction of nearly equal values, so there is no cancellation error; the truncation error is $O(h^2)$ and $h$ can be made tiny.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s3" num="3" title="One-dimensional search" tags="exam calc" pages="Part 1 · pp. 37–50">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="48">Bracketing</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="52">Fibonacci</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="55">Golden section</PdfRef>
+
+All of these trap the minimum of a **unimodal** function in a shrinking interval.
+
+### Bracketing
+
+Three points $a < b < c$ bracket a minimum when $f(b) < f(a)$ and $f(b) < f(c)$. Start from $x$ with step $s$, step downhill, and expand the step by a factor $k$ each time until the function rises. It fails on functions with no finite minimum (a line, $e^x$), on a flat function (no strict decrease), and when it overshoots into a different basin of a multimodal function.
+
+### Fibonacci search
+
+Two queries can remove at most half the interval, whatever $f$ is. With $N$ queries, Fibonacci search is **optimal**: total reduction $1/F_{N+1}$, where each step uses
+
+$$
+\rho_k = 1 - \frac{F_{N-k+1}}{F_{N-k+2}}.
+$$
+
+At the last iteration the two interior points coincide ($\rho = 1/2$); the fix is to shift one of them by a small $\epsilon$. Choosing $N$:
+
+$$
+\frac{1 + 2\epsilon}{F_{N+1}} \le \frac{\text{final range}}{\text{initial range}}
+$$
+
+<Worked title="Initial range [−2, 4], ε = 0.1, final range 0.2. Find N.">
+
+$\dfrac{1.2}{F_{N+1}} \le \dfrac{0.2}{6} \Rightarrow F_{N+1} \ge 36$. In $1,1,2,3,5,8,13,21,34,55$ the first value $\ge 36$ is $F_{10} = 55$, so $N + 1 = 10$, **$N = 9$**.
+
+</Worked>
+
+### Golden section
+
+Replace every $\rho_k$ by its limit: $\varphi = \tfrac{1 + \sqrt5}{2} \approx 1.618$, so $1 - \rho \approx 0.618$ and $\rho \approx 0.382$. No $N$ needed in advance; reduction $\approx 0.618^N$ - near-optimal and simpler.
+
+### Bisection
+
+Bisection finds a **root**. To minimize, apply it to $f'$ on $[a, b]$ with $f'(a) < 0 < f'(b)$; each step halves the interval. Then check the root is a minimum.
+
+<IntervalSearch />
+
+<RecallList>
+
+<Recall q="Fibonacci vs golden section: two differences.">
+
+Fibonacci uses a different $\rho$ each step and needs $N$ in advance; it is optimal ($1/F_{N+1}$). Golden section uses fixed $\rho \approx 0.382$, needs no $N$, and gets $\approx 0.618^N$.
+
+</Recall>
+
+<Recall q="Why apply bisection to f′ and not f?">
+
+Bisection locates a sign change, i.e. a zero. A minimum of $f$ is a zero of $f'$, not of $f$. It needs $f'(a)$ and $f'(b)$ of opposite sign.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s4" num="4" title="Line search, Wolfe, Newton, trust regions" tags="exam calc" pages="Part 1 · pp. 51–69">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="59">Line search</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="64">Wolfe example</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="66">Newton</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="72">Trust region</PdfRef>
+
+$$
+x^{(k+1)} = x^{(k)} + \alpha^{(k)} d^{(k)}, \qquad \text{descent direction: } \nabla f(x^{(k)})^T d^{(k)} < 0
+$$
+
+**Exact line search** minimizes $\phi(\alpha) = f(x + \alpha d)$.
+
+<Worked title="f = (x₁x₂)² + x₃², x = [1, 2, 1], d = [0, −2, −1]: find α* and the next point">
+
+$x + \alpha d = [1,\ 2 - 2\alpha,\ 1 - \alpha]$, so $\phi(\alpha) = (2 - 2\alpha)^2 + (1-\alpha)^2 = 5(1-\alpha)^2$. Minimized at **$\alpha^* = 1$**, next point **$[1, 0, 0]$**.
+
+</Worked>
+
+### The Wolfe conditions ($0 < \beta < \sigma < 1$)
+
+$$
+\begin{aligned}
+f(x + \alpha d) &\le f(x) + \beta\alpha\, \nabla f(x)^T d && \text{(1) sufficient decrease - rejects steps too large} \\
+\nabla f(x + \alpha d)^T d &\ge \sigma\, \nabla f(x)^T d && \text{(2) curvature - rejects steps too small}
+\end{aligned}
+$$
+
+**Backtracking**: start at $\alpha_{\max}$, multiply by a factor (0.5) until (1) holds.
+
+<WolfeLab />
+
+<Worked title="Backtracking on f = x₁ + x₁x₂ + x₁², x = [1, 2], d = [−1, −2], αmax = 10, β = 1e−4, σ = 0.9">
+
+$\nabla f = [1 + x_2 + 2x_1,\ x_1] = [5, 1]$, $f(x) = 4$, $\nabla f^T d = -7$.
+
+| $\alpha$ | $x + \alpha d$ | $f$ | threshold $4 - 7\beta\alpha$ | OK |
+|---|---|---|---|---|
+| 10 | $[-9, -18]$ | 234 | 3.993 | no |
+| 5 | $[-4, -8]$ | 44 | 3.9965 | no |
+| 2.5 | $[-1.5, -3]$ | 5.25 | 3.99825 | no |
+| 1.25 | $[-0.25, -0.5]$ | −0.0625 | 3.999125 | yes |
+
+Second condition at $[-0.25, -0.5]$: $\nabla f = [0, -0.25]$, so $\nabla f^T d = 0.5 \ge 0.9 \times (-7) = -6.3$ ✓.
+
+</Worked>
+
+### Newton's method
+
+From the second-order Taylor model, set its derivative to zero:
+
+$$
+x^{(k+1)} = x^{(k)} - \frac{f'(x^{(k)})}{f''(x^{(k)})}, \qquad x^{(k+1)} = x^{(k)} - H^{-1} g
+$$
+
+Quadratic convergence near a minimum with $H \succ 0$, and **one step** on a positive-definite quadratic. Failure modes: $f'' \le 0$ or indefinite $H$ (goes uphill or to a maximum/saddle - it only solves $\nabla f = 0$), $f'' \approx 0$ (huge steps, overshoot), and starting far away (oscillation or divergence).
+
+**Secant** replaces $f''$ by the difference quotient $\dfrac{f'(x_k) - f'(x_{k-1})}{x_k - x_{k-1}}$ - no second derivative needed.
+
+<NewtonLab />
+
+### Trust regions
+
+Fix the step **size** first, then the direction - the reverse of line search:
+
+$$
+s^{(k)} = \arg\min_{\|s\| \le \Delta_k} m_k(s), \qquad
+\eta = \frac{f(x^{(k)}) - f(x^{(k)} + s)}{m_k(0) - m_k(s)}
+$$
+
+$\eta \approx 1$: the model is trustworthy. $\eta < \eta_1$: reject and shrink $\Delta$ by $\gamma_1 < 1$. $\eta > \eta_2$: accept and enlarge by $\gamma_2 > 1$. At a saddle such as $x_1^2 - x_2^2$ at the origin, Newton's step is zero (the gradient is zero), but the trust-region subproblem still finds the negative-curvature direction inside the ball and escapes.
+
+### Stopping
+
+Four termination conditions: maximum iterations; absolute improvement $f_k - f_{k+1} < \varepsilon$; relative improvement $< \varepsilon_r |f_k|$; gradient magnitude $\|\nabla f\| < \varepsilon_g$. On non-convex problems, add **random restarts**.
+
+<Detail>
+
+**Why the curvature ratio can be negative.** In the second Wolfe condition both sides involve $\nabla f^T d$: at the start it is negative (descent). If the step passes the minimum along $d$, the new directional derivative is positive, so the ratio new/old is negative - and the condition is satisfied easily. A ratio near $+1$ means the step barely changed the slope (too small).
+
+**Newton from Taylor.** $f(x) \approx f(x_k) + f'(x_k)(x - x_k) + \tfrac12 f''(x_k)(x - x_k)^2$. Differentiate in $x$ and set to zero: $f'(x_k) + f''(x_k)(x - x_k) = 0$.
+
+**One Newton step solves the Booth function.** $(x_1 + 2x_2 - 7)^2 + (2x_1 + x_2 - 5)^2$ is a positive-definite quadratic, so from $[5, 4]$ one step lands on the minimizer $[1, 3]$.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Which Wolfe condition rejects too-large steps, and which too-small?">
+
+The first (Armijo, sufficient decrease) rejects steps that are too large; the second (curvature) rejects steps that are too small.
+
+</Recall>
+
+<Recall q="In the backtracking example, why does α = 2.5 fail but 1.25 succeed?">
+
+At 2.5, $f = 5.25$ is above the threshold 3.99825 (the function went up). At 1.25, $f = -0.0625$ is below 3.999125.
+
+</Recall>
+
+<Recall q="Name Newton's three failure modes.">
+
+Non-positive-definite Hessian (wrong direction / converges to a max or saddle); near-zero curvature (huge, overshooting steps); a start far from the solution (the local model is poor, oscillation or divergence).
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s5" num="5" title="First-order and adaptive methods" tags="exam calc" pages="Part 1 · pp. 70–85">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="78">Chapter 4</PdfRef> <PdfRef file="cse/sem7/en3330-part-1.pdf" page="91">Comparison tables</PdfRef>
+
+**Steepest descent** $d = -\nabla f$ (often normalized). It guarantees improvement when $\nabla f \ne 0$, the step is small enough, and $f$ is differentiable.
+
+<Worked title="Two GD iterations on f = x₁² + x₂² from [1, 1], α = 0.2">
+
+$\nabla f = 2x$, so $x \leftarrow x - 0.4x = 0.6x$: $[0.6, 0.6]$, then $[0.36, 0.36]$.
+
+</Worked>
+
+**Conditioning** is the problem. On $\tfrac12(x_1^2 + b x_2^2)$ with $b = 0.001$ the valley is long and narrow: GD kills $x_1$ but moves $x_2$ at rate $1 - \alpha b$ per step - almost nothing.
+
+<DescentLab />
+
+### Conjugate gradient (quadratic $\tfrac12 x^TAx + b^Tx$)
+
+$$
+\alpha^{(k)} = -\frac{d^{(k)T}(Ax^{(k)} + b)}{d^{(k)T} A d^{(k)}}, \qquad
+d^{(k+1)} = -g^{(k+1)} + \beta^{(k)} d^{(k)}
+$$
+
+$$
+\beta_{FR} = \frac{g_{k+1}^T g_{k+1}}{g_k^T g_k}, \qquad
+\beta_{PR} = \frac{g_{k+1}^T (g_{k+1} - g_k)}{g_k^T g_k}
+$$
+
+Exact in at most $n$ steps on an SPD quadratic. FR and PR exist because nonlinear problems have no $A$; $\max(\beta_{PR}, 0)$ is an automatic restart.
+
+### Momentum and adaptive rates
+
+| Method | Update (elementwise) | Note |
+|---|---|---|
+| Momentum | $v \leftarrow \beta v - \alpha g$, $x \leftarrow x + v$ | $\beta = 0$ is plain GD |
+| Nesterov | gradient at the look-ahead $x + \beta v$ | less overshoot |
+| Adagrad | $x_i \leftarrow x_i - \dfrac{\alpha}{\epsilon + \sqrt{s_i}} g_i$, $s_i \mathrel{+}= g_i^2$ | rate only shrinks |
+| RMSProp | $\hat s \leftarrow \gamma \hat s + (1-\gamma) g^2$ | decaying average fixes Adagrad |
+| Adadelta | ratio of RMS of updates to RMS of gradients | no learning rate at all |
+| Adam | momentum + RMSProp + bias correction | the default |
+
+**Adam, five steps:**
+
+$$
+\begin{aligned}
+v &\leftarrow \gamma_v v + (1-\gamma_v) g, &
+s &\leftarrow \gamma_s s + (1-\gamma_s) g^{\odot 2}, \\
+\hat v &= v / (1 - \gamma_v^k), &
+\hat s &= s / (1 - \gamma_s^k), \\
+x &\leftarrow x - \alpha\, \hat v / (\epsilon + \sqrt{\hat s})
+\end{aligned}
+$$
+
+Bias correction is needed because $v$ and $s$ start at zero, so early averages are biased toward zero.
+
+<Callout kind="exam" title="The head-to-head (b = 0.001, x₀ = [5, 4], α = 0.1, 500 iterations)">
+
+GD reaches $x_1 \approx 10^{-23}$ but $x_2 = 3.805$. Momentum oscillates in $x_1$ but drags $x_2$ to 2.437. Adagrad slows down (monotone denominator). RMSProp parks at $[0.05, -0.05]$. Adadelta barely moves ($[4.709, 3.712]$). **Adam wins** - $\approx 10^{-11}$. With $b = 1$ all six behave alike: conditioning, not the algorithm, creates the difficulty.
+
+</Callout>
+
+<Detail>
+
+**Hypergradient descent** adapts $\alpha$ itself using $g^{(k)T}g^{(k-1)}$: a positive product means successive gradients agree, so the step can grow; negative means overshoot, so it shrinks.
+
+**Deriving the CG step.** Minimize $\phi(\alpha) = f(x + \alpha d)$ for the quadratic: $\phi'(\alpha) = d^T(A(x + \alpha d) + b) = 0$ gives the formula above. $\beta$ follows from requiring conjugacy $d^{(k+1)T} A d^{(k)} = 0$.
+
+</Detail>
+
+<RecallList>
+
+<Recall q="Steepest-descent direction for f = x₁x₂² + 1 at [−2, −2].">
+
+$\nabla f = [x_2^2,\ 2x_1x_2] = [4, 8]$, so $d = [-4, -8]$ (or normalized, $[-1, -2]/\sqrt5$).
+
+</Recall>
+
+<Recall q="Adagrad's weakness, and how RMSProp and Adadelta fix it.">
+
+Its accumulated $s$ grows forever, so the rate decays to zero. RMSProp uses an exponentially decaying average; Adadelta does too and also removes the global learning rate.
+
+</Recall>
+
+<Recall q="On a 2-D quadratic: steps for GD, CG and Newton?">
+
+GD: many (depends on conditioning). CG: at most 2. Newton: 1.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s6" num="6" title="Second-order and quasi-Newton" tags="exam" pages="Part 1 · pp. 86–92">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="94">Second-order methods</PdfRef>
+
+Newton uses $S = H^{-1}$. When $H$ is expensive or unavailable:
+
+- **Classical modified Newton** computes $H^{(0)}$ once and reuses it - poor if the Hessian changes quickly.
+- **Quasi-Newton** builds $Q^{(k)} \approx H^{-1}$ from gradients, starting from $Q^{(1)} = I$, with update $Q^{(k+1)} = Q^{(k)} + \Delta$ and the **secant condition** $Q^{(k+1)} y_k = s_k$, where $s_k = x_{k+1} - x_k$ and $y_k = g_{k+1} - g_k$.
+
+$$
+Q_{DFP}^{+} = Q + \frac{s s^T}{s^T y} - \frac{Q y y^T Q}{y^T Q y}
+$$
+
+$$
+Q_{BFGS}^{+} = (I - \rho s y^T)\, Q\, (I - \rho y s^T) + \rho s s^T, \qquad \rho = \frac{1}{y^T s}
+$$
+
+| Update | Rank | Keeps $Q \succ 0$? | Note |
+|---|---|---|---|
+| Rank-one (SR1) | 1 | No | can lose positive definiteness; denominator can vanish |
+| DFP | 2 | Yes, if $y^Ts > 0$ | the first rank-two update |
+| BFGS | 2 | Yes, if $y^Ts > 0$ | more robust to inexact line search - the default |
+| L-BFGS | - | - | stores only the last $m$ pairs $(s, y)$: memory $O(mn)$ |
+
+A **rank-one matrix** is an outer product $uv^T$. Choose BFGS over DFP for robustness; choose L-BFGS when $n$ is so large that an $n \times n$ matrix will not fit.
+
+<RecallList>
+
+<Recall q="What is Q(1) in quasi-Newton, and what is Q(k) meant to approach?">
+
+$Q^{(1)} = I$ (so the first step is gradient descent); $Q^{(k)} \to (H^{(k)})^{-1}$.
+
+</Recall>
+
+<Recall q="Why does Newton solve ½(x₁² + bx₂²) in exactly one step?">
+
+The function is quadratic, so the second-order Taylor model is exact; minimizing the model (one Newton step) minimizes the function.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s7" num="7" title="Python: scipy.optimize and PyTorch" tags="code" pages="Part 1 · pp. 93–109">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="101">Chapter 5</PdfRef>
+
+| Method | Python | Needs |
+|---|---|---|
+| Bracketing | `scipy.optimize.bracket(f, xa, xb)` | $f$ |
+| Bisection on $f'$ | `scipy.optimize.bisect(f, a, b)` | sign-changing bracket |
+| Wolfe line search | `scipy.optimize.line_search(f, g, x, d)` | $f, \nabla f$ |
+| Secant / Newton 1-D | `scipy.optimize.newton(f, x0[, fprime])` | $f$ (secant) or $f, f'$ |
+| Newton multivariate | `minimize(..., method='Newton-CG', jac, hess or hessp)` | $f, \nabla f, H$ or $Hp$ |
+| BFGS | `minimize(..., method='BFGS', jac)` | $f, \nabla f$ |
+| Trust region | `minimize(..., method='trust-ncg', jac, hess)` | $f, \nabla f, H$ |
+| GD / momentum / Adam … | `torch.optim.SGD`, `.Adam`, … | autodiff |
+
+```python
+import torch
+x = torch.tensor([0.0], requires_grad=True)
+opt = torch.optim.Adam([x], lr=0.01)
+for _ in range(2000):
+    opt.zero_grad()            # clear old gradients - they accumulate otherwise
+    loss = (x - 2) ** 2 + 3
+    loss.backward()            # autodiff fills x.grad
+    opt.step()                 # apply the update rule
+```
+
+<Callout kind="key" title="Choosing in practice">
+
+Cheap Hessian → `trust-ncg`, or `Newton-CG` with `hessp` for large $n$. Gradient only → BFGS (L-BFGS-B for very large $n$, e.g. $10^6$). PyTorch-expressible → autodiff + a first-order optimizer. Non-convex → any of these plus random restarts. Always check the solver status, gradient norm and objective - not just the returned point.
+
+</Callout>
+
+<RecallList>
+
+<Recall q="What happens with bisect(lambda x: x**2 - 1, -2, 2)?">
+
+It raises an error: $f(-2) = 3$ and $f(2) = 3$ have the same sign, so the interval is not a valid bracket (even though roots exist inside).
+
+</Recall>
+
+<Recall q="line_search returned α = 1.0 but the slice is minimized at α = 1.75. Bug?">
+
+No. A Wolfe line search returns any step satisfying the conditions, trying $\alpha = 1$ first; it does not seek the exact minimizer along the line.
+
+</Recall>
+
+<Recall q="Adam reached −0.490 from x₀ = 0 and 2.535 from x₀ = 2. Lesson?">
+
+Different starts end in different basins; local methods find local minima. Compare objective values to see which is lower, and use restarts on non-convex problems.
+
+</Recall>
+
+<Recall q="On the 5-D Rosenbrock, which solver won?">
+
+`trust-ncg`: about 20 iterations to $f \approx 10^{-30}$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s8" num="8" title="Stochastic methods and cross-entropy" tags="exam calc" pages="Part 1 · pp. 110–132">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="118">Chapter 6</PdfRef>
+
+Exact line search forces $g^{(k+1)T} d^{(k)} = 0$ (from $\phi'(\alpha^*) = 0$ and the chain rule), so each step needs a new direction - and at a saddle where $\nabla f = 0$ a deterministic method is stuck. Randomness buys **exploration** (in the descent simulation in §5, pick the saddle function and start on the line $x_1 = 0$: GD, momentum and Adam all stall at the saddle, Noisy GD escapes), injected at three levels:
+
+
+
+| Method | What is perturbed | Update |
+|---|---|---|
+| Noisy descent | the iterate | $x \leftarrow x - \alpha g + \epsilon$, $\epsilon \sim \mathcal N(0, \sigma_k^2 I)$, $\sigma_k$ decaying |
+| SGD | the gradient | $x \leftarrow x - \alpha \hat g$, $\mathbb E[\hat g] = \nabla f$ (unbiased, low variance preferred) |
+| Cross-entropy | the whole point → a distribution | sample, keep elites, refit |
+
+SGD is preferred for neural networks because a mini-batch gradient is far cheaper than the full one, and the noise helps escape saddles and sharp minima. It does **not** decrease $f$ every step; with a constant step it keeps bouncing around the optimum - decay the step size.
+
+### Information theory
+
+$$
+I(x) = -\log_2 p(x), \qquad H(X) = -\sum p(x) \log_2 p(x), \qquad
+D_{KL}(p\|q) = \sum p(x) \log \frac{p(x)}{q(x)}
+$$
+
+$H(X, Y) = H(X) + H(Y \mid X)$, $I(X; Y) = H(X) - H(X \mid Y)$, and cross-entropy $H(p, q) = H(p) + D_{KL}(p\|q)$. KL is asymmetric. Binary entropy peaks at $p = \tfrac12$ with 1 bit; for $N$ outcomes $0 \le H \le \log_2 N$.
+
+### The cross-entropy method
+
+1. Sample $N$ points from $\mathcal N(\mu, \Sigma)$.
+2. Keep the $N_e$ **elite** samples with the lowest $f$.
+3. Refit by maximum likelihood on the elites:
+
+$$
+\mu_{k+1} = \frac{1}{N_e}\sum_{x \in E} x, \qquad
+\Sigma_{k+1} = \frac{1}{N_e}\sum_{x \in E}(x - \mu_{k+1})(x - \mu_{k+1})^T
+$$
+
+This is exactly minimizing the KL divergence between the proposal and the elite distribution.
+
+<CrossEntropyLab />
+
+<Callout kind="warn" title="Do not let the variance collapse">
+
+On $f = x^2$, CE with $\mu_0 = 20$, $\sigma_0^2 = 70$, $N = 100$, $N_e = 10$ converged to $10^{-6}$ in five iterations. With $\sigma_0^2 = 20$ it stopped at $\mu = 6.7$: the covariance shrank before the samples reached the minimum. Fixes: larger initial variance, more samples or elites, or a floor on $\sigma$.
+
+</Callout>
+
+<RecallList>
+
+<Recall q="I(p) for p = 0.05 and p = 0.95, in bits.">
+
+$-\log_2 0.05 \approx 4.32$ bits (surprising); $-\log_2 0.95 \approx 0.074$ bits (expected).
+
+</Recall>
+
+<Recall q="D_KL(g‖h) and D_KL(h‖g) for g = (0.5, 0.5), h = (0.6, 0.4).">
+
+$\approx 0.0294$ and $\approx 0.0290$ bits - close but not equal, which shows KL is not symmetric (not a distance).
+
+</Recall>
+
+<Recall q="Why is Rastrigin hard for gradient methods but easy for CE?">
+
+It has a regular grid of local minima; gradient methods fall into the nearest one. CE samples a wide region and fits the distribution to the best samples, seeing the global trend. The price: many function evaluations per iteration.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s9" num="9" title="Constraints: transformations, elimination, Lagrange" tags="exam calc" pages="Part 2 · pp. 1–6">
+
+<PdfRef file="cse/sem7/en3330-part-2.pdf" page="5">Chapter 7</PdfRef>
+
+General problem: $\min f(x)$ s.t. $h(x) = 0$, $g(x) \le 0$. **Check feasibility before optimizing**: a nonempty compact feasible set with continuous $f$ guarantees a minimizer exists.
+
+### Bound-preserving maps
+
+$$
+x = \frac{a+b}{2} + \frac{b-a}{2}\tanh z \in (a, b), \qquad F'(z) = f'(T(z))\, \frac{b-a}{2}\operatorname{sech}^2 z
+$$
+
+| Map | Benefit | Limitation |
+|---|---|---|
+| sigmoid / tanh | smooth, monotone | endpoints need infinite $z$; tails saturate (tiny gradients) |
+| rational $\tfrac{2z}{1+z^2}$ | reaches both endpoints | not one-to-one; extra stationary points at $z = \pm1$ |
+| $x = d \pm z^2$ | one-sided bound incl. endpoint | two-to-one; $T' = 0$ at $z = 0$ |
+
+### Elimination
+
+Substitute $x_n = \psi(x_1, \dots, x_{n-1})$ into the objective **and every remaining constraint**, keep the domain of $\psi$ and **all sign branches** (for a sphere, $x_n = \pm\sqrt{a - \sum x_i^2}$).
+
+### Lagrange multipliers
+
+At a regular minimizer (equality gradients linearly independent), there is $\nu^*$ with
+
+$$
+\nabla f(x^*) + J_h(x^*)^T \nu^* = 0, \qquad h(x^*) = 0
+$$
+
+- $n + p$ equations in $n + p$ unknowns. They give **candidates** - max, min and saddle alike.
+- **Second order:** test the Lagrangian Hessian $H_L = \nabla^2 f + \sum \nu_i \nabla^2 h_i$ only on tangent directions: $Z^T H_L Z \succ 0$, $Z$ a basis of $\ker J_h$.
+- **Sensitivity:** for $a(x) = b$, $dv/db = -\nu^*$. Scaling $h$ by $c$ divides $\nu$ by $c$ - always state the constraint with the multiplier.
+
+<LagrangeLab />
+
+<Callout kind="exam" title="Why regularity matters">
+
+$\min x$ s.t. $x^2 = 0$: the only feasible point is $0$, but $1 + \nu \cdot 2x = 0$ has no solution there - the constraint gradient vanishes. And writing $h = 0$ as $h \le 0,\ -h \le 0$ makes the active gradients dependent, breaking LICQ.
+
+</Callout>
+
+<RecallList>
+
+<Recall q="Why can a tanh-transformed problem fail to attain an endpoint optimum?">
+
+tanh only reaches $\pm1$ as $z \to \pm\infty$; if the constrained optimum is at $a$ or $b$, there is no finite minimizer - a solver returns a large $z$ that only approximates the endpoint.
+
+</Recall>
+
+<Recall q="Why restrict the Lagrangian Hessian to tangent directions?">
+
+Only feasible directions matter. Curvature normal to the constraint surface cannot be followed without leaving the feasible set, so it does not decide constrained optimality.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s10" num="10" title="KKT conditions and duality" tags="exam calc" pages="Part 2 · pp. 7–9">
+
+<PdfRef file="cse/sem7/en3330-part-2.pdf" page="11">Chapter 8</PdfRef>
+
+With $L = f + \nu^T h + \mu^T g$:
+
+$$
+\begin{aligned}
+& h(x^*) = 0,\ g(x^*) \le 0 && \text{primal feasibility} \\
+& \mu^* \ge 0 && \text{dual feasibility} \\
+& \mu_j^* g_j(x^*) = 0 && \text{complementary slackness} \\
+& \nabla f + J_h^T \nu^* + J_g^T \mu^* = 0 && \text{stationarity}
+\end{aligned}
+$$
+
+- **Inactive** constraint ⇒ $\mu_j = 0$. An **active** constraint may also have $\mu_j = 0$.
+- KKT is **necessary** under a constraint qualification (LICQ, or Slater for convex problems).
+- KKT is **sufficient and global** when $f, g_j$ are convex and $h$ is affine.
+
+<KktDiagram />
+
+### Active-set method by hand
+
+For each plausible active set: set $g_j = 0$ for active, $\mu_j = 0$ for inactive; solve; then **check** - every original inequality, every multiplier sign ($\mu \ge 0$), all bounds, and that it is a minimum (not just stationary). Up to $2^m$ cases.
+
+### Duality
+
+$$
+q(\nu, \mu) = \inf_x L(x, \nu, \mu), \qquad d^* = \sup_{\mu \ge 0} q \le p^* \quad \text{(weak duality)}
+$$
+
+Proof: for feasible $x$ and $\mu \ge 0$, $\mu^T g(x) \le 0$ and $h(x) = 0$, so $q \le L(x, \nu, \mu) \le f(x)$. $q$ is always **concave**. Strong duality $d^* = p^*$ holds for convex problems under Slater. Any feasible $x$ and finite $q$ give the certificate $0 \le f(x) - p^* \le f(x) - q(\nu, \mu)$.
+
+<Worked title="min x₁² + x₂² s.t. x₁ + x₂ = 1">
+
+$L = x_1^2 + x_2^2 + \nu(x_1 + x_2 - 1)$. Stationarity: $2x_1 + \nu = 0$, $2x_2 + \nu = 0$ ⇒ $x_1 = x_2 = -\nu/2$. Feasibility ⇒ $-\nu = 1$, so $\nu^* = -1$, $x^* = (\tfrac12, \tfrac12)$, $p^* = \tfrac12$. Convex objective, affine constraint ⇒ global.
+
+Dual: $q(\nu) = \inf_x L = -\tfrac{\nu^2}{2} - \nu$, maximized at $\nu = -1$ with $q = \tfrac12 = p^*$ - zero gap.
+
+</Worked>
+
+<RecallList>
+
+<Recall q="Can an inactive inequality have a positive multiplier?">
+
+No - complementary slackness $\mu_j g_j = 0$ with $g_j < 0$ forces $\mu_j = 0$.
+
+</Recall>
+
+<Recall q="Why is maximizing a convex quadratic not a convex problem?">
+
+Maximizing a convex $f$ is minimizing the concave $-f$; convex optimization needs a convex objective to minimize. The maximum sits at a vertex/boundary and local maxima need not be global.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s11" num="11" title="Penalty, augmented Lagrangian, barrier" tags="exam calc" pages="Part 2 · pp. 9–14">
+
+<PdfRef file="cse/sem7/en3330-part-2.pdf" page="13">Penalties</PdfRef> <PdfRef file="cse/sem7/en3330-part-2.pdf" page="15">Barriers</PdfRef>
+
+### Exterior penalty
+
+$$
+P_Q(x) = \sum h_i(x)^2 + \sum \max\{g_j(x), 0\}^2, \qquad \min f + \rho P_Q, \quad \rho_{k+1} = \gamma \rho_k
+$$
+
+The count penalty (number of violated constraints) is discontinuous with no gradient toward feasibility. The quadratic penalty guides smoothly but is feasible only as $\rho \to \infty$, and the Hessian term $\rho A^TA$ makes the subproblem **ill-conditioned**. Warm-start each solve.
+
+### Augmented Lagrangian (equalities)
+
+$$
+L_\rho(x, \nu) = f + \nu^T h + \frac{\rho}{2}\|h\|^2, \qquad \nu_{k+1} = \nu_k + \rho\, h(x_{k+1})
+$$
+
+The update is exactly the stationarity balance, so the method **learns the constraint force** and converges with moderate $\rho$.
+
+<Worked title="min x² s.t. x = 1, with ρ = 1">
+
+Penalty only ($\nu = 0$): $2x + \rho(x - 1) = 0 \Rightarrow x = \rho/(2 + \rho) = \tfrac13$ - biased.
+
+Augmented: $2x + \nu + (x - 1) = 0 \Rightarrow x = (1 - \nu)/3$, then $\nu \leftarrow \nu + (x - 1)$. The fixed point is $\nu^* = -2$, $x^* = 1$ - exact with $\rho = 1$.
+
+</Worked>
+
+### Log barrier and the central path
+
+$$
+\min\ t f(x) - \sum_j \log(-g_j(x)), \qquad \mu_j = -\frac{1}{t g_j}, \qquad \mu_j g_j = -\frac1t
+$$
+
+Iterates stay **strictly feasible**. For an exactly centered convex problem, $f(x_t) - p^* \le m/t$. Algorithm: strictly feasible start (Phase I) → centre with domain-preserving Newton → stop when $m/t \le \varepsilon$ → else $t \leftarrow \gamma t$ and warm-start. The log barrier can be negative - nonnegativity is not required.
+
+<Callout kind="key" title="Approach direction">
+
+For $\min x$ s.t. $x \ge 1$: the quadratic-penalty minimizer $x = 1 - \tfrac{1}{2\rho}$ approaches from **outside** (below); the barrier minimizer $x = 1 + \tfrac1t$ approaches from **inside** (above), with gap exactly $1/t$.
+
+</Callout>
+
+<PenaltyBarrierLab />
+
+| | Quadratic penalty | Augmented Lagrangian | Log barrier |
+|---|---|---|---|
+| Needs a feasible start | no | depends | strictly feasible |
+| Iterates | may be infeasible | may be infeasible | strictly feasible |
+| Main risk | ill-conditioning | inexact inner solves | losing the domain |
+| Stop on | violation + stationarity | violation + KKT residual | centering + gap $m/t$ |
+
+<RecallList>
+
+<Recall q="Derive μⱼsⱼ = 1/t.">
+
+Stationarity of $tf + \phi$: $t\nabla f - \sum \frac{1}{g_j}\nabla g_j = 0$. Divide by $t$ and set $\mu_j = -1/(tg_j) > 0$: ordinary stationarity, with $\mu_j g_j = -1/t$, i.e. $\mu_j s_j = 1/t$ for slack $s_j = -g_j$.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s12" num="12" title="Newton for equality-constrained problems" tags="exam calc" pages="Part 2 · pp. 15–20">
+
+<PdfRef file="cse/sem7/en3330-part-2.pdf" page="19">Chapter 9</PdfRef>
+
+Newton direction: $Hd = -\nabla f$. **Newton decrement** $\delta^2 = d^THd = -\nabla f^Td$; predicted decrease $\delta^2/2$. Damp with Armijo: accept $\alpha$ when $f(x + \alpha d) \le f(x) - c\alpha\delta^2$.
+
+| Objective | Newton behaviour | Why |
+|---|---|---|
+| $x^4/4$ | $x_{k+1} = 2x_k/3$, only linear | curvature vanishes at the minimizer |
+| $x^3 - 3x$ | some starts go to the max at $-1$ | it solves $f' = 0$ without classifying |
+| $\sqrt{1 + x^2}$ | $x_{k+1} = -x_k^3$, diverges for $\lvert x_0 \rvert > 1$ | the full step is poor far away |
+
+The Newton simulation in §4 steps through all three.
+
+### Feasible start ($Ax_0 = b$)
+
+$$
+\begin{bmatrix} H & A^T \\ A & 0 \end{bmatrix}
+\begin{bmatrix} d \\ \nu_+ \end{bmatrix} =
+\begin{bmatrix} -\nabla f \\ 0 \end{bmatrix}
+$$
+
+$Ad = 0$ keeps every step feasible. The KKT matrix is nonsingular if $A$ has full row rank and $Z^THZ \succ 0$ - even when $H$ itself is singular. Backtrack on $f$.
+
+### Infeasible start
+
+$$
+\begin{bmatrix} H & A^T \\ A & 0 \end{bmatrix}
+\begin{bmatrix} \Delta x \\ \Delta \nu \end{bmatrix} =
+-\begin{bmatrix} \nabla f + A^T\nu \\ Ax - b \end{bmatrix}
+$$
+
+Backtrack on the **residual norm**: $\|r(x + \alpha\Delta x, \nu + \alpha\Delta\nu)\| \le (1 - c\alpha)\|r\|$. Since $r_p^+ = (1 - \alpha) r_p$, a full step restores affine feasibility exactly. The objective **may rise** - from $(0,0)$ on $x_1 + x_2 = 1$ the method correctly moves to $(\tfrac12, \tfrac12)$, raising $f$ from 0 to $\tfrac12$.
+
+<Callout kind="warn" title="Do not mix the two multiplier meanings">
+
+The increment system returns $\Delta\nu$; the direct form returns the new estimate $\hat\nu_+$. With a damped step use $\Delta\nu = \hat\nu_+ - \nu$.
+
+</Callout>
+
+**Economic dispatch.** $\min \sum C_i(P_i)$ s.t. $\sum P_i = D$ ⇒ $C_i'(P_i) = -\nu$ for every unconstrained generator: **equal marginal costs**, and $-\nu$ is the system marginal price ($dC^*/dD = -\nu$). A unit at its capacity limit gets its own bound multiplier.
+
+<RecallList>
+
+<Recall q="Prove feasible-start Newton keeps Ax = b for any step length.">
+
+The second block row gives $Ad = 0$, so $A(x + \alpha d) = Ax + \alpha Ad = b$.
+
+</Recall>
+
+<Recall q="Why can an objective-increasing step be accepted by infeasible-start Newton?">
+
+From an infeasible point the objective is not a valid measure of progress - it can be lower than any feasible value. The method reduces the combined primal-dual residual instead.
+
+</Recall>
+
+</RecallList>
+
+</Section>
+
+<Section id="s13" num="13" title="Method selection and exam checklist" tags="exam" pages="Part 1 · p. 133 · Part 2 · p. 50">
+
+<PdfRef file="cse/sem7/en3330-part-1.pdf" page="141">Revision reference, Part 1</PdfRef> <PdfRef file="cse/sem7/en3330-part-2.pdf" page="54">Revision reference, Part 2</PdfRef>
+
+| Situation | Approach | Essential check |
+|---|---|---|
+| Simple independent bounds | parametrization or bound-aware solver | does the map reach the endpoints? |
+| Easy equality elimination | reduced variables | all branches and domains kept |
+| Small symbolic problem | Lagrange / KKT | regularity, active bounds, signs, classification |
+| Smooth equalities | augmented Lagrangian or equality Newton | feasibility + stationarity residuals |
+| Convex inequalities, interior point known | log barrier + Newton | strict domain, gap $m/t$ |
+| Affine equalities, feasible start | feasible-start Newton | $Z^THZ \succ 0$, $Ad = 0$ |
+| Affine equalities, infeasible start | infeasible-start Newton | residual decreasing |
+
+<Callout kind="exam" title="Before you hand in a calculation">
+
+1. Formulate first: variables, objective, every constraint (including non-negativity and bounds).
+2. Check assumptions: smoothness, convexity, unimodality, positive definiteness, feasibility.
+3. Separate the direction rule, the step-size rule and the stopping rule.
+4. After solving: substitute back into **every** constraint; check multiplier signs; classify the point.
+5. A small step or a stalled objective does not certify global optimality.
+
+</Callout>
+
+</Section>

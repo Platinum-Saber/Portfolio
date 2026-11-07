@@ -65,6 +65,9 @@ database" fallback, while the dashboard shows both secrets as set. They belong i
 |---|---|---|
 | `SUPABASE_URL` | Secret | same as `.env.local` |
 | `SUPABASE_ANON_KEY` | Secret | same as `.env.local` |
+| `GOOGLE_CLIENT_ID` | Secret | notes sign-in - [`NOTES.md`](./NOTES.md) |
+| `GOOGLE_CLIENT_SECRET` | Secret | notes sign-in |
+| `NOTES_AUTH_SECRET` | Secret | 32+ random characters; signs the notes session cookie |
 
 Runtime secrets on the **Worker**, not build variables: `/api/contact` reads them per request.
 Without them the form answers `503 unavailable` and the page falls back to `mailto:`, by design.
@@ -73,7 +76,9 @@ Verified locally that values set this way reach the route.
 Unlike Vercel, a secret change takes effect on the live Worker without a rebuild (Cloudflare
 deploys a new version with the new secret).
 
-Locally: put the same two lines in `.dev.vars` (git-ignored) for `npm run preview`.
+Locally: put the same lines in `.dev.vars` (git-ignored) for `npm run preview`.
+
+`wrangler.jsonc` also sets `assets.run_worker_first: ["/notes-files/*"]` - the members-only PDFs. Do not remove it: without it the asset store serves them to anyone ([`NOTES.md`](./NOTES.md)).
 
 ## The prefetch storm (2026-09-24) - why cache interception is off
 

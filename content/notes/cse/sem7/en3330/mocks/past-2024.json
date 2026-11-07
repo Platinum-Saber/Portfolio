@@ -1,0 +1,390 @@
+{
+ "title": "2024 final paper (In20)",
+ "minutes": 120,
+ "intro": "**2 hours · 100 marks · 4 questions of 25 marks · answer all.** Closed book; an approved calculator only. Derivations are needed only where asked.\n\nWork on paper. When you submit (or time runs out) every part shows a **worked answer** and a **mark scheme** - tick the points your answer contains to get your score.\n\nThe questions are as set in the 2024 paper, with worked answers added. Original: [EN3330 2024 paper (PDF)](/notes-files/cse/sem7/en3330-paper-2024.pdf). Where the printed question has a typo, the answer says which reading it uses.",
+ "sections": [
+  {
+   "id": "Q",
+   "title": "Answer ALL questions",
+   "blurb": "Four questions, 25 marks each. Calculator allowed; closed book.",
+   "questions": [
+    {
+     "id": "q1",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Optimality · feasible sets",
+     "prompt": "Question 1.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 5,
+       "prompt": "Five critical points of a function $f(x)$, $\\{x \\in \\mathbb{R} : -1.5 \\le x \\le 13\\}$, are shown in Figure Q1.1. State the given critical points A, B, C, D and E.\n\n![Figure Q1.1: critical points of f(x)](/notes-files/cse/sem7/en3330-2024-fig-q1.png)",
+       "answer": "| Point | x (approx.) | Type |\n|---|---|---|\n| A | 0 | **Saddle / stationary inflection** - $f' = 0$ but $f$ keeps increasing on both sides: neither max nor min |\n| B | 2 | **Local maximum** - and the **global maximum** on $[-1.5, 13]$ (f ≈ 3.2 is higher than both end values, ≈ −7.8 and ≈ −1.5) |\n| C | 5.7 | **Global minimum** (f ≈ −16, the lowest value in the interval) |\n| D | 9.3 | **Local maximum** (f ≈ −0.5, below B) |\n| E | 11.7 | **Local minimum** (f ≈ −4.8, above C) |\n\nCheck the end points when you say \"global\": on a closed interval the global extremes can sit at an end point that is not a critical point.",
+       "points": [
+        {
+         "text": "A: saddle / inflection - neither",
+         "marks": 1
+        },
+        {
+         "text": "B: local and global maximum",
+         "marks": 1
+        },
+        {
+         "text": "C: global minimum",
+         "marks": 1
+        },
+        {
+         "text": "D: local maximum",
+         "marks": 1
+        },
+        {
+         "text": "E: local minimum",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 12,
+       "prompt": "Consider\n$$\\min_{\\mathbf{x}}\\ f(\\mathbf{x}) = \\Big(x_1 - \\tfrac43\\Big)^n + (x_2 - 5)^n \\quad\\text{s.t.}\\quad x_1 + 2x_2 - 8 \\ge 0,\\ 2x_1 + x_2 - 6 \\le 0,\\ -x_1 \\le 0,\\ -x_2 \\le 0.$$\n(i) Sketch the feasible region. **[4]** (ii) For $n = 2$ sketch the minimum of $f$ and the feasible region on one diagram. **[6]** (iii) List the active and inactive constraints at that minimum. **[2]**",
+       "answer": "**(i)** Boundary lines: $x_1 + 2x_2 = 8$ through (0, 4) and (8, 0) - feasible **above** it; $2x_1 + x_2 = 6$ through (0, 6) and (3, 0) - feasible **below** it; and $x_1 \\ge 0$. They meet where $x_1 + 2x_2 = 8$ and $2x_1 + x_2 = 6$: $x_1 = 4/3$, $x_2 = 10/3$. The feasible region is the **triangle with vertices (0, 4), (0, 6) and (4/3, 10/3)** ($x_2 \\ge 0$ is automatically satisfied).\n\n**(ii)** For $n = 2$ the level sets are circles centred at $(4/3, 5)$. That centre is **infeasible**: $2(4/3) + 5 = 7.67 > 6$. So the constrained minimum is the point of the triangle closest to $(4/3, 5)$ - its projection onto the line $2x_1 + x_2 = 6$:\n$$\\mathbf{x}^* = \\begin{bmatrix}4/3\\\\5\\end{bmatrix} - \\frac{2(4/3) + 5 - 6}{2^2 + 1^2}\\begin{bmatrix}2\\\\1\\end{bmatrix} = \\begin{bmatrix}4/3\\\\5\\end{bmatrix} - \\frac13\\begin{bmatrix}2\\\\1\\end{bmatrix} = \\begin{bmatrix}2/3\\\\14/3\\end{bmatrix}.$$\nIt lies on the edge between (0, 6) and (4/3, 10/3) ($x_1 + 2x_2 = 10 \\ge 8$ ✓), so $\\mathbf{x}^* = (2/3, 14/3)$ with $f^* = (2/3)^2 + (1/3)^2 = 5/9$. The smallest circle touching the triangle is tangent to that edge.\n\n![Feasible triangle, level circles and the constrained minimum](/notes-files/cse/sem7/en3330-2024-ans-q1b.png)\n\n**(iii)** Active: $2x_1 + x_2 - 6 \\le 0$ (holds with equality). Inactive: $x_1 + 2x_2 - 8 \\ge 0$ (value 2 > 0), $-x_1 \\le 0$, $-x_2 \\le 0$.",
+       "points": [
+        {
+         "text": "Correct boundary lines and side of each",
+         "marks": 2
+        },
+        {
+         "text": "Triangle with vertices (0,4), (0,6), (4/3,10/3)",
+         "marks": 2
+        },
+        {
+         "text": "Unconstrained centre (4/3, 5) shown infeasible",
+         "marks": 1.5
+        },
+        {
+         "text": "Projection onto 2x₁ + x₂ = 6 → (2/3, 14/3)",
+         "marks": 3
+        },
+        {
+         "text": "Diagram: circles tangent to the edge at x*",
+         "marks": 1.5
+        },
+        {
+         "text": "Active / inactive lists",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 2,
+       "prompt": "State the first-order (FONC) and second-order (SONC) necessary conditions for a local minimum of a multivariable function.",
+       "answer": "At a local minimizer $\\mathbf{x}^*$ of a twice-differentiable $f$ (interior point):\n- **FONC:** $\\nabla f(\\mathbf{x}^*) = \\mathbf{0}$.\n- **SONC:** $\\nabla^2 f(\\mathbf{x}^*) \\succeq 0$ - the Hessian is positive semidefinite.",
+       "points": [
+        {
+         "text": "FONC",
+         "marks": 1
+        },
+        {
+         "text": "SONC (PSD, not PD)",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "d",
+       "marks": 6,
+       "prompt": "For $f(\\mathbf{x}) = \\dfrac{x_1^3}{3} - \\dfrac{9x_1^2}{2} + 20x_1 + x_2^2 - 6x_2 + 9$, identify the critical points and classify them.",
+       "answer": "$\\dfrac{\\partial f}{\\partial x_1} = x_1^2 - 9x_1 + 20 = (x_1 - 4)(x_1 - 5) = 0 \\Rightarrow x_1 = 4, 5$; $\\dfrac{\\partial f}{\\partial x_2} = 2x_2 - 6 = 0 \\Rightarrow x_2 = 3$.\n\nCritical points: **(4, 3)** and **(5, 3)**. Hessian $\\nabla^2 f = \\begin{bmatrix}2x_1 - 9 & 0\\\\ 0 & 2\\end{bmatrix}$.\n\n- (4, 3): eigenvalues −1 and 2 - **indefinite → saddle point** (neither), $f = 29.33$.\n- (5, 3): eigenvalues 1 and 2 - **positive definite → strict local minimum**, $f = 29.17$. (Not global: the cubic term makes $f \\to -\\infty$ as $x_1 \\to -\\infty$.)",
+       "points": [
+        {
+         "text": "Gradient and both critical points",
+         "marks": 2
+        },
+        {
+         "text": "Hessian",
+         "marks": 1
+        },
+        {
+         "text": "(4,3) saddle with reason",
+         "marks": 1.5
+        },
+        {
+         "text": "(5,3) local min with reason",
+         "marks": 1.5
+        }
+       ]
+      }
+     ],
+     "explain": "Q1(b)(ii): the quickest route is \"the minimum of a squared distance over a convex set is the projection of the centre onto the set\" - then check which edge the projection lands on."
+    },
+    {
+     "id": "q2",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Least norm · weighted centroid",
+     "prompt": "Question 2.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 7,
+       "prompt": "Consider $\\min \\|\\mathbf{x} - \\mathbf{d}\\|_2^2$ s.t. $\\mathbf{a}^T\\mathbf{x} = b$, with $\\mathbf{d}, \\mathbf{a} \\in \\mathbb{R}^n$, $b \\in \\mathbb{R}$.\n(i) Show it is equivalent to $\\min\\|\\mathbf{y}\\|_2^2$ s.t. $\\mathbf{a}^T\\mathbf{y} = c$, where $c = b - \\mathbf{a}^T\\mathbf{d}$. **[2]**\n(ii) Use purely geometric arguments to find the optimal $\\mathbf{x}^*$. **[5]**",
+       "answer": "**(i)** Substitute $\\mathbf{y} = \\mathbf{x} - \\mathbf{d}$ (a one-to-one shift). The objective becomes $\\|\\mathbf{y}\\|_2^2$ and the constraint $\\mathbf{a}^T(\\mathbf{y} + \\mathbf{d}) = b \\iff \\mathbf{a}^T\\mathbf{y} = b - \\mathbf{a}^T\\mathbf{d} = c$. Same optimal value; $\\mathbf{x}^* = \\mathbf{y}^* + \\mathbf{d}$.\n\n**(ii)** $\\{\\mathbf{y} : \\mathbf{a}^T\\mathbf{y} = c\\}$ is a **hyperplane** with normal $\\mathbf{a}$. The point of a hyperplane closest to the origin is the foot of the perpendicular from the origin, so $\\mathbf{y}^*$ is parallel to $\\mathbf{a}$: $\\mathbf{y}^* = t\\mathbf{a}$. Putting it on the plane: $t\\,\\mathbf{a}^T\\mathbf{a} = c \\Rightarrow t = c/\\|\\mathbf{a}\\|^2$. (Any other point $\\mathbf{y}^* + \\mathbf{v}$ with $\\mathbf{a}^T\\mathbf{v} = 0$ has $\\|\\mathbf{y}^* + \\mathbf{v}\\|^2 = \\|\\mathbf{y}^*\\|^2 + \\|\\mathbf{v}\\|^2$ by Pythagoras - larger.)\n$$\\mathbf{x}^* = \\mathbf{d} + \\frac{b - \\mathbf{a}^T\\mathbf{d}}{\\|\\mathbf{a}\\|_2^2}\\,\\mathbf{a},$$\nthe orthogonal projection of $\\mathbf{d}$ onto the hyperplane.",
+       "points": [
+        {
+         "text": "Substitution y = x − d and transformed constraint",
+         "marks": 2
+        },
+        {
+         "text": "Hyperplane / perpendicular argument",
+         "marks": 2
+        },
+        {
+         "text": "y* = c a/‖a‖²",
+         "marks": 1.5
+        },
+        {
+         "text": "x* = d + (b − aᵀd) a/‖a‖²",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 12,
+       "prompt": "An energy-minimisation problem is $\\min_{\\mathbf{z}} \\sum_{k=1}^m \\beta_k\\|\\mathbf{z} - \\mathbf{b}_k\\|_2^2$ with $\\beta_k > 0$, $\\mathbf{b}_k \\in \\mathbb{R}^n$. Using $\\|\\mathbf{z} - \\mathbf{b}_k\\|_2^2 = \\mathbf{z}^T\\mathbf{z} - 2\\mathbf{z}^T\\mathbf{b}_k + \\mathbf{b}_k^T\\mathbf{b}_k$, show that $\\mathbf{z}^* = \\dfrac{\\sum_k \\beta_k\\mathbf{b}_k}{\\sum_k\\beta_k}$.",
+       "answer": "Expand:\n$$F(\\mathbf{z}) = \\sum_k\\beta_k(\\mathbf{z}^T\\mathbf{z} - 2\\mathbf{z}^T\\mathbf{b}_k + \\mathbf{b}_k^T\\mathbf{b}_k) = \\Big(\\sum_k\\beta_k\\Big)\\mathbf{z}^T\\mathbf{z} - 2\\mathbf{z}^T\\Big(\\sum_k\\beta_k\\mathbf{b}_k\\Big) + \\sum_k\\beta_k\\|\\mathbf{b}_k\\|^2.$$\nGradient (using $\\nabla(\\mathbf{z}^T\\mathbf{z}) = 2\\mathbf{z}$, $\\nabla(\\mathbf{z}^T\\mathbf{c}) = \\mathbf{c}$):\n$$\\nabla F = 2\\Big(\\sum_k\\beta_k\\Big)\\mathbf{z} - 2\\sum_k\\beta_k\\mathbf{b}_k = \\mathbf{0} \\;\\Rightarrow\\; \\mathbf{z}^* = \\frac{\\sum_k\\beta_k\\mathbf{b}_k}{\\sum_k\\beta_k}.$$\nHessian $\\nabla^2F = 2\\big(\\sum_k\\beta_k\\big)I \\succ 0$ since every $\\beta_k > 0$: $F$ is strictly convex, so this stationary point is the **unique global minimum** - the weighted centroid of the $\\mathbf{b}_k$.",
+       "points": [
+        {
+         "text": "Expansion and collecting terms",
+         "marks": 3
+        },
+        {
+         "text": "Correct gradient",
+         "marks": 3
+        },
+        {
+         "text": "Setting to zero → z*",
+         "marks": 3
+        },
+        {
+         "text": "Hessian 2(Σβ)I ≻ 0 ⇒ global min",
+         "marks": 3
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "prompt": "If $\\mathbf{b}_1, \\dots, \\mathbf{b}_m$ ($m \\le n$) are orthonormal, solve $\\max_{\\boldsymbol\\beta}\\ \\sum_k\\beta_k\\|\\mathbf{z}^* - \\mathbf{b}_k\\|_2^2$ s.t. $\\sum_k\\beta_k = 1$, $\\beta_k > 0$.",
+       "answer": "With $\\sum\\beta_k = 1$, $\\mathbf{z}^* = \\sum_k\\beta_k\\mathbf{b}_k$. Orthonormality gives $\\|\\mathbf{z}^*\\|^2 = \\sum_k\\beta_k^2$, $\\mathbf{z}^{*T}\\mathbf{b}_k = \\beta_k$, $\\|\\mathbf{b}_k\\|^2 = 1$. So\n$$\\sum_k\\beta_k\\|\\mathbf{z}^* - \\mathbf{b}_k\\|^2 = \\sum_k\\beta_k\\Big(\\sum_j\\beta_j^2 - 2\\beta_k + 1\\Big) = \\sum_j\\beta_j^2 - 2\\sum_k\\beta_k^2 + 1 = 1 - \\sum_k\\beta_k^2.$$\nMaximising $1 - \\sum\\beta_k^2$ means minimising $\\sum\\beta_k^2$ subject to $\\sum\\beta_k = 1$. Lagrangian $\\sum\\beta_k^2 - \\nu(\\sum\\beta_k - 1)$: $2\\beta_k = \\nu$ for all $k$, so all equal: $\\beta_k^* = 1/m$ (positive ✓). Optimal value $1 - 1/m$.",
+       "points": [
+        {
+         "text": "Uses orthonormality to simplify",
+         "marks": 2
+        },
+        {
+         "text": "Objective = 1 − Σβ²",
+         "marks": 2
+        },
+        {
+         "text": "Lagrange → βₖ = 1/m, value 1 − 1/m",
+         "marks": 2
+        }
+       ]
+      }
+     ],
+     "explain": "For (b), always finish with the Hessian - \"stationary point\" is not \"minimum\" until you have shown convexity."
+    },
+    {
+     "id": "q3",
+     "kind": "long",
+     "marks": 25,
+     "lab": "KKT · formulation",
+     "prompt": "Question 3. A PCB company makes types A, B and C ($x_A, x_B, x_C$ units) with profit $P = (60x_A + 20x_B(x_B - 10) + 10x_C) \\times 10^3$.\n- One labour hour makes one type A **or** one type B PCB; a type C needs two labour hours. 120 labour hours are allocated and **all** must be used.\n- A type B needs 5 minutes of machine time; A needs twice that and C three times. 950 machine units are available and **all** must be used.\n- Type A costs Rs 30 000; B costs half of A; C costs one third of B. The budget is Rs 2.5 × 10⁶.",
+     "parts": [
+      {
+       "label": "i",
+       "marks": 5,
+       "prompt": "Formulate the optimisation problem. All three types must be manufactured.",
+       "answer": "Variables $x_A, x_B, x_C$. Costs: A 30 000, B 15 000, C 5 000 Rs. Machine time per unit: A 10, B 5, C 15 minutes.\n\n*Assumption:* the 950 machine \"hours\" must be **minutes** - with at most 120 labour hours of production the machines can never use 950 hours (at most 60 type C × 15 min = 15 h), so the constraint is read as 950 minutes.\n$$\\begin{aligned} \\max_{x_A, x_B, x_C}\\quad & P = \\big(60x_A + 20x_B^2 - 200x_B + 10x_C\\big)\\times 10^3\\\\ \\text{s.t.}\\quad & x_A + x_B + 2x_C = 120 && \\text{(labour)}\\\\ & 10x_A + 5x_B + 15x_C = 950 && \\text{(machine)}\\\\ & 30\\,000x_A + 15\\,000x_B + 5\\,000x_C \\le 2.5\\times10^6 \\iff 6x_A + 3x_B + x_C \\le 500 && \\text{(budget)}\\\\ & x_A, x_B, x_C \\ge 1 \\ \\text{(all types made; integers)}. \\end{aligned}$$",
+       "points": [
+        {
+         "text": "Objective",
+         "marks": 1
+        },
+        {
+         "text": "Labour equality",
+         "marks": 1
+        },
+        {
+         "text": "Machine equality (unit assumption stated)",
+         "marks": 1
+        },
+        {
+         "text": "Budget inequality",
+         "marks": 1
+        },
+        {
+         "text": "Positivity / all types",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "ii",
+       "marks": 5,
+       "prompt": "Write the Lagrangian and the KKT conditions (primal feasibility, dual feasibility, complementary slackness).",
+       "answer": "Write it as a minimisation of $f = -P/10^3$ (drop the constant scale). With $h_1 = x_A + x_B + 2x_C - 120$, $h_2 = 10x_A + 5x_B + 15x_C - 950$, $g = 6x_A + 3x_B + x_C - 500$:\n$$\\mathcal L = -(60x_A + 20x_B^2 - 200x_B + 10x_C) + \\lambda_1h_1 + \\lambda_2h_2 + \\mu g.$$\n**Stationarity:** $-60 + \\lambda_1 + 10\\lambda_2 + 6\\mu = 0$; $-(40x_B - 200) + \\lambda_1 + 5\\lambda_2 + 3\\mu = 0$; $-10 + 2\\lambda_1 + 15\\lambda_2 + \\mu = 0$.\n**Primal feasibility:** $h_1 = 0$, $h_2 = 0$, $g \\le 0$. **Dual feasibility:** $\\mu \\ge 0$ ($\\lambda_1, \\lambda_2$ free). **Complementary slackness:** $\\mu g = 0$.",
+       "points": [
+        {
+         "text": "Lagrangian with signs right (min −P)",
+         "marks": 2
+        },
+        {
+         "text": "Three stationarity equations",
+         "marks": 1.5
+        },
+        {
+         "text": "Primal, dual feasibility, complementary slackness",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "iii",
+       "marks": 10,
+       "prompt": "Use the KKT conditions to find $x_A, x_B, x_C$ that maximise profit (ignore non-negativity).",
+       "answer": "**Use the equalities first.** Machine − 10 × labour: $-5x_B - 5x_C = -250 \\Rightarrow x_C = 50 - x_B$; then $x_A = 120 - x_B - 2x_C = 20 + x_B$. On this line\n$$P/10^3 = 60(20 + x_B) + 20x_B^2 - 200x_B + 10(50 - x_B) = 20x_B^2 - 150x_B + 1700,$$\na **convex** parabola in $x_B$ - so the maximum is at an end of the allowed range, not at the stationary point. Budget: $6(20 + x_B) + 3x_B + (50 - x_B) = 170 + 8x_B \\le 500 \\Rightarrow x_B \\le 41.25$.\n\n**Case μ = 0** (budget slack): stationarity reduces to $\\tfrac{d}{dx_B}(-P) = 0 \\Rightarrow x_B = 3.75$ (λ₁ = −160, λ₂ = 22). A KKT point - but it is the profit **minimum** (P = 1418.75 × 10³); reject.\n\n**Case μ > 0** (budget active): $x_B = 41.25$, $x_A = 61.25$, $x_C = 8.75$. Stationarity with $40x_B - 200 = 1450$:\n$$\\lambda_1 + 10\\lambda_2 + 6\\mu = 60,\\quad \\lambda_1 + 5\\lambda_2 + 3\\mu = 1450,\\quad 2\\lambda_1 + 15\\lambda_2 + \\mu = 10$$\ngives $\\lambda_1 = 2840$, $\\lambda_2 = -390.5$, $\\mu = 187.5 \\ge 0$ ✓ - all KKT conditions hold.\n\n**Optimum:** $x_A = 61.25$, $x_B = 41.25$, $x_C = 8.75$, $P = 29\\,543.75 \\times 10^3$ Rs. As whole PCBs: $x_B = 41$, $x_A = 61$, $x_C = 9$ (budget 498 ≤ 500 ✓), $P = 29\\,170 \\times 10^3$ Rs.",
+       "points": [
+        {
+         "text": "Eliminate to x_C = 50 − x_B, x_A = 20 + x_B",
+         "marks": 2
+        },
+        {
+         "text": "Profit as convex quadratic in x_B",
+         "marks": 1.5
+        },
+        {
+         "text": "Budget bound x_B ≤ 41.25",
+         "marks": 1.5
+        },
+        {
+         "text": "μ = 0 case found and rejected (minimum)",
+         "marks": 2
+        },
+        {
+         "text": "μ > 0 case: multipliers, μ = 187.5 ≥ 0",
+         "marks": 2
+        },
+        {
+         "text": "Final values and profit",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "iv",
+       "marks": 5,
+       "prompt": "If only one type of PCB is made, which type maximises profit?",
+       "answer": "With one type, the two equalities cannot both hold (A alone needs 120 labour h but then 1200 machine min ≠ 950), so treat labour, machine and budget as **upper limits**:\n- **A only:** $x_A \\le 120$ (labour), $\\le 95$ (machine), $\\le 83.3$ (budget) → 83 units, $P = 60 \\times 83 = 4\\,980 \\times 10^3$.\n- **B only:** $x_B \\le 120$, $\\le 190$, $\\le 166.7$ → 120 units, $P = 20 \\times 120 \\times 110 = 264\\,000 \\times 10^3$.\n- **C only:** $2x_C \\le 120 \\Rightarrow 60$, $\\le 63.3$, $\\le 500$ → 60 units, $P = 600 \\times 10^3$.\n\n**Type B** - its profit grows quadratically ($20x_B(x_B - 10)$), so it dominates at volume.",
+       "points": [
+        {
+         "text": "States equalities relaxed to limits",
+         "marks": 1
+        },
+        {
+         "text": "Each type: binding limit and profit",
+         "marks": 3
+        },
+        {
+         "text": "Conclusion B",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "Part (iii) is where most marks go: show the second case. A KKT point is only a candidate - with a convex objective in a maximisation the interior KKT point is the worst choice."
+    },
+    {
+     "id": "q4",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Gradient descent · cross-entropy",
+     "prompt": "Question 4.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 15,
+       "prompt": "Consider $\\min_{\\mathbf{x}} f = \\tfrac12\\mathbf{a}^T\\tilde{\\mathbf{x}}$ with $\\tilde{\\mathbf{x}} = [x_1^2, x_2^2, x_3^2]^T$ and $\\mathbf{a} = [a_1, a_2, a_3]^T$.\n(i) Gradient descent with step size α: write $x_1^{(k+1)}, x_2^{(k+1)}, x_3^{(k+1)}$. **[5]**\n(ii) Compute the rate of change $(x_i^{(k+1)} - x_i^{(k)})/x_i^{(k)}$. **[3]**\n(iii) With $a_1 = 10^{-4}$, $a_2 = a_3 = 1$ and $\\mathbf{x}^{(0)} = [5, 5, 5]^T$, comment on the progress of gradient descent. **[5]**\n(iv) Propose two first-order methods that perform better here. **[2]**",
+       "answer": "**(i)** $f = \\tfrac12(a_1x_1^2 + a_2x_2^2 + a_3x_3^2)$, so $\\partial f/\\partial x_i = a_ix_i$ and\n$$x_i^{(k+1)} = x_i^{(k)} - \\alpha a_ix_i^{(k)} = (1 - \\alpha a_i)\\,x_i^{(k)},\\quad i = 1, 2, 3.$$\n\n**(ii)** $\\dfrac{x_i^{(k+1)} - x_i^{(k)}}{x_i^{(k)}} = -\\alpha a_i$ - each coordinate shrinks geometrically by its own factor $(1 - \\alpha a_i)$.\n\n**(iii)** Stability needs $\\lvert 1 - \\alpha a_i\\rvert < 1$ for all $i$, i.e. $\\alpha < 2/\\max a_i = 2$. With α ≈ 1, $x_2, x_3$ reach 0 almost at once, but $x_1$ only shrinks by a factor $1 - 10^{-4}$ per step: to bring $x_1$ from 5 to $10^{-3}$ needs $k \\approx \\ln(5/10^{-3})/10^{-4} \\approx 85\\,000$ iterations. The problem is **ill-conditioned** (condition number $a_{max}/a_{min} = 10^4$): one step size cannot suit both the steep ($x_2, x_3$) and the flat ($x_1$) directions, and choosing α > 2 to speed up $x_1$ makes $x_2, x_3$ diverge. Progress towards the global minimum (0, 0, 0) is extremely slow.\n\n**(iv)** Any two of: **momentum** / **Nesterov momentum** (accumulate speed along the consistently flat $x_1$ direction); **Adagrad**, **RMSProp** or **Adam** (per-coordinate step sizes - divide by the gradient history, so the tiny-gradient $x_1$ gets a large effective step).",
+       "points": [
+        {
+         "text": "Gradient a_i x_i",
+         "marks": 1.5
+        },
+        {
+         "text": "Update (1 − αa_i)x_i for all three",
+         "marks": 3.5
+        },
+        {
+         "text": "Rate −αa_i",
+         "marks": 3
+        },
+        {
+         "text": "Stability α < 2",
+         "marks": 1
+        },
+        {
+         "text": "x₁ factor 1 − 10⁻⁴: very slow (~10⁵ steps)",
+         "marks": 2
+        },
+        {
+         "text": "Ill-conditioning explanation",
+         "marks": 2
+        },
+        {
+         "text": "Two suitable methods",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 10,
+       "prompt": "Five samples drawn from a multivariate normal are used by the cross-entropy method to **maximise** $f(\\mathbf{x}) = 5x_1^2 - x_2^2$:\n\n| i | 1 | 2 | 3 | 4 | 5 |\n|---|---|---|---|---|---|\n| $x_{1,i}$ | 4 | 8 | 6 | 10 | 12 |\n| $x_{2,i}$ | 5 | 25 | 15 | 10 | 0 |\n\n(i) Which three elite samples are used, and why? **[2]** (ii) Compute the mean vector and covariance matrix for the next iteration. **[8]**",
+       "answer": "**(i)** $f$ values: 55, −305, −45, 400, 720. For maximisation the elites are the three **largest**: samples **5 (720), 4 (400) and 1 (55)**.\n\n**(ii)** Maximum-likelihood refit on the elites $\\{(12, 0), (10, 10), (4, 5)\\}$:\n$$\\boldsymbol\\mu = \\tfrac13\\big[(12 + 10 + 4),\\ (0 + 10 + 5)\\big] = [8.667,\\ 5]^T.$$\nDeviations $\\mathbf{x} - \\boldsymbol\\mu$: (3.333, −5), (1.333, 5), (−4.667, 0).\n$$\\Sigma = \\frac13\\sum(\\mathbf{x} - \\boldsymbol\\mu)(\\mathbf{x} - \\boldsymbol\\mu)^T = \\frac13\\begin{bmatrix}11.11 + 1.78 + 21.78 & -16.67 + 6.67 + 0\\\\ \\cdot & 25 + 25 + 0\\end{bmatrix} = \\begin{bmatrix}11.56 & -3.33\\\\ -3.33 & 16.67\\end{bmatrix}.$$\n(Dividing by $m - 1 = 2$ instead - the unbiased estimate - gives [[17.33, −5], [−5, 25]]; the course's ML refit uses $1/m$.)",
+       "points": [
+        {
+         "text": "f values",
+         "marks": 1
+        },
+        {
+         "text": "Elites 5, 4, 1 with reason",
+         "marks": 1
+        },
+        {
+         "text": "Mean vector",
+         "marks": 2
+        },
+        {
+         "text": "Deviations",
+         "marks": 2
+        },
+        {
+         "text": "Covariance entries",
+         "marks": 3
+        },
+        {
+         "text": "Symmetric matrix stated",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "For CE always check the direction: these notes minimise by default, but this question maximises - pick the largest f."
+    }
+   ]
+  }
+ ]
+}

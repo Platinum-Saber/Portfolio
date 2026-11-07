@@ -1,0 +1,669 @@
+{
+ "title": "Mock paper 1",
+ "minutes": 120,
+ "intro": "**120 minutes · 100 marks.** Same structure as the final paper:\n\n| Section | Marks | What |\n|---|---|---|\n| A - MCQ | 50 | 3 scenarios × 5 questions, then 10 theory questions (2 marks each) |\n| B - Code-based | 40 | 8 questions × 5: fill the gaps, arrange the lines, spot the bug |\n| C - Full code | 10 | One complete program, self-marked against a rubric |\n\nFill-the-gap and arrange questions earn partial credit; MCQs and spot-the-line are all or nothing. You can flag questions and come back. Answers save in this browser as you go.",
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A - MCQ",
+   "blurb": "Each scenario describes a program and what was observed when it ran; five questions follow it. Questions 16–25 are on the theory. 2 marks each, one answer is correct.",
+   "scenarios": [
+    {
+     "id": "s1",
+     "title": "Scenario 1 · Ticket counter",
+     "text": "An event-booking service counts ticket sales in a shared variable. Each of four seller threads records 100 000 sales:\n\n```c\nlong sold = 0;\npthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;\n\nvoid *seller(void *arg) {\n    int id = *(int *)arg;\n    printf(\"seller %d starting\\n\", id);\n    for (int i = 0; i < 100000; i++)\n        sold++;                                /* version A */\n    return NULL;\n}\n\nint main(void) {\n    pthread_t t[4];\n    for (int i = 0; i < 4; i++)\n        pthread_create(&t[i], NULL, seller, &i);\n    for (int i = 0; i < 4; i++)\n        pthread_join(t[i], NULL);\n    printf(\"sold = %ld\\n\", sold);\n}\n```\n\nTwo alternatives were also written. **Version B** wraps every `sold++` in `pthread_mutex_lock(&m)` / `unlock`. **Version C** counts in a local variable and adds it to `sold` once, under the mutex, after the loop. Measured on a 4-core machine, compiled with `gcc -O0 -pthread`:\n\n| Version | Printed `sold` over five runs | Time |\n|---|---|---|\n| A | 271 904 · 312 477 · 288 015 · 301 552 · 266 830 | 0.002 s |\n| B | 400 000 every run | 0.041 s |\n| C | 400 000 every run | 0.0004 s |\n\nThe start-up lines sometimes read `seller 2 starting` twice and never `seller 0 starting`."
+    },
+    {
+     "id": "s2",
+     "title": "Scenario 2 · Print spooler",
+     "text": "A print spooler shares a circular queue of capacity 8 between 3 workstation threads (producers) and 2 printer threads (consumers). One mutex `m` and **one** condition variable `changed` are used:\n\n```c\nvoid submit(job_t j) {\n    pthread_mutex_lock(&m);\n    if (count == CAP)\n        pthread_cond_wait(&changed, &m);\n    queue[tail] = j;  tail = (tail + 1) % CAP;  count++;\n    pthread_cond_signal(&changed);\n    pthread_mutex_unlock(&m);\n}\n\njob_t take(void) {\n    pthread_mutex_lock(&m);\n    if (count == 0)\n        pthread_cond_wait(&changed, &m);\n    job_t j = queue[head];  head = (head + 1) % CAP;  count--;\n    pthread_cond_signal(&changed);\n    pthread_mutex_unlock(&m);\n    return j;\n}\n```\n\nAt the end each workstation submits one special `STOP` job; a printer exits when it takes a `STOP` job. In testing, two problems appear rarely: a printer occasionally prints a garbage job, and once the whole system froze with the queue full and every thread blocked."
+    },
+    {
+     "id": "s3",
+     "title": "Scenario 3 · Photo filter in OpenMP",
+     "text": "A photo tool processes an image of `H` rows on a 4-core machine (compiled with `gcc -fopenmp -O0`):\n\n```c\n// Loop 1 - blur: every row costs the same\n#pragma omp parallel for\nfor (int r = 0; r < H; r++) blur_row(r);\n\n// Loop 2 - count bright pixels\nint bright = 0;\n#pragma omp parallel for\nfor (int i = 0; i < N; i++)\n    if (img[i] > 200) bright++;\n\n// Loop 3 - fractal preview: rows near the middle take ~50x longer than edge rows\n#pragma omp parallel for schedule(static)\nfor (int r = 0; r < H; r++) render_row(r);\n\n// Debug print\nint level = 5;\n#pragma omp parallel private(level)\nprintf(\"level = %d\\n\", level);\n```\n\nLoop 2 prints a different, too-small `bright` on every run. Three fixes were timed with 4 threads: `#pragma omp critical` 0.31 s, `#pragma omp atomic` 0.12 s, `reduction(+:bright)` 0.015 s. Loop 3 takes almost as long with 4 threads as with 1."
+    }
+   ],
+   "questions": [
+    {
+     "id": "a1",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Race conditions",
+     "prompt": "Why does version A print a different value below 400 000 on every run?",
+     "options": [
+      "At `-O0` the compiler drops some loop iterations",
+      "`long` is too small to hold 400 000 on a 64-bit machine",
+      "`printf` inside the threads delays some sellers so they finish after `main` prints",
+      "`sold++` is a load, an add and a store; two threads can load the same value and both store value + 1, so one increment is lost"
+     ],
+     "answer": 3,
+     "explain": "A read-modify-write on shared memory is not atomic. Overlapping load–store windows lose updates; how many depends on the interleaving, so the total changes from run to run.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a2",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Mutex contention",
+     "prompt": "Versions B and C are both correct. Why is C about 100 times faster than B?",
+     "options": [
+      "C makes 4 lock/unlock calls in total, B makes 400 000 on one contended mutex, serialising the loop and bouncing the lock between cores",
+      "C uses more threads than B",
+      "The mutex in B is a spin lock, which is always slower than a sleep lock",
+      "B is compiled without optimisation and C with optimisation"
+     ],
+     "answer": 0,
+     "explain": "Shrink the critical section and lock rarely: private accumulation followed by one combine. OpenMP `reduction` and split counters are the same idea.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a3",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Thread arguments",
+     "prompt": "Why do the start-up lines sometimes show the same seller id twice and never id 0?",
+     "options": [
+      "`pthread_create` does not start threads in creation order",
+      "Every thread receives the address of the single loop variable `i`, which has usually changed (or reached 4) by the time a thread reads it",
+      "Thread ids are reused once a thread has finished",
+      "`printf` is not thread-safe, so lines get mixed up"
+     ],
+     "answer": 1,
+     "explain": "Pass the value, not the address: `(void *)(intptr_t)i`, or a separate array slot per thread.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a4",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Deadlock",
+     "prompt": "In version B a developer deletes the `pthread_mutex_unlock(&m)` line. What happens?",
+     "options": [
+      "The total is still correct but the program is slower",
+      "The program crashes with a segmentation fault",
+      "The first thread increments once, then blocks re-locking the mutex it already holds; every other thread blocks too and the program hangs",
+      "The program runs normally because the mutex is released when the loop iteration ends"
+     ],
+     "answer": 2,
+     "explain": "A default mutex is not recursive: re-locking it from the owning thread blocks forever. All other threads wait on the same lock - the process sits at 0 % CPU.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a5",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Compiler effects",
+     "prompt": "Version A is rebuilt with `-O2` and now prints 400 000 every time. What is the right conclusion?",
+     "options": [
+      "The program is now correct and needs no lock",
+      "`-O2` makes `sold++` an atomic instruction",
+      "The race is still there; the optimiser turned the loop into a single `sold += 100000`, so the race window became tiny",
+      "With optimisation the threads run one after another"
+     ],
+     "answer": 2,
+     "explain": "Passing a test is not proof of correctness. With `-O0` or `volatile` the lost updates return.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a6",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Condition variables",
+     "prompt": "What is the most likely cause of a printer \"printing a garbage job\"?",
+     "options": [
+      "The waits use `if`, so a printer that wakes up (spuriously, or after another printer took the job) does not re-check `count == 0` and reads an empty slot",
+      "The queue capacity of 8 is too small",
+      "`pthread_cond_signal` was called while holding the mutex",
+      "The modulo arithmetic on `head` is wrong"
+     ],
+     "answer": 0,
+     "explain": "Pthreads condition variables are Mesa-style and allow spurious wake-ups. Always wait in a `while` loop that re-tests the predicate.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a7",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Lost wake-up",
+     "prompt": "The freeze with a full queue and everyone blocked is best explained by:",
+     "options": [
+      "The `STOP` jobs arrived before the normal jobs",
+      "With one condition variable, a printer's `signal` woke another printer or a workstation instead of a waiting one that could proceed, so the useful waiter slept on (a lost wake-up)",
+      "A deadlock caused by two mutexes taken in different orders",
+      "The queue indices overflowed"
+     ],
+     "answer": 1,
+     "explain": "Use two condition variables (`not_full`, `not_empty`) so a signal always reaches a thread that can act on it - or use `broadcast` with `while` loops.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a8",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Shutdown",
+     "prompt": "The spooler is reconfigured with **4 printers** but still 3 workstations, each sending one `STOP`. What happens at shutdown?",
+     "options": [
+      "Three printers exit; the fourth blocks for ever in `take()` on an empty queue, so `main` never returns from joining it",
+      "All four printers exit normally",
+      "The workstations block because the queue is full of `STOP` jobs",
+      "One printer prints a `STOP` job as if it were a document"
+     ],
+     "answer": 0,
+     "explain": "Every consumer needs its own termination signal: send one `STOP` per printer (or have each printer count `STOP`s from every producer).",
+     "scenario": "s2"
+    },
+    {
+     "id": "a9",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Ordering",
+     "prompt": "Which ordering guarantee does the spooler give?",
+     "options": [
+      "Jobs leave the queue in the order they were inserted, but with two printers two jobs from one workstation can finish printing in either order",
+      "Jobs from different workstations are never interleaved",
+      "Jobs always finish printing in the order they were submitted",
+      "There is no ordering at all, even for removal from the queue"
+     ],
+     "answer": 0,
+     "explain": "A FIFO queue orders removal, not completion. Once two consumers work in parallel, finishing order depends on scheduling.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a10",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Bounded buffer",
+     "prompt": "The queue capacity is changed from 8 to 1. Which statement is true?",
+     "options": [
+      "Jobs are taken out of order",
+      "It deadlocks immediately because `head == tail`",
+      "Printers can now take the same job twice",
+      "It is still correct, but producers and consumers now alternate in lock-step, causing many more waits and context switches and lower throughput"
+     ],
+     "answer": 3,
+     "explain": "Correctness does not depend on the capacity; a larger buffer only absorbs bursts so the two sides block less often.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a11",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Data races in OpenMP",
+     "prompt": "What is the best fix for loop 2, and why?",
+     "options": [
+      "Declare `bright` as `private`",
+      "`#pragma omp critical` around `bright++`, because it is the most general",
+      "`schedule(dynamic)`, so threads do not collide",
+      "`reduction(+:bright)`: each thread counts privately and the copies are combined once at the end"
+     ],
+     "answer": 3,
+     "explain": "`private` would throw the per-thread counts away; critical and atomic are correct but pay a synchronisation per hit (0.31 s and 0.12 s vs 0.015 s).",
+     "scenario": "s3"
+    },
+    {
+     "id": "a12",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "OpenMP synchronisation",
+     "prompt": "Why is `atomic` (0.12 s) faster than `critical` (0.31 s) but still much slower than `reduction`?",
+     "options": [
+      "Atomic runs the loop on fewer threads",
+      "Critical sections are disabled at `-O0`",
+      "Atomic is a single hardware read-modify-write instead of a lock acquire/release, but every hit still contends for the same cache line; reduction has no shared writes inside the loop",
+      "Reduction uses the GPU"
+     ],
+     "answer": 2,
+     "explain": "Cost order: critical (lock per hit) > atomic (contended atomic instruction per hit) > reduction (private work, one combine).",
+     "scenario": "s3"
+    },
+    {
+     "id": "a13",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Loop scheduling",
+     "prompt": "Why does loop 3 barely speed up, and what should change?",
+     "options": [
+      "Rows must be processed in order, so the loop cannot be parallelised",
+      "Static scheduling gives each thread a contiguous block of rows; the threads owning the expensive middle rows finish last while the others idle. Use `schedule(dynamic)` (or `guided`)",
+      "The loop has a data race; add `reduction`",
+      "Four threads are too few; use 64 threads"
+     ],
+     "answer": 1,
+     "explain": "Load imbalance. Dynamic scheduling hands out rows (or small chunks) to whichever thread is free, at the cost of a shared counter per chunk.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a14",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Loop scheduling",
+     "prompt": "Loop 1 is switched from the default schedule to `schedule(dynamic, 1)`. What is the most likely effect?",
+     "options": [
+      "Wrong output, because rows are processed out of order",
+      "No gain, possibly slightly slower: the rows already cost the same, so static was balanced and dynamic only adds scheduling overhead",
+      "The program deadlocks at the implicit barrier",
+      "About 4 times faster, because dynamic is always better"
+     ],
+     "answer": 1,
+     "explain": "Dynamic scheduling pays off only when iteration costs vary.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a15",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Data sharing",
+     "prompt": "What do the debug lines print?",
+     "options": [
+      "`level = 0` in every thread",
+      "`level = 5` in every thread",
+      "An indeterminate value in each thread - a `private` copy is uninitialised; `firstprivate(level)` would print 5",
+      "The thread number in each thread"
+     ],
+     "answer": 2,
+     "explain": "`private` creates a new uninitialised variable per thread (GCC warns about it). After the region, the original `level` is still 5.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a16",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Amdahl's law",
+     "prompt": "90 % of a program can be parallelised perfectly. What is the best possible speedup on 8 cores, and on unlimited cores?",
+     "options": [
+      "About 7.2× on 8 cores; 90× at most",
+      "Exactly 8× on 8 cores; unlimited otherwise",
+      "About 4.7× on 8 cores; unlimited otherwise",
+      "About 4.7× on 8 cores; 10× at most"
+     ],
+     "answer": 3,
+     "explain": "$S(8) = 1/(0.1 + 0.9/8) = 1/0.2125 \\approx 4.7$; the ceiling is $1/(1 - p) = 10$."
+    },
+    {
+     "id": "a17",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Interleavings",
+     "prompt": "Two processes each execute 3 atomic actions. How many different interleavings are possible?",
+     "options": [
+      "720",
+      "20",
+      "9",
+      "6"
+     ],
+     "answer": 1,
+     "explain": "$(nm)!/(m!)^n = 6!/(3!\\,3!) = 20$."
+    },
+    {
+     "id": "a18",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Work and span",
+     "prompt": "A computation has work $T_1 = 1000$ and span $T_\\infty = 50$. What is the best lower bound on $T_{40}$?",
+     "options": [
+      "20",
+      "1000/40 + 50 = 75",
+      "25",
+      "50"
+     ],
+     "answer": 3,
+     "explain": "Work law $T_P \\ge T_1/P = 25$, span law $T_P \\ge T_\\infty = 50$; the bound is the larger, 50. Parallelism $T_1/T_\\infty = 20$ - more than 20 processors cannot help."
+    },
+    {
+     "id": "a19",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Mutual exclusion",
+     "prompt": "In Peterson's algorithm, both processes set their flag and then write `victim`. Which process enters if both arrive together?",
+     "options": [
+      "The one that did NOT write `victim` last",
+      "The one that wrote `victim` last",
+      "Neither - they deadlock",
+      "The one with the lower id"
+     ],
+     "answer": 0,
+     "explain": "Each writes `victim = me` (\"you go first\"). Whoever writes last sees its own id and waits; the other proceeds."
+    },
+    {
+     "id": "a20",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Mutual exclusion attempts",
+     "prompt": "Two processes each \"test the other's flag, then set my own flag\" before entering. Which property fails?",
+     "options": [
+      "Mutual exclusion - both can test before either sets, and both enter",
+      "Deadlock freedom - both wait for ever",
+      "Nothing fails; it is correct",
+      "Livelock freedom - both keep backing off"
+     ],
+     "answer": 0,
+     "explain": "The test and the set are separate steps; the interleaving test, test, set, set lets both in."
+    },
+    {
+     "id": "a21",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Deadlock",
+     "prompt": "Making every thread acquire locks in one global order prevents deadlock by removing which condition?",
+     "options": [
+      "Mutual exclusion",
+      "No pre-emption",
+      "Circular wait",
+      "Hold and wait"
+     ],
+     "answer": 2,
+     "explain": "With a global order, a chain of waiting threads can never close into a cycle."
+    },
+    {
+     "id": "a22",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Semaphores",
+     "prompt": "A semaphore initialised to 1 protects a critical section. Which invariant proves mutual exclusion?",
+     "options": [
+      "$S \\le 0$ whenever a process is in the CS and $S = 2$ otherwise",
+      "$\\#\\text{wait} = \\#\\text{post}$ at all times",
+      "$S = \\#\\text{wait} + \\#\\text{post}$",
+      "$S + \\#\\text{(processes in CS)} = 1$ with $S \\ge 0$"
+     ],
+     "answer": 3,
+     "explain": "From $S = S_0 + \\#\\text{post} - \\#\\text{wait}$ and $\\#CS = \\#\\text{wait} - \\#\\text{post}$: $S + \\#CS = 1$, and $S \\ge 0$ gives $\\#CS \\le 1$."
+    },
+    {
+     "id": "a23",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Monitors",
+     "prompt": "Pthreads and Java monitors use signal-and-continue (Mesa) semantics. What must a waiting thread do as a result?",
+     "options": [
+      "Call `signal` before it waits",
+      "Release the monitor lock before calling `wait`",
+      "Re-check its condition in a `while` loop after waking",
+      "Nothing - the condition is guaranteed true on wake-up"
+     ],
+     "answer": 2,
+     "explain": "The signaller keeps running; another thread may change the state before the waiter re-acquires the lock."
+    },
+    {
+     "id": "a24",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Architectures",
+     "prompt": "Under Flynn's taxonomy, a GPU running one kernel over thousands of data elements is best described as:",
+     "options": [
+      "SISD",
+      "SIMD (NVIDIA calls it SIMT: warps of threads execute one instruction together)",
+      "MISD",
+      "MIMD with shared caches"
+     ],
+     "answer": 1,
+     "explain": "One instruction stream applied to many data elements, in lock-step within a warp."
+    },
+    {
+     "id": "a25",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Progress conditions",
+     "prompt": "An increment written as a compare-and-swap retry loop is:",
+     "options": [
+      "Lock-free but not wait-free",
+      "Neither lock-free nor obstruction-free",
+      "Blocking",
+      "Wait-free"
+     ],
+     "answer": 0,
+     "explain": "A CAS fails only because another thread's CAS succeeded - the system progresses - but one unlucky thread can retry without bound."
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B - Code-based",
+   "blurb": "8 questions, 5 marks each. Choose the missing lines, drag the lines into order (or use the arrows), or click the faulty line(s).",
+   "questions": [
+    {
+     "id": "b1",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "Condition variables",
+     "prompt": "Complete `put()` of a bounded buffer protected by one mutex and two condition variables.",
+     "code": "void put(int item) {\n    pthread_mutex_lock(&mutex);\n    ⟦1⟧ (count == BUFFER_SIZE)\n        pthread_cond_wait(⟦2⟧, &mutex);\n    buffer[tail] = item;\n    tail = ⟦3⟧;\n    count++;\n    pthread_cond_signal(⟦4⟧);\n    pthread_mutex_unlock(&mutex);\n}",
+     "blanks": [
+      {
+       "options": [
+        "if",
+        "while",
+        "for",
+        "do"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "&not_empty",
+        "&not_full",
+        "&mutex",
+        "NULL"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "tail + 1",
+        "(tail + 1) % BUFFER_SIZE",
+        "(head + 1) % BUFFER_SIZE",
+        "count"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "&not_full",
+        "&mutex",
+        "&not_empty",
+        "&cond"
+       ],
+       "answer": 2
+      }
+     ],
+     "explain": "Wait in a `while` on `not_full`; advance `tail` circularly; then signal `not_empty`, the condition the consumer waits on."
+    },
+    {
+     "id": "b2",
+     "kind": "order",
+     "marks": 5,
+     "lab": "Condition variables",
+     "prompt": "Arrange `get()` of the bounded buffer in a correct order.",
+     "lines": [
+      "int get(void) {",
+      "    pthread_mutex_lock(&mutex);",
+      "    while (count == 0) pthread_cond_wait(&not_empty, &mutex);",
+      "    int item = buffer[head];",
+      "    head = (head + 1) % BUFFER_SIZE; count--;",
+      "    pthread_cond_signal(&not_full);",
+      "    pthread_mutex_unlock(&mutex);",
+      "    return item;",
+      "}"
+     ],
+     "explain": "Lock, wait while empty, take the item, update head and count, wake a producer, unlock, return. Returning before unlocking would leave the mutex locked forever."
+    },
+    {
+     "id": "b3",
+     "kind": "spot",
+     "marks": 5,
+     "lab": "Mutex contention",
+     "prompt": "This thread function is meant to count in a local variable and add to the shared `counter` once, under the lock. Click the line(s) that make it pointlessly slow.",
+     "code": "void *increment_local(void *arg) {\n    long local = 0;\n    for (int i = 0; i < M; i++) {\n        pthread_mutex_lock(&mutex);\n        local++;\n        pthread_mutex_unlock(&mutex);\n    }\n    pthread_mutex_lock(&mutex);\n    counter += local;\n    pthread_mutex_unlock(&mutex);\n    return NULL;\n}",
+     "answer": [
+      4,
+      6
+     ],
+     "explain": "`local` is private to the thread - locking around `local++` (lines 4 and 6) protects nothing and brings back the contention of locking every single increment. Only the final `counter += local` needs the lock."
+    },
+    {
+     "id": "b4",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "OpenMP",
+     "prompt": "Complete this OpenMP Monte Carlo estimate of π with a reduction and a private random seed.",
+     "code": "int count = 0;\n#pragma omp parallel ⟦1⟧\n{\n    unsigned int seed = ⟦2⟧;\n    #pragma omp for\n    for (int i = 0; i < NUM_DARTS; i++) {\n        double x = (double)⟦3⟧ / RAND_MAX;\n        double y = (double)⟦3⟧ / RAND_MAX;\n        if (x * x + y * y <= 1.0) count++;\n    }\n}\ndouble pi = 4.0 * count / NUM_DARTS;",
+     "blanks": [
+      {
+       "options": [
+        "shared(count)",
+        "private(count)",
+        "reduction(+:count)",
+        "firstprivate(count)"
+       ],
+       "answer": 2
+      },
+      {
+       "options": [
+        "42",
+        "42 + omp_get_thread_num()",
+        "omp_get_num_threads()",
+        "rand()"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "rand()",
+        "rand_r(&seed)",
+        "rand_r(seed)",
+        "random()"
+       ],
+       "answer": 1
+      }
+     ],
+     "explain": "`reduction(+:count)` gives each thread a private zeroed `count` and sums them at the end. The seed must differ per thread and live inside the region; `rand_r` takes a pointer to it."
+    },
+    {
+     "id": "b5",
+     "kind": "spot",
+     "marks": 5,
+     "lab": "Barriers",
+     "prompt": "The two-phase reusable barrier below has one wrong line. Click it.",
+     "code": "void barrier_wait(barrier_t *b) {\n    sem_wait(&b->mutex);\n    if (++b->count == b->n) { sem_wait(&b->t2); sem_post(&b->t1); }\n    sem_post(&b->mutex);\n    sem_wait(&b->t1); sem_post(&b->t1);\n\n    sem_wait(&b->mutex);\n    if (--b->count == 0) { sem_wait(&b->t1); sem_post(&b->t1); }\n    sem_post(&b->mutex);\n    sem_wait(&b->t2); sem_post(&b->t2);\n}",
+     "answer": [
+      8
+     ],
+     "explain": "The last thread out of phase 1 must close turnstile 1 and **open turnstile 2**: `sem_wait(&b->t1); sem_post(&b->t2);`. Line 8 posts t1 again, so t2 never opens and every thread blocks on line 10."
+    },
+    {
+     "id": "b6",
+     "kind": "order",
+     "marks": 5,
+     "lab": "Lock-free",
+     "prompt": "Arrange a lock-free compare-and-swap increment loop in order.",
+     "lines": [
+      "void *inc_cas(void *arg) {",
+      "    for (int i = 0; i < NUM_INCREMENTS; i++) {",
+      "        long old;",
+      "        do {",
+      "            old = counter;",
+      "        } while (!__sync_bool_compare_and_swap(&counter, old, old + 1));",
+      "    }",
+      "    return NULL; }"
+     ],
+     "explain": "Read the current value, try to swap in old+1; if another thread changed `counter` in between, the CAS fails and the loop re-reads. Lock-free, not wait-free."
+    },
+    {
+     "id": "b7",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "Fine-grained locking",
+     "prompt": "Complete the hand-over-hand `fine_contains` (sentinel head node with key `INT_MIN`).",
+     "code": "int fine_contains(list_t *l, int key) {\n    node_t *pred = l->head;\n    pthread_mutex_lock(&pred->lock);\n    node_t *curr = pred->next;\n    while (curr) {\n        ⟦1⟧;\n        if (curr->key >= key) break;\n        ⟦2⟧;\n        pred = curr;\n        curr = curr->next;\n    }\n    int found = curr && curr->key == key;\n    if (curr) pthread_mutex_unlock(&curr->lock);\n    pthread_mutex_unlock(&pred->lock);\n    return found;\n}",
+     "blanks": [
+      {
+       "options": [
+        "pthread_mutex_lock(&curr->lock)",
+        "pthread_mutex_unlock(&pred->lock)",
+        "pthread_mutex_lock(&l->global_lock)",
+        "pthread_mutex_lock(&pred->lock)"
+       ],
+       "answer": 0
+      },
+      {
+       "options": [
+        "pthread_mutex_unlock(&curr->lock)",
+        "pthread_mutex_unlock(&pred->lock)",
+        "pthread_mutex_lock(&curr->next->lock)",
+        "pthread_mutex_unlock(&l->global_lock)"
+       ],
+       "answer": 1
+      }
+     ],
+     "explain": "Lock the next node **before** releasing the previous one - that is the hand-over-hand rule. Releasing `pred` first opens a gap where `curr` can be deleted under you."
+    },
+    {
+     "id": "b8",
+     "kind": "order",
+     "marks": 5,
+     "lab": "Thread pools",
+     "prompt": "Arrange a thread-pool worker that grabs the next task index under a mutex.",
+     "lines": [
+      "void *pool_worker(void *arg) {",
+      "    for (;;) {",
+      "        pthread_mutex_lock(&task_mutex);",
+      "        int idx = next_task++;",
+      "        pthread_mutex_unlock(&task_mutex);",
+      "        if (idx >= NUM_TASKS) break;",
+      "        do_task(&tasks[idx]);",
+      "    } return NULL; }"
+     ],
+     "explain": "Take and increment the shared index inside the critical section, release it **before** doing the (long) task, and stop when the index runs past the end. Doing the task while holding the lock would serialise the pool."
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C - Full code",
+   "blurb": "One complete program, 10 marks. After you submit, the model solution and a marking rubric appear - tick what you achieved.",
+   "questions": [
+    {
+     "id": "c1",
+     "kind": "code",
+     "marks": 10,
+     "lab": "Condition variables",
+     "prompt": "Write a complete C program (pthreads) with **one producer and one consumer** sharing a **circular bounded buffer of size 5**.\n\n- The producer puts the integers `0 … N−1` (N from `argv[1]`), then a sentinel `-1`.\n- The consumer prints every item and stops at the sentinel.\n- Use **one mutex and two condition variables**; neither thread may busy-wait.\n- `main` creates both threads, joins them and prints `All items consumed.`",
+     "starter": "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n\n#define BUFFER_SIZE 5\n\n/* shared state */\n\nvoid put(int item) {\n}\n\nint get(void) {\n}\n\nvoid *producer(void *arg) {\n}\n\nvoid *consumer(void *arg) {\n}\n\nint main(int argc, char *argv[]) {\n}\n",
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n\n#define BUFFER_SIZE 5\n\nint buffer[BUFFER_SIZE];\nint head = 0, tail = 0, count = 0;\nint N;\npthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;\npthread_cond_t not_full = PTHREAD_COND_INITIALIZER;\npthread_cond_t not_empty = PTHREAD_COND_INITIALIZER;\n\nvoid put(int item) {\n    pthread_mutex_lock(&mutex);\n    while (count == BUFFER_SIZE)\n        pthread_cond_wait(&not_full, &mutex);\n    buffer[tail] = item;\n    tail = (tail + 1) % BUFFER_SIZE;\n    count++;\n    pthread_cond_signal(&not_empty);\n    pthread_mutex_unlock(&mutex);\n}\n\nint get(void) {\n    pthread_mutex_lock(&mutex);\n    while (count == 0)\n        pthread_cond_wait(&not_empty, &mutex);\n    int item = buffer[head];\n    head = (head + 1) % BUFFER_SIZE;\n    count--;\n    pthread_cond_signal(&not_full);\n    pthread_mutex_unlock(&mutex);\n    return item;\n}\n\nvoid *producer(void *arg) {\n    for (int i = 0; i < N; i++) put(i);\n    put(-1);                       /* sentinel */\n    return NULL;\n}\n\nvoid *consumer(void *arg) {\n    for (;;) {\n        int item = get();\n        if (item == -1) break;\n        printf(\"Consumed: %d\\n\", item);\n    }\n    return NULL;\n}\n\nint main(int argc, char *argv[]) {\n    if (argc != 2) { fprintf(stderr, \"Usage: %s N\\n\", argv[0]); return 1; }\n    N = atoi(argv[1]);\n    pthread_t p, c;\n    pthread_create(&p, NULL, producer, NULL);\n    pthread_create(&c, NULL, consumer, NULL);\n    pthread_join(p, NULL);\n    pthread_join(c, NULL);\n    printf(\"All items consumed.\\n\");\n    return 0;\n}\n",
+     "rubric": [
+      {
+       "text": "Shared state: circular buffer, head, tail, count, one mutex, two condition variables, correctly initialised",
+       "marks": 1
+      },
+      {
+       "text": "`put` waits in a **while** loop on `not_full` while the buffer is full",
+       "marks": 2
+      },
+      {
+       "text": "`get` waits in a **while** loop on `not_empty` while the buffer is empty",
+       "marks": 2
+      },
+      {
+       "text": "Indices advance modulo the buffer size and `count` is updated inside the lock",
+       "marks": 1
+      },
+      {
+       "text": "Each side signals the *other* condition (`put` → not_empty, `get` → not_full) and unlocks on every path",
+       "marks": 2
+      },
+      {
+       "text": "Producer sends the sentinel; consumer stops on it and does not print it",
+       "marks": 1
+      },
+      {
+       "text": "`main` parses N, creates and joins both threads, prints the final line",
+       "marks": 1
+      }
+     ],
+     "explain": "Compare your code with the model solution line by line, then tick each rubric item you fully satisfied. Common slips: `if` instead of `while`, signalling the same CV you wait on, or returning from `get` before unlocking."
+    }
+   ]
+  }
+ ]
+}

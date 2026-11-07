@@ -1,0 +1,362 @@
+{
+ "title": "2025 final paper (In21)",
+ "minutes": 120,
+ "intro": "**2 hours · 100 marks · 4 questions of 25 marks · answer all.** Closed book; an approved calculator only. Derivations are needed only where asked.\n\nWork on paper. When you submit (or time runs out) every part shows a **worked answer** and a **mark scheme** - tick the points your answer contains to get your score.\n\nThe questions are as set in the 2025 paper, with worked answers added. Original: [EN3330 2025 paper (PDF)](/notes-files/cse/sem7/en3330-paper-2025.pdf). Where the printed question has a typo, the answer says which reading it uses.",
+ "sections": [
+  {
+   "id": "Q",
+   "title": "Answer ALL questions",
+   "blurb": "Four questions, 25 marks each. Calculator allowed; closed book.",
+   "questions": [
+    {
+     "id": "q1",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Optimality · LP geometry",
+     "prompt": "Question 1.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 5,
+       "prompt": "Seven critical points of $f(x)$ on $-5 \\le x \\le 15$ are shown in Figure Q1.1. State whether each is a minimum (local/global), a maximum (local/global) or neither.\n\n![Figure Q1.1: critical points of f(x)](/notes-files/cse/sem7/en3330-2025-fig-q1.png)",
+       "answer": "| Point | x ≈ | Classification |\n|---|---|---|\n| A | −3 | **Neither** - a flat (stationary) inflection: $f$ rises on both sides |\n| B | 0.5 | **Global maximum** (f ≈ 9, joint highest with C) |\n| C | 13 | **Global maximum** (f ≈ 9 - tied with B) |\n| D | 3.2 | **Local maximum** (small bump) |\n| E | 10 | **Local maximum** (f ≈ 5) |\n| F | 5.2 | **Global minimum** (f ≈ −4.5, lowest point; end values ≈ 2 are higher) |\n| G | 8.5 | **Local minimum** (f ≈ −2.5) |",
+       "points": [
+        {
+         "text": "A neither",
+         "marks": 0.5
+        },
+        {
+         "text": "B and C both global maxima",
+         "marks": 1.5
+        },
+        {
+         "text": "D, E local maxima",
+         "marks": 1
+        },
+        {
+         "text": "F global minimum",
+         "marks": 1
+        },
+        {
+         "text": "G local minimum",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 15,
+       "prompt": "Consider $\\min f(\\mathbf{x}) = 5\\lvert x_1\\rvert + 2\\lvert x_2\\rvert$ s.t. $A\\mathbf{x} \\le \\mathbf{b}$, $-x_1 \\le 0$, $-x_2 \\le 0$, with $A = \\begin{bmatrix}10 & 4\\\\ 1 & 1\\end{bmatrix}$, $\\mathbf{b} = \\begin{bmatrix}20\\\\10\\end{bmatrix}$.\n(i) Sketch the feasible region and level curves of $f$. **[5]** (ii) Find the solution graphically. **[4]** (iii) Propose $A$ and $\\mathbf{b}$ so that the solution has either $x_1 = 0$ or $x_2 = 0$. **[6]**",
+       "answer": "**(i)** On $x \\ge 0$, $f = 5x_1 + 2x_2$ - level curves are parallel lines of slope $-5/2$, $f$ increasing away from the origin. Constraints: $10x_1 + 4x_2 \\le 20$ (line through (2, 0) and (0, 5)) and $x_1 + x_2 \\le 10$ (through (10, 0), (0, 10) - **redundant**, it lies outside the first). Feasible region: **triangle (0, 0), (2, 0), (0, 5)**.\n\n![Feasible region and level lines](/notes-files/cse/sem7/en3330-2025-ans-q1b.png)\n\n**(ii)** The origin is feasible ($A\\mathbf{0} = \\mathbf{0} \\le \\mathbf{b}$) and $f \\ge 0$ everywhere, with $f(\\mathbf{0}) = 0$. So $\\mathbf{x}^* = (0, 0)$, $f^* = 0$ - the level line $f = 0$ touches the region only at the origin.\n\n**(iii)** The constraints as printed keep the origin feasible, so the optimum has **both** coordinates zero. To get exactly one zero, the constraints must cut the origin off, and the edge the level lines first touch decides which coordinate vanishes. Since the level lines have slope −5/2:\n- **$x_1 = 0$:** require $x_1 + x_2 \\ge 4$ (and keep $x_1 + x_2 \\le 10$): $A = \\begin{bmatrix}-1 & -1\\\\ 1 & 1\\end{bmatrix}$, $\\mathbf{b} = \\begin{bmatrix}-4\\\\10\\end{bmatrix}$. The edge $x_1 + x_2 = 4$ has slope −1, **flatter** than the level lines, so they first touch at its end on the $x_2$-axis: $\\mathbf{x}^* = (0, 4)$, $f = 8$ (vs (4, 0) with $f = 20$).\n- **$x_2 = 0$:** require $3x_1 + x_2 \\ge 6$ (slope −3, **steeper** than −5/2): $A = \\begin{bmatrix}-3 & -1\\\\ 1 & 1\\end{bmatrix}$, $\\mathbf{b} = \\begin{bmatrix}-6\\\\10\\end{bmatrix}$ gives $\\mathbf{x}^* = (2, 0)$, $f = 10$ (vs (0, 6) with $f = 12$).\n\n(If the intended constraint was $A\\mathbf{x} \\ge \\mathbf{b}$ with the given numbers, the region is unbounded above the lines, the vertices on the axes are (0, 10) with $f = 20$ and (10, 0) with $f = 50$, and the solution (0, 10) already has $x_1 = 0$.)",
+       "points": [
+        {
+         "text": "Region: triangle (0,0),(2,0),(0,5); redundant constraint noted",
+         "marks": 3
+        },
+        {
+         "text": "Level lines of slope −5/2",
+         "marks": 2
+        },
+        {
+         "text": "Solution (0,0), f = 0, with reason",
+         "marks": 4
+        },
+        {
+         "text": "A, b that exclude the origin",
+         "marks": 2
+        },
+        {
+         "text": "Slope argument for which axis",
+         "marks": 2
+        },
+        {
+         "text": "Verified optimum for the proposal",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 5,
+       "prompt": "For $f(\\mathbf{x}) = 2x_1^2 - 6x_1 + \\dfrac{x_2^3}{3} - \\dfrac{9x_2^2}{2} + 20x_2 + 9$, identify and classify the critical points.",
+       "answer": "$\\partial f/\\partial x_1 = 4x_1 - 6 = 0 \\Rightarrow x_1 = 1.5$; $\\partial f/\\partial x_2 = x_2^2 - 9x_2 + 20 = 0 \\Rightarrow x_2 = 4, 5$.\n\nHessian $\\begin{bmatrix}4 & 0\\\\ 0 & 2x_2 - 9\\end{bmatrix}$:\n- **(1.5, 4):** eigenvalues 4, −1 → indefinite → **saddle point** ($f = 33.83$).\n- **(1.5, 5):** eigenvalues 4, 1 → positive definite → **strict local minimum** ($f = 33.67$); not global (cubic in $x_2$ is unbounded below).",
+       "points": [
+        {
+         "text": "Critical points",
+         "marks": 2
+        },
+        {
+         "text": "Hessian",
+         "marks": 1
+        },
+        {
+         "text": "Classification of both",
+         "marks": 2
+        }
+       ]
+      }
+     ],
+     "explain": "For (b)(iii) the marks are for the reasoning: compare the slope of the binding edge with the slope of the level lines."
+    },
+    {
+     "id": "q2",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Transformations · Lagrange",
+     "prompt": "Question 2.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "prompt": "A variable is bounded by $-5 \\le x \\le 8$. Which of the transformations in Figure Q2.1 can convert the constrained problem into an unconstrained one? Justify.\n\n![Figure Q2.1: (a) tanh z, (b) 2z/(1+z²), (c) sin z](/notes-files/cse/sem7/en3330-2025-fig-q2.png)",
+       "answer": "Each map $g(z)$ has range within $[-1, 1]$, so set\n$$x = \\frac{a+b}{2} + \\frac{b-a}{2}\\,g(z) = 1.5 + 6.5\\,g(z), \\quad z \\in \\mathbb{R},$$\nand minimise $F(z) = f(1.5 + 6.5g(z))$ without constraints. **All three can be used**, with different trade-offs:\n\n| Map | Range | Verdict |\n|---|---|---|\n| (a) tanh | open (−1, 1) | Smooth and monotone (one $z$ per $x$) - but the bounds −5 and 8 are only approached as $z \\to \\pm\\infty$: if the optimum is at a bound there is no finite minimiser, and the flat tails give tiny gradients. |\n| (b) $2z/(1+z^2)$ | closed [−1, 1] | Reaches **both bounds** (at $z = \\pm1$) - the textbook choice. Not one-to-one, and $g'(\\pm1) = 0$ creates extra stationary points of $F$. |\n| (c) sin z | closed [−1, 1] | Reaches both bounds, but periodic: every $x$ has infinitely many $z$, and $F$ gets infinitely many stationary points. Usable, least convenient. |\n\nBest overall: **(b)** when the solution may lie on a bound; **(a)** when it is known to be interior.",
+       "points": [
+        {
+         "text": "Scaling x = 1.5 + 6.5 g(z)",
+         "marks": 2
+        },
+        {
+         "text": "tanh: open interval / bounds unreachable",
+         "marks": 1.5
+        },
+        {
+         "text": "Rational: reaches bounds, not one-to-one",
+         "marks": 1.5
+        },
+        {
+         "text": "sin: periodic, many minima",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 19,
+       "prompt": "Consider $\\min \\tfrac12\\|\\mathbf{x}\\|_2^2$ s.t. $y_i(\\mathbf{a}_i^T\\mathbf{x} + b) = 1$, $i = 1, \\dots, m$, with $y_i \\in \\{-1, +1\\}$, $\\mathbf{a}_i \\in \\mathbb{R}^n$ given; $\\mathbf{x}$ and the offset $b$ are the variables.\n(i) Show that $\\mathbf{x}^* = \\sum_i\\lambda_iy_i\\mathbf{a}_i$. **[6]** (ii) Show that $\\sum_i\\lambda_iy_i = 0$. **[3]** (iii) With $\\boldsymbol\\lambda, \\mathbf{y} \\in \\mathbb{R}^m$ and $A = [\\mathbf{a}_1, \\dots, \\mathbf{a}_m]$, show $f(\\mathbf{x}^*) = \\tfrac12(\\boldsymbol\\lambda \\odot \\mathbf{y})^T(A^TA)(\\boldsymbol\\lambda \\odot \\mathbf{y})$. **[10]**",
+       "answer": "*(The paper writes $b_i$; one common offset $b$ is assumed - with a separate free $b_i$ per constraint each constraint could be met by $b_i$ alone, forcing $\\lambda_i = 0$ and $\\mathbf{x}^* = 0$. This is the hard-margin SVM.)*\n\n**(i)** Lagrangian (equality constraints, multipliers $\\lambda_i$):\n$$\\mathcal L(\\mathbf{x}, b, \\boldsymbol\\lambda) = \\tfrac12\\mathbf{x}^T\\mathbf{x} - \\sum_{i=1}^m\\lambda_i\\big[y_i(\\mathbf{a}_i^T\\mathbf{x} + b) - 1\\big].$$\nStationarity in $\\mathbf{x}$: $\\nabla_{\\mathbf{x}}\\mathcal L = \\mathbf{x} - \\sum_i\\lambda_iy_i\\mathbf{a}_i = \\mathbf{0} \\Rightarrow \\mathbf{x}^* = \\sum_i\\lambda_iy_i\\mathbf{a}_i$. The objective is strictly convex and the constraints affine, so this stationary point is the global optimum.\n\n**(ii)** Stationarity in $b$: $\\dfrac{\\partial\\mathcal L}{\\partial b} = -\\sum_i\\lambda_iy_i = 0 \\Rightarrow \\sum_i\\lambda_iy_i = 0$.\n\n**(iii)** Let $\\mathbf{w} = \\boldsymbol\\lambda \\odot \\mathbf{y}$, i.e. $w_i = \\lambda_iy_i$. Then\n$$\\mathbf{x}^* = \\sum_i w_i\\mathbf{a}_i = [\\mathbf{a}_1, \\dots, \\mathbf{a}_m]\\begin{bmatrix}w_1\\\\ \\vdots\\\\ w_m\\end{bmatrix} = A\\mathbf{w}.$$\nHence\n$$f(\\mathbf{x}^*) = \\tfrac12\\|\\mathbf{x}^*\\|_2^2 = \\tfrac12(A\\mathbf{w})^T(A\\mathbf{w}) = \\tfrac12\\mathbf{w}^T(A^TA)\\mathbf{w} = \\tfrac12(\\boldsymbol\\lambda\\odot\\mathbf{y})^T(A^TA)(\\boldsymbol\\lambda\\odot\\mathbf{y}).$$\nElement-wise: $(A^TA)_{ij} = \\mathbf{a}_i^T\\mathbf{a}_j$, so $f(\\mathbf{x}^*) = \\tfrac12\\sum_i\\sum_j\\lambda_i\\lambda_jy_iy_j\\,\\mathbf{a}_i^T\\mathbf{a}_j$ - the SVM dual objective's quadratic term.",
+       "points": [
+        {
+         "text": "Lagrangian with all constraints",
+         "marks": 2
+        },
+        {
+         "text": "∇ₓL = 0 → x*",
+         "marks": 3
+        },
+        {
+         "text": "Convexity remark",
+         "marks": 1
+        },
+        {
+         "text": "∂L/∂b = 0 → Σλy = 0",
+         "marks": 3
+        },
+        {
+         "text": "Writes x* = A(λ⊙y)",
+         "marks": 4
+        },
+        {
+         "text": "Expands norm to quadratic form",
+         "marks": 4
+        },
+        {
+         "text": "Element-wise / final form",
+         "marks": 2
+        }
+       ]
+      }
+     ],
+     "explain": "(b)(iii) is 10 marks for three lines of algebra - the marks are for showing that the sum is a matrix–vector product. Write that step explicitly."
+    },
+    {
+     "id": "q3",
+     "kind": "long",
+     "marks": 25,
+     "lab": "KKT · formulation",
+     "prompt": "Question 3. A cloud provider serves user types A, B and C ($x_A, x_B, x_C$ users).\n- Type A needs 8 GB RAM, 1 GPU, 100 GB storage. Type B needs half of A's RAM and storage, and 3 GPUs. Type C needs twice A's RAM, half of B's storage and 1 GPU.\n- Monthly fees: A Rs 20 000, B Rs 35 000, C Rs 25 000.\n- Available: 200 GB RAM, 50 GPUs, 1500 GB storage. All RAM and all GPUs must be used; all three types must be served.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 5,
+       "prompt": "Formulate the problem that maximises monthly revenue.",
+       "answer": "Requirements: A (8 GB, 1 GPU, 100 GB); B (4 GB, 3 GPU, 50 GB); C (16 GB, 1 GPU, 25 GB).\n$$\\begin{aligned} \\max\\quad & R = 20\\,000x_A + 35\\,000x_B + 25\\,000x_C\\\\ \\text{s.t.}\\quad & 8x_A + 4x_B + 16x_C = 200 && \\text{(RAM, all used)}\\\\ & x_A + 3x_B + x_C = 50 && \\text{(GPU, all used)}\\\\ & 100x_A + 50x_B + 25x_C \\le 1500 && \\text{(storage)}\\\\ & x_A, x_B, x_C \\ge 1 . \\end{aligned}$$",
+       "points": [
+        {
+         "text": "Correct resource table",
+         "marks": 1.5
+        },
+        {
+         "text": "Objective",
+         "marks": 1
+        },
+        {
+         "text": "Two equalities",
+         "marks": 1.5
+        },
+        {
+         "text": "Storage inequality and positivity",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 8,
+       "prompt": "Write the Lagrangian and the KKT conditions.",
+       "answer": "Minimise $f = -R/1000 = -(20x_A + 35x_B + 25x_C)$:\n$$\\mathcal L = -(20x_A + 35x_B + 25x_C) + \\lambda_1(8x_A + 4x_B + 16x_C - 200) + \\lambda_2(x_A + 3x_B + x_C - 50) + \\mu(100x_A + 50x_B + 25x_C - 1500).$$\n**Stationarity:**\n$-20 + 8\\lambda_1 + \\lambda_2 + 100\\mu = 0$; $\\ -35 + 4\\lambda_1 + 3\\lambda_2 + 50\\mu = 0$; $\\ -25 + 16\\lambda_1 + \\lambda_2 + 25\\mu = 0$.\n**Primal feasibility:** both equalities hold; $100x_A + 50x_B + 25x_C \\le 1500$.\n**Dual feasibility:** $\\mu \\ge 0$ ($\\lambda_1, \\lambda_2$ unrestricted).\n**Complementary slackness:** $\\mu(100x_A + 50x_B + 25x_C - 1500) = 0$.",
+       "points": [
+        {
+         "text": "Lagrangian",
+         "marks": 2
+        },
+        {
+         "text": "Three stationarity equations",
+         "marks": 3
+        },
+        {
+         "text": "Primal feasibility",
+         "marks": 1
+        },
+        {
+         "text": "Dual feasibility",
+         "marks": 1
+        },
+        {
+         "text": "Complementary slackness",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 12,
+       "prompt": "Solve with the KKT conditions (ignore non-negativity).",
+       "answer": "**Case μ = 0.** The three stationarity equations in two unknowns $\\lambda_1, \\lambda_2$: from the first and third, $8\\lambda_1 = 5 \\Rightarrow \\lambda_1 = 0.625$, $\\lambda_2 = 15$; the second gives $2.5 + 45 = 47.5 \\ne 35$ - **inconsistent**. A linear objective cannot be stationary in the interior, so the storage constraint must be **active**.\n\n**Case μ > 0.** Solve the stationarity system: $\\lambda_1 = 0.893$, $\\lambda_2 = 10$, $\\mu = 0.0286 > 0$ ✓.\nPrimal: RAM/4 gives $2x_A + x_B + 4x_C = 50$; with $x_A + 3x_B + x_C = 50$:\n$$x_B = 10 + 0.4x_C,\\qquad x_A = 20 - 2.2x_C .$$\nStorage active: $100(20 - 2.2x_C) + 50(10 + 0.4x_C) + 25x_C = 2500 - 175x_C = 1500 \\Rightarrow x_C = 40/7 = 5.714$.\n\n$$x_A = 7.429,\\quad x_B = 12.286,\\quad x_C = 5.714,\\qquad R = 721.43 \\times 10^3\\ \\text{Rs/month}.$$\n\nCheck: on the equality line $R/1000 = 750 - 5x_C$, decreasing in $x_C$, and storage needs $x_C \\ge 5.714$ - so the smallest allowed $x_C$ is optimal, as KKT found. μ = 0.0286 means each extra GB of storage would add about Rs 28.6 of revenue. (No integer user counts satisfy both equalities and the storage limit exactly - in practice one would relax \"fully utilised\" or round and re-check.)",
+       "points": [
+        {
+         "text": "μ = 0 case shown inconsistent",
+         "marks": 2.5
+        },
+        {
+         "text": "Multipliers with μ ≥ 0",
+         "marks": 2.5
+        },
+        {
+         "text": "Equality solution in terms of x_C",
+         "marks": 3
+        },
+        {
+         "text": "Storage active → x_C = 40/7",
+         "marks": 2
+        },
+        {
+         "text": "Final values and revenue",
+         "marks": 2
+        }
+       ]
+      }
+     ],
+     "explain": "With a linear objective the optimum is always on the boundary: say so, then show the μ = 0 case fails rather than skipping it."
+    },
+    {
+     "id": "q4",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Penalty · duality · Wolfe",
+     "prompt": "Question 4.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 12,
+       "prompt": "Consider $\\min ax_1 + bx_2$ s.t. $x_1 \\ge c$, $x_2 \\ge d$, solved by a quadratic penalty with $\\rho_{k+1} = \\mu\\rho_k$, $\\rho_0 = 5$.\n(i) With the start infeasible and $a, b > 0$, show the penalised minimiser is $x_1 = c - \\dfrac{a}{2\\rho}$, $x_2 = d - \\dfrac{b}{2\\rho}$. **[6]**\n(ii) With $\\mu = 1.05$, $a = 5$, $b = 10$, $c = 4$, $d = 6$, how many iterations are needed for $\\|\\mathbf{x}_k - \\mathbf{x}^*\\|_2^2 \\le 10^{-3}$? **[6]**",
+       "answer": "**(i)** Penalised objective $\\phi(\\mathbf{x}) = ax_1 + bx_2 + \\rho\\big[\\min(0, x_1 - c)^2 + \\min(0, x_2 - d)^2\\big]$. In the infeasible region $x_1 < c$, $x_2 < d$ (where the minimiser lies, since $a, b > 0$ pull the variables down):\n$$\\frac{\\partial\\phi}{\\partial x_1} = a + 2\\rho(x_1 - c) = 0 \\Rightarrow x_1 = c - \\frac{a}{2\\rho},\\qquad \\frac{\\partial\\phi}{\\partial x_2} = b + 2\\rho(x_2 - d) = 0 \\Rightarrow x_2 = d - \\frac{b}{2\\rho}.$$\n$\\partial^2\\phi = 2\\rho I \\succ 0$: a minimum. It approaches $\\mathbf{x}^* = (c, d)$ from outside as $\\rho \\to \\infty$.\n\n**(ii)** $\\|\\mathbf{x}_k - \\mathbf{x}^*\\|^2 = \\dfrac{a^2 + b^2}{4\\rho_k^2} = \\dfrac{125}{4\\rho_k^2} \\le 10^{-3} \\Rightarrow \\rho_k \\ge \\sqrt{31\\,250} = 176.78$.\nWith $\\rho_k = 5(1.05)^k$: $(1.05)^k \\ge 35.36 \\Rightarrow k \\ge \\dfrac{\\ln 35.36}{\\ln 1.05} = 73.08$, so **k = 74 iterations** ($\\rho_{74} = 184.9$, error $9.1\\times10^{-4}$; at $k = 73$ the error is still $1.008\\times10^{-3}$).",
+       "points": [
+        {
+         "text": "Penalty function",
+         "marks": 1.5
+        },
+        {
+         "text": "Derivatives in the infeasible region",
+         "marks": 2
+        },
+        {
+         "text": "Both closed forms",
+         "marks": 2
+        },
+        {
+         "text": "Second-order check / approach from outside",
+         "marks": 0.5
+        },
+        {
+         "text": "Distance formula (a²+b²)/(4ρ²)",
+         "marks": 2
+        },
+        {
+         "text": "ρ ≥ 176.8",
+         "marks": 1.5
+        },
+        {
+         "text": "k = 74 with logs",
+         "marks": 2.5
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "prompt": "For $\\min 5x_1^2 + 4x_1x_2 + x_2^2$ s.t. $5x_1^2 + 2x_2^2 = 14$, $3x_1 + 2x_2 \\ge 5$: (i) state the primal and dual problems **[4]**; (ii) give the dual function **[2]**.",
+       "answer": "**(i) Primal:** $\\min_{\\mathbf{x}} f(\\mathbf{x}) = 5x_1^2 + 4x_1x_2 + x_2^2$ s.t. $h(\\mathbf{x}) = 5x_1^2 + 2x_2^2 - 14 = 0$, $g(\\mathbf{x}) = 5 - 3x_1 - 2x_2 \\le 0$.\nLagrangian $\\mathcal L = f + \\lambda h + \\mu g$, $\\mu \\ge 0$.\n**Dual:** $\\max_{\\lambda, \\mu}\\ q(\\lambda, \\mu)$ s.t. $\\mu \\ge 0$, where $q(\\lambda, \\mu) = \\inf_{\\mathbf{x}}\\mathcal L(\\mathbf{x}, \\lambda, \\mu)$. Weak duality: $q \\le f^*$ for every feasible $(\\lambda, \\mu)$.\n\n**(ii)** $\\mathcal L = (5 + 5\\lambda)x_1^2 + 4x_1x_2 + (1 + 2\\lambda)x_2^2 - 3\\mu x_1 - 2\\mu x_2 - 14\\lambda + 5\\mu$, a quadratic in $\\mathbf{x}$ with Hessian $H = \\begin{bmatrix}10 + 10\\lambda & 4\\\\ 4 & 2 + 4\\lambda\\end{bmatrix}$. When $H \\succ 0$ ($\\lambda > -1$ and $4 + 60\\lambda + 40\\lambda^2 > 0$) the infimum is at $\\nabla_{\\mathbf{x}}\\mathcal L = 0$, giving\n$$q(\\lambda, \\mu) = 5\\mu - 14\\lambda - \\frac{\\mu^2(5 + 38\\lambda)}{4 + 60\\lambda + 40\\lambda^2};$$\notherwise $q = -\\infty$.",
+       "points": [
+        {
+         "text": "Primal in standard form",
+         "marks": 1.5
+        },
+        {
+         "text": "Dual problem with μ ≥ 0",
+         "marks": 1.5
+        },
+        {
+         "text": "Weak duality / definition of q",
+         "marks": 1
+        },
+        {
+         "text": "Dual function (or correct inf-of-Lagrangian statement)",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 7,
+       "prompt": "First and second Wolfe conditions: $f(\\mathbf{x}^{(k+1)}) \\le f(\\mathbf{x}^{(k)}) + \\beta\\alpha\\nabla_{\\mathbf{d}}f(\\mathbf{x}^{(k)})$ and $\\nabla_{\\mathbf{d}}f(\\mathbf{x}^{(k+1)}) \\ge \\sigma\\nabla_{\\mathbf{d}}f(\\mathbf{x}^{(k)})$. Given $f = x_1 + x_1x_2 + x_1^2$, $\\mathbf{x}^{(k)} = [1, 2]^T$, $\\mathbf{d} = [-1, -2]^T$, $\\beta = 10^{-4}$, $\\sigma = 0.9$:\n(i) What are the purposes of the two conditions? **[2]** (ii) Is $\\alpha = 2.5$ acceptable? If not, what next? **[5]**",
+       "answer": "**(i)** First (Armijo, **sufficient decrease**): the step must reduce $f$ by at least a fraction β of the decrease predicted by the slope - rules out steps that are too long. Second (**curvature**): the slope at the new point must be less negative than σ times the initial slope - rules out steps that are too short.\n\n**(ii)** $\\nabla f = [1 + x_2 + 2x_1,\\ x_1]^T$; at $(1, 2)$: $[5, 1]^T$, $f = 4$, $\\nabla_{\\mathbf{d}}f = 5(-1) + 1(-2) = -7$ (a descent direction).\nα = 2.5: $\\mathbf{x}^{(k+1)} = (1 - 2.5,\\ 2 - 5) = (-1.5, -3)$, $f = -1.5 + 4.5 + 2.25 = 5.25$.\n- Armijo: is $5.25 \\le 4 + 10^{-4}(2.5)(-7) = 3.998$? **No - fails.**\n- Curvature: $\\nabla f(-1.5, -3) = [-5, -1.5]$, slope $= 5 + 3 = 8 \\ge 0.9(-7) = -6.3$ ✓.\nNot acceptable (the step is too long - $f$ went up). **Next:** backtrack, e.g. $\\alpha \\leftarrow 0.5\\alpha = 1.25$: $\\mathbf{x} = (-0.25, -0.5)$, $f = -0.0625 \\le 3.999$ ✓ and slope $= 0 + 0.5 = 0.5 \\ge -6.3$ ✓ - **α = 1.25 satisfies both**.",
+       "points": [
+        {
+         "text": "Purpose of each condition",
+         "marks": 2
+        },
+        {
+         "text": "Gradient, f and directional derivative",
+         "marks": 1.5
+        },
+        {
+         "text": "Armijo check fails",
+         "marks": 1.5
+        },
+        {
+         "text": "Curvature check",
+         "marks": 0.5
+        },
+        {
+         "text": "Backtrack and verify a new α",
+         "marks": 1.5
+        }
+       ]
+      }
+     ],
+     "explain": "Wolfe questions: always compute the directional derivative first and confirm it is negative - it appears in both conditions."
+    }
+   ]
+  }
+ ]
+}

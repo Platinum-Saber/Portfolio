@@ -1,0 +1,382 @@
+{
+ "title": "Mock paper",
+ "minutes": 120,
+ "intro": "**2 hours · 100 marks · 4 questions of 25 marks · answer all.** Closed book; an approved calculator only. Derivations are needed only where asked.\n\nWork on paper. When you submit (or time runs out) every part shows a **worked answer** and a **mark scheme** - tick the points your answer contains to get your score.\n\nCovers the whole syllabus in the same shape as the 2024 and 2025 papers: optimality and feasible sets, least norm and transformations, a KKT production problem, and algorithms (descent, barrier, cross-entropy).",
+ "sections": [
+  {
+   "id": "Q",
+   "title": "Answer ALL questions",
+   "blurb": "Four questions, 25 marks each. Calculator allowed; closed book.",
+   "questions": [
+    {
+     "id": "q1",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Optimality · feasible sets",
+     "prompt": "Question 1.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "prompt": "For $f(x) = x^4 - 4x^3 + 4x^2$ on $-1 \\le x \\le 3$: find every critical point, classify each, and state the global maximum and minimum on the interval.",
+       "answer": "$f(x) = x^2(x - 2)^2$, $f'(x) = 4x^3 - 12x^2 + 8x = 4x(x - 1)(x - 2)$ → critical points $x = 0, 1, 2$.\n$f''(x) = 12x^2 - 24x + 8$: $f''(0) = 8 > 0$, $f''(1) = -4 < 0$, $f''(2) = 8 > 0$.\n\n| x | f | Type |\n|---|---|---|\n| 0 | 0 | local minimum - and **global minimum** |\n| 1 | 1 | **local maximum** (not global) |\n| 2 | 0 | local minimum - and **global minimum** (tied with x = 0) |\n| −1 (end) | 9 | **global maximum** (tied) |\n| 3 (end) | 9 | **global maximum** (tied) |\n\nThe global maximum is at the end points, which are not critical points - always evaluate them on a closed interval.",
+       "points": [
+        {
+         "text": "f' factorised, three critical points",
+         "marks": 2
+        },
+        {
+         "text": "Second-derivative classification",
+         "marks": 2
+        },
+        {
+         "text": "End values 9 → global max; 0 and 2 global min",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 12,
+       "prompt": "Consider $\\min (x_1 - 3)^2 + (x_2 - 3)^2$ s.t. $x_1 + x_2 \\le 4$, $x_2 \\le 3$, $x_1 \\ge 0$, $x_2 \\ge 0$.\n(i) Sketch the feasible region with level curves of $f$. **[4]** (ii) Find the solution and verify it with the KKT conditions. **[5]** (iii) If the objective is changed to $\\max\\ x_1 + 2x_2$ on the same region, find the solution graphically. **[3]**",
+       "answer": "**(i)** Region: the quadrilateral with vertices **(0, 0), (4, 0), (1, 3), (0, 3)** - below $x_1 + x_2 = 4$ and $x_2 = 3$. Level sets of $f$ are circles centred at (3, 3), which is infeasible ($3 + 3 > 4$).\n\n![Feasible region, level circles and both optima](/notes-files/cse/sem7/en3330-mock1-ans-q1b.png)\n\n**(ii)** The closest feasible point to (3, 3) is its projection onto $x_1 + x_2 = 4$: $(3, 3) - \\tfrac{6 - 4}{2}(1, 1) = \\mathbf{(2, 2)}$, $f^* = 2$.\nKKT with only $g_1 = x_1 + x_2 - 4$ active: $\\nabla f + \\mu_1\\nabla g_1 = (2(2 - 3), 2(2 - 3)) + \\mu_1(1, 1) = 0 \\Rightarrow \\mu_1 = 2 \\ge 0$ ✓. Other multipliers 0 ($x_2 = 2 < 3$, $x > 0$ - inactive) ✓; complementary slackness ✓; primal feasible ✓. Convex problem ⇒ global minimum.\n\n**(iii)** Level lines $x_1 + 2x_2 = c$ have slope −1/2; push them up-right. Vertex values: (0, 0) → 0, (4, 0) → 4, (1, 3) → **7**, (0, 3) → 6. Solution **(1, 3)**, value 7 - an LP optimum is at a vertex.",
+       "points": [
+        {
+         "text": "Correct region and vertices",
+         "marks": 2.5
+        },
+        {
+         "text": "Level circles, centre infeasible",
+         "marks": 1.5
+        },
+        {
+         "text": "x* = (2,2), f = 2",
+         "marks": 2
+        },
+        {
+         "text": "KKT: μ₁ = 2 ≥ 0, others zero, CS",
+         "marks": 3
+        },
+        {
+         "text": "LP vertex (1,3), value 7",
+         "marks": 3
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 7,
+       "prompt": "Find and classify the critical points of $f(\\mathbf{x}) = x_1^3 + x_2^3 - 3x_1x_2$.",
+       "answer": "$\\nabla f = [3x_1^2 - 3x_2,\\ 3x_2^2 - 3x_1]^T = 0 \\Rightarrow x_2 = x_1^2$ and $x_1 = x_2^2 = x_1^4 \\Rightarrow x_1(x_1^3 - 1) = 0$. Real solutions: **(0, 0)** and **(1, 1)**.\n\n$\\nabla^2 f = \\begin{bmatrix}6x_1 & -3\\\\ -3 & 6x_2\\end{bmatrix}$.\n- (0, 0): $\\begin{bmatrix}0 & -3\\\\ -3 & 0\\end{bmatrix}$, eigenvalues ±3 → indefinite → **saddle**, $f = 0$.\n- (1, 1): $\\begin{bmatrix}6 & -3\\\\ -3 & 6\\end{bmatrix}$, eigenvalues 3, 9 → positive definite → **strict local minimum**, $f = -1$. Not global ($f \\to -\\infty$ along $x_1 = x_2 \\to -\\infty$).",
+       "points": [
+        {
+         "text": "Gradient and solving the system",
+         "marks": 2.5
+        },
+        {
+         "text": "Both critical points",
+         "marks": 1
+        },
+        {
+         "text": "Hessian",
+         "marks": 1
+        },
+        {
+         "text": "Classifications with eigenvalues/determinant",
+         "marks": 2
+        },
+        {
+         "text": "Not global remark",
+         "marks": 0.5
+        }
+       ]
+      }
+     ],
+     "explain": "Every \"classify\" part is: gradient = 0, then the Hessian sign at each point. Write the eigenvalues - \"the Hessian is positive\" earns nothing."
+    },
+    {
+     "id": "q2",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Least norm · least squares · transformations",
+     "prompt": "Question 2.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 8,
+       "prompt": "Find the point on the plane $x_1 + 2x_2 + 2x_3 = 9$ closest to the origin (i) with a Lagrange multiplier **[5]** and (ii) geometrically **[3]**, and give the minimum distance.",
+       "answer": "**(i)** $\\min \\|\\mathbf{x}\\|^2$ s.t. $\\mathbf{a}^T\\mathbf{x} = 9$, $\\mathbf{a} = (1, 2, 2)$. $\\mathcal L = \\mathbf{x}^T\\mathbf{x} + \\nu(\\mathbf{a}^T\\mathbf{x} - 9)$; $\\nabla_{\\mathbf{x}}\\mathcal L = 2\\mathbf{x} + \\nu\\mathbf{a} = 0 \\Rightarrow \\mathbf{x} = -\\tfrac{\\nu}{2}\\mathbf{a}$. Substitute: $-\\tfrac{\\nu}{2}\\|\\mathbf{a}\\|^2 = 9$, $\\|\\mathbf{a}\\|^2 = 9 \\Rightarrow \\nu = -2$, $\\mathbf{x}^* = (1, 2, 2)$.\n\n**(ii)** The closest point is the foot of the normal from the origin: $\\mathbf{x}^* = \\tfrac{9}{\\|\\mathbf{a}\\|^2}\\mathbf{a} = (1, 2, 2)$.\n\nDistance $\\|\\mathbf{x}^*\\| = \\sqrt{1 + 4 + 4} = 3$ (= $|9|/\\|\\mathbf{a}\\|$).",
+       "points": [
+        {
+         "text": "Lagrangian",
+         "marks": 1
+        },
+        {
+         "text": "Stationarity → x parallel to a",
+         "marks": 2
+        },
+        {
+         "text": "ν = −2 and x*",
+         "marks": 2
+        },
+        {
+         "text": "Geometric projection argument",
+         "marks": 2
+        },
+        {
+         "text": "Distance 3",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 9,
+       "prompt": "Fit $y = c_0 + c_1x$ to the points (0, 1), (1, 3), (2, 4) by least squares: write the problem as $\\min\\|A\\mathbf{c} - \\mathbf{y}\\|^2$, derive the normal equations, and solve.",
+       "answer": "$A = \\begin{bmatrix}1 & 0\\\\ 1 & 1\\\\ 1 & 2\\end{bmatrix}$, $\\mathbf{y} = \\begin{bmatrix}1\\\\3\\\\4\\end{bmatrix}$. $F(\\mathbf{c}) = \\|A\\mathbf{c} - \\mathbf{y}\\|^2$, $\\nabla F = 2A^T(A\\mathbf{c} - \\mathbf{y}) = 0 \\Rightarrow A^TA\\mathbf{c} = A^T\\mathbf{y}$ (normal equations). $\\nabla^2F = 2A^TA \\succ 0$ (columns independent) ⇒ unique global minimum.\n$$A^TA = \\begin{bmatrix}3 & 3\\\\ 3 & 5\\end{bmatrix},\\quad A^T\\mathbf{y} = \\begin{bmatrix}8\\\\11\\end{bmatrix} \\Rightarrow \\mathbf{c} = \\frac{1}{6}\\begin{bmatrix}5 & -3\\\\ -3 & 3\\end{bmatrix}\\begin{bmatrix}8\\\\11\\end{bmatrix} = \\begin{bmatrix}7/6\\\\ 3/2\\end{bmatrix}.$$\nLine $y = 1.167 + 1.5x$; residuals (−1/6, 1/3, −1/6) sum to zero, as they must with an intercept.",
+       "points": [
+        {
+         "text": "A and y",
+         "marks": 2
+        },
+        {
+         "text": "Gradient → normal equations",
+         "marks": 2.5
+        },
+        {
+         "text": "Convexity (2AᵀA ≻ 0)",
+         "marks": 1
+        },
+        {
+         "text": "AᵀA and Aᵀy",
+         "marks": 2
+        },
+        {
+         "text": "c₀ = 7/6, c₁ = 3/2",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 8,
+       "prompt": "A variable must satisfy $2 \\le x \\le 10$. (i) Give a $\\tanh$ transformation that removes the bounds and the chain-rule expression for $dF/dz$. **[4]** (ii) For $f(x) = (x - 12)^2$, explain what gradient descent on $z$ does, and propose a transformation that fixes it. **[4]**",
+       "answer": "**(i)** $x = 6 + 4\\tanh z$ maps $z \\in \\mathbb{R}$ onto $(2, 10)$. With $F(z) = f(6 + 4\\tanh z)$:\n$$\\frac{dF}{dz} = f'(x)\\,\\frac{dx}{dz} = f'(x)\\cdot 4(1 - \\tanh^2 z).$$\n\n**(ii)** The constrained optimum is the bound $x = 10$ (closest to 12). $f'(x) = 2(x - 12) < 0$ on the interval, so $dF/dz < 0$ always and descent pushes $z \\to +\\infty$: $x$ creeps towards 10 but never reaches it, and the factor $1 - \\tanh^2 z \\to 0$ makes progress vanish - **no finite minimiser**.\nFix: a map whose range is the **closed** interval, e.g. $x = 6 + 4\\sin z$ (bound reached at $z = \\pi/2$, where $dF/dz = 0$) or $x = 6 + 4\\cdot\\tfrac{2z}{1 + z^2}$ (reached at $z = 1$).",
+       "points": [
+        {
+         "text": "Correct scaling 6 + 4 tanh z",
+         "marks": 1.5
+        },
+        {
+         "text": "Chain rule with 4(1 − tanh²)",
+         "marks": 2.5
+        },
+        {
+         "text": "Optimum at bound; z → ∞, vanishing gradient",
+         "marks": 2.5
+        },
+        {
+         "text": "Closed-range alternative with z value",
+         "marks": 1.5
+        }
+       ]
+      }
+     ],
+     "explain": "Part (c) shows why the choice of transformation matters: tanh is smooth and one-to-one, but cannot represent a solution that sits on a bound."
+    },
+    {
+     "id": "q3",
+     "kind": "long",
+     "marks": 25,
+     "lab": "KKT · formulation",
+     "prompt": "Question 3. A workshop builds three drone models P, Q and R ($x_P, x_Q, x_R$ units per month).\n- Assembly: P needs 2 hours, Q needs 1 hour and R needs 3 hours. 200 assembly hours are available and **all** must be used.\n- Testing: P needs 1 hour, Q needs 2 hours, R needs 1 hour. 150 test hours are available and **all** must be used.\n- Parts cost Rs 10 000 for P, Rs 8 000 for Q and Rs 20 000 for R; the parts budget is Rs 1.22 million.\n- Profit (thousand Rs) is $50x_P + 40x_Q + 120x_R - x_R^2$ - R's profit falls as the market saturates.",
+     "parts": [
+      {
+       "label": "i",
+       "marks": 5,
+       "prompt": "Formulate the optimisation problem.",
+       "answer": "Working in thousands of rupees:\n$$\\begin{aligned} \\max\\quad & P = 50x_P + 40x_Q + 120x_R - x_R^2\\\\ \\text{s.t.}\\quad & 2x_P + x_Q + 3x_R = 200 && \\text{(assembly)}\\\\ & x_P + 2x_Q + x_R = 150 && \\text{(testing)}\\\\ & 10x_P + 8x_Q + 20x_R \\le 1220 && \\text{(budget)}\\\\ & x_P, x_Q, x_R \\ge 0. \\end{aligned}$$",
+       "points": [
+        {
+         "text": "Objective",
+         "marks": 1
+        },
+        {
+         "text": "Two equalities",
+         "marks": 2
+        },
+        {
+         "text": "Budget in consistent units",
+         "marks": 1.5
+        },
+        {
+         "text": "Non-negativity",
+         "marks": 0.5
+        }
+       ]
+      },
+      {
+       "label": "ii",
+       "marks": 5,
+       "prompt": "Write the Lagrangian and the KKT conditions.",
+       "answer": "Minimise $f = -P$. With $h_1 = 2x_P + x_Q + 3x_R - 200$, $h_2 = x_P + 2x_Q + x_R - 150$, $g = 10x_P + 8x_Q + 20x_R - 1220$:\n$$\\mathcal L = -(50x_P + 40x_Q + 120x_R - x_R^2) + \\lambda_1h_1 + \\lambda_2h_2 + \\mu g.$$\nStationarity: $-50 + 2\\lambda_1 + \\lambda_2 + 10\\mu = 0$; $\\ -40 + \\lambda_1 + 2\\lambda_2 + 8\\mu = 0$; $\\ -(120 - 2x_R) + 3\\lambda_1 + \\lambda_2 + 20\\mu = 0$.\nPrimal: $h_1 = h_2 = 0$, $g \\le 0$. Dual: $\\mu \\ge 0$. Complementary slackness: $\\mu g = 0$.",
+       "points": [
+        {
+         "text": "Lagrangian",
+         "marks": 2
+        },
+        {
+         "text": "Stationarity",
+         "marks": 1.5
+        },
+        {
+         "text": "Feasibility, dual feasibility, CS",
+         "marks": 1.5
+        }
+       ]
+      },
+      {
+       "label": "iii",
+       "marks": 12,
+       "prompt": "Solve with the KKT conditions. Report the plan, the profit and the multipliers.",
+       "answer": "**Reduce with the equalities.** From testing, $x_P = 150 - 2x_Q - x_R$; into assembly: $-3x_Q + x_R = -100$, so\n$$x_Q = \\frac{100 + x_R}{3},\\qquad x_P = \\frac{250 - 5x_R}{3}.$$\nProfit on this line: $P = 5500 + 50x_R - x_R^2$ (concave, unconstrained peak at $x_R = 25$). Budget: $1100 + 6x_R \\le 1220 \\Rightarrow x_R \\le 20$.\n\n**Case μ = 0:** stationarity gives $x_R = 25$ - budget $1250 > 1220$: **infeasible**, reject.\n\n**Case μ > 0 (budget active):** $x_R = 20$, $x_P = 50$, $x_Q = 40$. Stationarity with $120 - 2x_R = 80$:\n$2\\lambda_1 + \\lambda_2 + 10\\mu = 50$, $\\lambda_1 + 2\\lambda_2 + 8\\mu = 40$, $3\\lambda_1 + \\lambda_2 + 20\\mu = 80$ ⇒ $\\lambda_1 = 13.33$, $\\lambda_2 = 6.67$, $\\mu = 5/3 \\ge 0$ ✓.\n\n**Plan:** $x_P = 50$, $x_Q = 40$, $x_R = 20$ (whole numbers - no rounding needed), $P = 6100$ thousand Rs = **Rs 6.1 million**. Check: assembly 100 + 40 + 60 = 200 ✓, testing 50 + 80 + 20 = 150 ✓, budget 500 + 320 + 400 = 1220 ✓.",
+       "points": [
+        {
+         "text": "Elimination to one variable",
+         "marks": 3
+        },
+        {
+         "text": "Profit and budget in x_R",
+         "marks": 2
+        },
+        {
+         "text": "μ = 0 case infeasible",
+         "marks": 2
+        },
+        {
+         "text": "Multipliers with μ ≥ 0",
+         "marks": 3
+        },
+        {
+         "text": "Final plan, profit, checks",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "iv",
+       "marks": 3,
+       "prompt": "Interpret $\\mu$. Would raising the budget by Rs 60 000 be worth it if the extra money cost Rs 80 000 in interest?",
+       "answer": "$\\mu = 5/3$ is the **shadow price** of the budget: each extra thousand rupees of budget raises the optimal profit by about Rs 1 667. Rs 60 000 more ($x_R$ could reach 30, but the unconstrained peak is 25, reached at a budget of 1250) - so only Rs 30 000 is usable: $x_R = 25$, $P = 6125$, a gain of **Rs 25 000** (μ is a local rate, so 60 × 5/3 = 100 overstates it). That is less than Rs 80 000 of interest - **not worth it**.",
+       "points": [
+        {
+         "text": "Shadow price meaning",
+         "marks": 1
+        },
+        {
+         "text": "Gain capped at x_R = 25 (P = 6125)",
+         "marks": 1.5
+        },
+        {
+         "text": "Conclusion",
+         "marks": 0.5
+        }
+       ]
+      }
+     ],
+     "explain": "When the objective is concave in a maximisation, first find the unconstrained peak - if it is infeasible, the budget is active and μ > 0 tells you by how much it binds."
+    },
+    {
+     "id": "q4",
+     "kind": "long",
+     "marks": 25,
+     "lab": "Descent methods · barrier · cross-entropy",
+     "prompt": "Question 4.",
+     "parts": [
+      {
+       "label": "a",
+       "marks": 8,
+       "prompt": "For $f(\\mathbf{x}) = x_1^2 + 5x_2^2$ from $\\mathbf{x}^{(0)} = (5, 1)$: (i) take one steepest-descent step with **exact line search** **[5]**; (ii) take one Newton step and compare **[3]**.",
+       "answer": "**(i)** $\\nabla f = (2x_1, 10x_2) = (10, 10)$, $H = \\mathrm{diag}(2, 10)$, $f(\\mathbf{x}^{(0)}) = 30$. For a quadratic the exact step along $-\\mathbf{g}$ is\n$$\\alpha^* = \\frac{\\mathbf{g}^T\\mathbf{g}}{\\mathbf{g}^TH\\mathbf{g}} = \\frac{200}{200 + 1000} = \\frac16.$$\n$\\mathbf{x}^{(1)} = (5, 1) - \\tfrac16(10, 10) = (3.333, -0.667)$, $f = 11.11 + 2.22 = 13.33$. (The next gradient $(6.67, -6.67)$ is orthogonal to the previous one - the zig-zag of steepest descent.)\n\n**(ii)** $\\mathbf{x}^{(1)} = \\mathbf{x}^{(0)} - H^{-1}\\mathbf{g} = (5, 1) - (5, 1) = (0, 0)$, $f = 0$ - the exact minimum in **one** step, because Newton's quadratic model of a quadratic is exact. Steepest descent needs many steps (condition number 5); Newton costs a Hessian solve per step.",
+       "points": [
+        {
+         "text": "Gradient and Hessian",
+         "marks": 1
+        },
+        {
+         "text": "α* = 1/6 from exact line search",
+         "marks": 2
+        },
+        {
+         "text": "x⁽¹⁾ and f",
+         "marks": 2
+        },
+        {
+         "text": "Newton step to (0,0)",
+         "marks": 2
+        },
+        {
+         "text": "Comparison",
+         "marks": 1
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "marks": 8,
+       "prompt": "Solve $\\min x_1 + x_2$ s.t. $x_1 \\ge 1$, $x_2 \\ge 2$ with the log-barrier method $\\phi_t(\\mathbf{x}) = x_1 + x_2 - \\tfrac1t[\\ln(x_1 - 1) + \\ln(x_2 - 2)]$.\n(i) Find the central path $\\mathbf{x}(t)$. **[4]** (ii) Show the duality gap is $2/t$ and find $t$ for a gap ≤ $10^{-3}$. **[2]** (iii) Contrast with a quadratic penalty. **[2]**",
+       "answer": "**(i)** $\\partial\\phi_t/\\partial x_1 = 1 - \\dfrac{1}{t(x_1 - 1)} = 0 \\Rightarrow x_1 = 1 + \\dfrac1t$; similarly $x_2 = 2 + \\dfrac1t$. ($\\nabla^2\\phi_t \\succ 0$ - a minimum.) As $t \\to \\infty$, $\\mathbf{x}(t) \\to (1, 2)$, $f^* = 3$.\n\n**(ii)** $f(\\mathbf{x}(t)) - f^* = 2/t$ (= $m/t$ with $m = 2$ constraints). $2/t \\le 10^{-3} \\Rightarrow t \\ge 2000$.\n\n**(iii)** The barrier keeps every iterate **strictly feasible** (approaches from inside, needs a feasible start, handles inequalities only). The quadratic penalty approaches from **outside** - iterates are infeasible until $\\rho \\to \\infty$ - but can start anywhere and handles equalities. Both become ill-conditioned as $t$ or $\\rho$ grows.",
+       "points": [
+        {
+         "text": "Derivatives and central path",
+         "marks": 3
+        },
+        {
+         "text": "Limit (1,2), f* = 3",
+         "marks": 1
+        },
+        {
+         "text": "Gap 2/t and t ≥ 2000",
+         "marks": 2
+        },
+        {
+         "text": "Inside vs outside contrast",
+         "marks": 2
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 9,
+       "prompt": "The cross-entropy method **minimises** $f(\\mathbf{x}) = (x_1 - 2)^2 + (x_2 + 1)^2$ with 3 elites. The samples are:\n\n| i | 1 | 2 | 3 | 4 | 5 | 6 |\n|---|---|---|---|---|---|---|\n| $x_1$ | 1 | 3 | 0 | 4 | 2 | 2 |\n| $x_2$ | 0 | −2 | 1 | 0 | −3 | 0 |\n\n(i) Identify the elites. **[2]** (ii) Compute the next mean and covariance. **[6]** (iii) Why might the covariance need a floor? **[1]**",
+       "answer": "**(i)** $f$: 2, 2, 8, 5, 4, 1. Smallest three: **sample 6 (1), samples 1 and 2 (2 each)** → elites (2, 0), (1, 0), (3, −2).\n\n**(ii)** $\\boldsymbol\\mu = \\tfrac13(2 + 1 + 3,\\ 0 + 0 - 2) = (2,\\ -2/3)$.\nDeviations: (0, 2/3), (−1, 2/3), (1, −4/3).\n$$\\Sigma = \\frac13\\sum(\\mathbf{x} - \\boldsymbol\\mu)(\\mathbf{x} - \\boldsymbol\\mu)^T = \\frac13\\begin{bmatrix}0 + 1 + 1 & 0 - \\tfrac23 - \\tfrac43\\\\ \\cdot & \\tfrac49 + \\tfrac49 + \\tfrac{16}9\\end{bmatrix} = \\begin{bmatrix}0.667 & -0.667\\\\ -0.667 & 0.889\\end{bmatrix}.$$\nThe mean has moved toward the true minimiser (2, −1).\n\n**(iii)** With few elites the covariance shrinks fast and can collapse before reaching the optimum (premature convergence) - adding a small $\\epsilon I$ keeps exploring.",
+       "points": [
+        {
+         "text": "f values and elites",
+         "marks": 2
+        },
+        {
+         "text": "Mean",
+         "marks": 2
+        },
+        {
+         "text": "Deviations",
+         "marks": 1
+        },
+        {
+         "text": "Covariance entries",
+         "marks": 3
+        },
+        {
+         "text": "Collapse reason",
+         "marks": 1
+        }
+       ]
+      }
+     ],
+     "explain": "For exact line search on a quadratic, use α = gᵀg / gᵀHg directly - deriving it from d/dα f(x − αg) = 0 also earns the marks."
+    }
+   ]
+  }
+ ]
+}

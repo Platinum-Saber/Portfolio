@@ -1,0 +1,662 @@
+{
+ "title": "Mock paper 2",
+ "minutes": 120,
+ "intro": "**120 minutes · 100 marks.** Same structure as the final paper, with more semaphores, concurrent data structures, patterns and deadlock theory:\n\n| Section | Marks | What |\n|---|---|---|\n| A - MCQ | 50 | 3 scenarios × 5 questions, then 10 theory questions (2 marks each) |\n| B - Code-based | 40 | 8 questions × 5: fill the gaps, arrange the lines, spot the bug |\n| C - Full code | 10 | One complete program, self-marked against a rubric |\n\nFill-the-gap and arrange questions earn partial credit; MCQs and spot-the-line are all or nothing.",
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A - MCQ",
+   "blurb": "Each scenario describes a program and what was observed when it ran; five questions follow it. Questions 16–25 are on the theory. 2 marks each, one answer is correct.",
+   "scenarios": [
+    {
+     "id": "s1",
+     "title": "Scenario 1 · Car-park ramp",
+     "text": "A car park has a single-lane ramp. Cars may use it in one direction at a time (up or down), with at most 4 cars on it at once. The controller uses POSIX semaphores:\n\n```c\nsem_t ramp;          /* 1 : the ramp belongs to one direction             */\nsem_t cap;           /* 4 : places on the ramp                            */\nsem_t mutex_up;      /* 1 : protects n_up                                 */\nsem_t mutex_down;    /* 1 : protects n_down                               */\nint n_up = 0, n_down = 0;\n\nvoid go_up(int id) {\n    sem_wait(&mutex_up);\n    if (++n_up == 1) sem_wait(&ramp);   /* first car up claims the ramp     */\n    sem_post(&mutex_up);\n\n    sem_wait(&cap);  drive_up(id);  sem_post(&cap);\n\n    sem_wait(&mutex_up);\n    if (--n_up == 0) sem_post(&ramp);   /* last car up releases it          */\n    sem_post(&mutex_up);\n}\n/* go_down() is the same with n_down and mutex_down */\n```\n\nAt closing time 5 attendants each count the cars on one floor; nobody may start the next round of counting until all 5 have finished the current round. A colleague builds this barrier from one counter and one semaphore."
+    },
+    {
+     "id": "s2",
+     "title": "Scenario 2 · Inventory service",
+     "text": "An inventory service keeps product ids in a **sorted linked list** shared by many threads (insert, delete, contains), and a shared **stock counter**. Two list versions exist: one global mutex for the whole list (coarse-grained), and one mutex per node with hand-over-hand locking (fine-grained). Three counter versions exist: a mutex around `stock++`, a compare-and-swap retry loop, and `__sync_fetch_and_add`.\n\nBenchmarks on a **2-core** laptop, `gcc -O2`:\n\n| Benchmark (8 threads) | Result |\n|---|---|\n| List, coarse-grained | 1.5 M ops/s |\n| List, fine-grained | 0.09 M ops/s |\n| Counter, mutex | 0.59 s, correct |\n| Counter, CAS loop | 0.40 s, correct |\n| Counter, fetch-and-add | 0.17 s, correct |\n| Counter, no synchronisation | correct total, ~0 s |"
+    },
+    {
+     "id": "s3",
+     "title": "Scenario 3 · Log-processing pipeline",
+     "text": "A log processor runs three stages connected by bounded queues: **read** a record (1 ms), **parse** it (6 ms), **write** the result (1 ms). Each stage runs in its own thread on a 4-core machine. At the end, the reader sends one *poison pill* into the read→parse queue; a parse thread that receives the pill forwards it to the write stage and exits.\n\nA second tool processes 200 independent *reports* whose costs differ by up to 100×. Version P uses a thread pool where each worker grabs the next report index from a shared counter. Version W gives each worker its own double-ended queue and lets idle workers steal from others."
+    }
+   ],
+   "questions": [
+    {
+     "id": "a1",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Semaphores",
+     "prompt": "What does the semaphore `cap` (initial value 4) implement?",
+     "options": [
+      "Mutual exclusion on the ramp",
+      "A barrier for 4 cars",
+      "A multiplex: at most 4 threads can be past `sem_wait(&cap)` at the same time",
+      "Fairness between the two directions"
+     ],
+     "answer": 2,
+     "explain": "A counting semaphore initialised to N admits N threads before the next one blocks.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a2",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Lightswitch",
+     "prompt": "The first car up waits on `ramp` while still holding `mutex_up`. Is that a deadlock risk?",
+     "options": [
+      "No: later up cars simply queue on `mutex_up` behind it, and the down side releases `ramp` without needing `mutex_up`, so no cycle can form",
+      "No, because semaphores cannot deadlock",
+      "Yes: a semaphore must never be waited on while another is held",
+      "Yes: the last car down needs `mutex_up` to post `ramp`"
+     ],
+     "answer": 0,
+     "explain": "This is the lightswitch pattern. Holding a lock while blocking is only dangerous if the thread that would wake you needs that same lock.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a3",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Race conditions",
+     "prompt": "A developer removes the `mutex_up` waits and posts \"for speed\". What can go wrong?",
+     "options": [
+      "Nothing: `++n_up` is atomic",
+      "Only the speed changes: more than 4 cars can now be on the ramp",
+      "Updates of `n_up` race, so two cars can both act as \"first\" (or \"last\"), and `ramp` is taken or released the wrong number of times - opposite traffic on the ramp, or a ramp never released",
+      "The program cannot compile"
+     ],
+     "answer": 2,
+     "explain": "The count and the decision based on it must be one critical section.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a4",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Starvation",
+     "prompt": "At peak time cars keep arriving to go up. What happens to cars waiting to go down, and what is the standard fix?",
+     "options": [
+      "Nothing - semaphores are always fair",
+      "They can wait indefinitely because `n_up` never returns to 0 (starvation); add a turnstile semaphore every car passes on arrival, which a waiting down car holds",
+      "The system deadlocks; reorder the semaphores",
+      "They enter as soon as 4 cars are on the ramp"
+     ],
+     "answer": 1,
+     "explain": "The lightswitch gives the active direction priority, exactly like readers in a reader-preference readers–writers lock.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a5",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Barriers",
+     "prompt": "Why does the colleague's barrier (one counter, one semaphore) fail when used for several rounds?",
+     "options": [
+      "Semaphores cannot block more than 4 threads",
+      "The counter overflows",
+      "A fast attendant can pass, start the next round and arrive at the barrier again before slow ones have left it, taking a token meant for them",
+      "A semaphore can be posted only once"
+     ],
+     "answer": 2,
+     "explain": "A reusable barrier needs two phases (two turnstiles) so nobody re-enters until everyone has left.",
+     "scenario": "s1"
+    },
+    {
+     "id": "a6",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Lock granularity",
+     "prompt": "Why is the fine-grained list about 16 times slower than the coarse-grained one here?",
+     "options": [
+      "Every step of every traversal locks and unlocks a node, and all operations start at the head lock, so threads form a convoy - with only 2 cores there is no parallelism to win back the overhead",
+      "Fine-grained locking always deadlocks under load",
+      "The coarse list skips locking for `contains`",
+      "Fine-grained lists cannot be compiled with `-O2`"
+     ],
+     "answer": 0,
+     "explain": "Fine-grained locking pays off with many cores, long lists and operations spread over the structure.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a7",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Hand-over-hand",
+     "prompt": "In the fine-grained list a thread unlocks `pred` before locking `curr`. What can go wrong?",
+     "options": [
+      "The thread deadlocks with itself",
+      "The list becomes unsorted only if keys are equal",
+      "In the gap another thread can delete `curr` or insert between `pred` and `curr`, so the thread follows a freed pointer or links into a node no longer in the list",
+      "Nothing, it is only slower"
+     ],
+     "answer": 2,
+     "explain": "Hold the previous lock until the next one is acquired; that keeps the pair stable.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a8",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Progress conditions",
+     "prompt": "Which classification of the three correct counters is right?",
+     "options": [
+      "Mutex - blocking; CAS loop - wait-free; fetch-and-add - lock-free",
+      "Mutex - lock-free; CAS loop - wait-free; fetch-and-add - blocking",
+      "All three are wait-free",
+      "Mutex - blocking; CAS loop - lock-free; fetch-and-add - wait-free"
+     ],
+     "answer": 3,
+     "explain": "A delayed lock holder blocks everyone; a CAS loop always lets someone succeed but may starve one thread; fetch-and-add finishes in bounded steps.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a9",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Atomic operations",
+     "prompt": "Why is fetch-and-add (0.17 s) faster than the CAS loop (0.40 s) under contention?",
+     "options": [
+      "CAS takes a hidden mutex",
+      "Fetch-and-add is executed by the compiler at build time",
+      "CAS cannot be used on `long` variables",
+      "Fetch-and-add always succeeds in one atomic instruction; most CAS attempts fail and must re-read and retry, each costing another cache-line transfer"
+     ],
+     "answer": 3,
+     "explain": "Both are lock-free primitives, but failed CAS attempts are wasted work.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a10",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Compiler effects",
+     "prompt": "The unsynchronised counter gives the correct total at `-O2`. What should you conclude?",
+     "options": [
+      "The counter is correct at `-O2` and needs no synchronisation",
+      "The race still exists; the compiler folded the loop into one addition per thread, shrinking the window so collisions are rare",
+      "`-O2` inserts locks automatically",
+      "Two cores cannot produce a race"
+     ],
+     "answer": 1,
+     "explain": "A test passing is not proof. Rebuild at `-O0` or make the variable `volatile` and the lost updates return.",
+     "scenario": "s2"
+    },
+    {
+     "id": "a11",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Pipelines",
+     "prompt": "With one thread per stage, what is the steady-state throughput?",
+     "options": [
+      "About 167 records per second - one per 6 ms, set by the parse stage",
+      "About 500 records per second",
+      "About 125 records per second (one per 8 ms)",
+      "About 1000 records per second"
+     ],
+     "answer": 0,
+     "explain": "A pipeline runs at the pace of its slowest stage; latency per record is still 8 ms.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a12",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Pipelines",
+     "prompt": "Two more parse threads are added (three in total). What throughput should you expect?",
+     "options": [
+      "About 500 records per second - parsing now delivers one record every 2 ms, and the 1 ms stages are not yet the bottleneck",
+      "Still about 167 per second",
+      "About 1000 per second",
+      "About 3000 per second"
+     ],
+     "answer": 0,
+     "explain": "Throughput = 1 / max(stage time / workers) = 1 / max(1, 6/3, 1) ms.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a13",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Termination",
+     "prompt": "With three parse threads the program now hangs at exit. Why?",
+     "options": [
+      "The write stage exits too early",
+      "Poison pills cannot pass through bounded queues",
+      "The bounded queues are too small",
+      "Only one poison pill is sent, so one parse thread exits and the other two block for ever on the empty queue"
+     ],
+     "answer": 3,
+     "explain": "Send one pill per consumer of a queue (and have the write stage wait for one pill per parse thread).",
+     "scenario": "s3"
+    },
+    {
+     "id": "a14",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Load balancing",
+     "prompt": "Why does version P balance the uneven reports well compared with giving each worker a fixed block of 200/n reports?",
+     "options": [
+      "Version P sorts the reports by cost first",
+      "Version P runs reports in parallel inside each worker",
+      "Workers take the next report when they finish one, so a worker that drew an expensive report simply takes fewer; with fixed blocks, whoever owns several expensive reports finishes last",
+      "Fixed blocks have a race condition"
+     ],
+     "answer": 2,
+     "explain": "Dynamic task assignment trades one tiny critical section (or atomic increment) per task for balance.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a15",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Work stealing",
+     "prompt": "In version W a worker pops from the back of its own deque but steals from the front of another's. Why?",
+     "options": [
+      "It keeps the deque sorted",
+      "The front of a deque is always empty",
+      "The owner gets its newest, cache-hot task; a thief takes the oldest (usually largest) task from the other end, so owner and thief rarely contend",
+      "Stealing from the back is impossible with a mutex"
+     ],
+     "answer": 2,
+     "explain": "LIFO locally for locality, FIFO for steals for big chunks and low contention.",
+     "scenario": "s3"
+    },
+    {
+     "id": "a16",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Deadlock avoidance",
+     "prompt": "In the Banker's algorithm, a request passes Request ≤ Need and Request ≤ Available, but the pretend-grant state is unsafe. What happens?",
+     "options": [
+      "The request is not granted; the process waits and the state is rolled back",
+      "The process is terminated",
+      "It is granted, because unsafe is not deadlocked",
+      "The OS pre-empts resources from another process"
+     ],
+     "answer": 0,
+     "explain": "Unsafe means deadlock can no longer be ruled out, so the OS keeps the system in a safe state."
+    },
+    {
+     "id": "a17",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Deadlock detection",
+     "prompt": "A resource-allocation graph with only single-instance resources contains a cycle. What can you conclude?",
+     "options": [
+      "The system is in a safe state",
+      "The processes in the cycle are deadlocked",
+      "Deadlock is possible but not certain",
+      "There is no deadlock unless the graph is also disconnected"
+     ],
+     "answer": 1,
+     "explain": "With one instance per resource a cycle is necessary and sufficient. With several instances it is only necessary."
+    },
+    {
+     "id": "a18",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Locks for n threads",
+     "prompt": "The Filter lock generalises Peterson's algorithm to n threads. Which property does it lose?",
+     "options": [
+      "First-come-first-served fairness (bounded waiting)",
+      "Deadlock freedom",
+      "Mutual exclusion",
+      "Starvation freedom"
+     ],
+     "answer": 0,
+     "explain": "A thread can be overtaken many times while climbing the levels. The Bakery lock restores FCFS with tickets."
+    },
+    {
+     "id": "a19",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "GPUs",
+     "prompt": "In CUDA, which statement about `__syncthreads()` is correct?",
+     "options": [
+      "It copies data from the host to the device",
+      "It is a barrier for the threads of one block only; there is no barrier across blocks inside a kernel",
+      "It synchronises every thread in the grid",
+      "It makes global-memory writes atomic"
+     ],
+     "answer": 1,
+     "explain": "Blocks may not even be resident at the same time; grid-wide synchronisation needs a kernel boundary."
+    },
+    {
+     "id": "a20",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "MPI",
+     "prompt": "Two ranks each call `MPI_Send` of a large message to the other and then `MPI_Recv`. What can happen?",
+     "options": [
+      "MPI reports a compile-time error",
+      "It always works because MPI buffers every message",
+      "The messages are delivered out of order",
+      "Deadlock: each send may block until the matching receive is posted, which never happens"
+     ],
+     "answer": 3,
+     "explain": "Small messages are often buffered, so the bug only appears for large ones. Order the calls, or use `MPI_Sendrecv` / non-blocking calls."
+    },
+    {
+     "id": "a21",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "MPI collectives",
+     "prompt": "Which collective leaves the combined result (for example a sum) on every rank?",
+     "options": [
+      "`MPI_Allreduce`",
+      "`MPI_Scatter`",
+      "`MPI_Bcast`",
+      "`MPI_Reduce`"
+     ],
+     "answer": 0,
+     "explain": "`MPI_Reduce` leaves it on the root only; `Allreduce` = reduce + broadcast."
+    },
+    {
+     "id": "a22",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Granularity",
+     "prompt": "A recursive sum spawns a new thread for every subtree with more than 100 nodes. It runs 100× slower than the serial version. Why?",
+     "options": [
+      "The tree is unbalanced, so threads deadlock",
+      "Creating and joining a thread costs microseconds while summing 100 nodes costs nanoseconds, so tens of thousands of threads are pure overhead",
+      "Recursion cannot be parallelised",
+      "The sum overflows"
+     ],
+     "answer": 1,
+     "explain": "Each task must do much more work than it costs to create; raise the threshold to a few large tasks per core."
+    },
+    {
+     "id": "a23",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Scaling",
+     "prompt": "Which statement matches Gustafson's view of speedup?",
+     "options": [
+      "Adding processors always reduces efficiency to zero",
+      "Speedup can never exceed 1/(1 − p) for any problem size",
+      "Speedup is limited by the span",
+      "If the problem size grows with the number of processors, the serial fraction shrinks in relative terms and speedup can grow almost linearly"
+     ],
+     "answer": 3,
+     "explain": "Amdahl fixes the problem size (strong scaling); Gustafson grows it (weak scaling): $S = (1 - p) + pn$."
+    },
+    {
+     "id": "a24",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "MapReduce",
+     "prompt": "Why can a combiner not simply apply the reduce function for computing an average?",
+     "options": [
+      "Averages cannot be computed with MapReduce",
+      "The average of partial averages is not the overall average; emit (sum, count) pairs and divide in the reducer",
+      "Combiners only work on strings",
+      "Combiners run on the reducer machine"
+     ],
+     "answer": 1,
+     "explain": "A combiner is safe for associative and commutative operations such as sum, max, min and count."
+    },
+    {
+     "id": "a25",
+     "kind": "mcq",
+     "marks": 2,
+     "lab": "Lock-free structures",
+     "prompt": "In a lock-free stack, a thread reads top = A, is delayed, and meanwhile others pop A, pop B and push A back. Its CAS(top, A, next) succeeds and corrupts the stack. What is this called?",
+     "options": [
+      "Priority inversion",
+      "False sharing",
+      "A convoy",
+      "The ABA problem"
+     ],
+     "answer": 3,
+     "explain": "The pointer value matches but the structure changed. Fix with a version counter beside the pointer, hazard pointers, or safe memory reclamation."
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B - Code-based",
+   "blurb": "8 questions, 5 marks each. Choose the missing lines, drag the lines into order (or use the arrows), or click the faulty line(s).",
+   "questions": [
+    {
+     "id": "b1",
+     "kind": "order",
+     "marks": 5,
+     "lab": "Semaphores",
+     "prompt": "Arrange the semaphore-based **producer** of a bounded buffer (`spaces` = N, `items` = 0, `mutex` = 1).",
+     "lines": [
+      "void put(int x) {",
+      "    sem_wait(&spaces);",
+      "    sem_wait(&mutex);",
+      "    buf[tail] = x;",
+      "    tail = (tail + 1) % N;",
+      "    sem_post(&mutex);",
+      "    sem_post(&items);",
+      "}"
+     ],
+     "explain": "Reserve a slot first, then lock the buffer, write, unlock, and announce an item. Swapping the two waits deadlocks on a full buffer."
+    },
+    {
+     "id": "b2",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "Semaphores",
+     "prompt": "Complete the bridge **lightswitch** for direction `d` (first car locks the bridge, last car releases it).",
+     "code": "void enter(int d) {\n    sem_wait(&turnstile);\n    sem_wait(&dir_mutex[d]);\n    if (⟦1⟧) sem_wait(&bridge);\n    sem_post(&dir_mutex[d]);\n    sem_post(&turnstile);\n    sem_wait(⟦2⟧);           /* at most 3 on the bridge */\n}\nvoid leave(int d) {\n    sem_post(&capacity);\n    sem_wait(&dir_mutex[d]);\n    if (⟦3⟧) sem_post(&bridge);\n    sem_post(&dir_mutex[d]);\n}",
+     "blanks": [
+      {
+       "options": [
+        "count[d] == 0",
+        "++count[d] == 1",
+        "count[d]++ == 1",
+        "--count[d] == 0"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "&bridge",
+        "&turnstile",
+        "&capacity",
+        "&dir_mutex[d]"
+       ],
+       "answer": 2
+      },
+      {
+       "options": [
+        "++count[d] == 1",
+        "count[d] == 1",
+        "--count[d] == 0",
+        "count[d]-- == 1"
+       ],
+       "answer": 2
+      }
+     ],
+     "explain": "The first car in (count becomes 1) claims the bridge; the last out (count becomes 0) releases it. The capacity semaphore (init 3) is the multiplex."
+    },
+    {
+     "id": "b3",
+     "kind": "spot",
+     "marks": 5,
+     "lab": "Readers–writers",
+     "prompt": "This reader-preference `start_read`/`end_read` pair has bugs. Click every faulty line.",
+     "code": "void start_read(void) {\n    pthread_mutex_lock(&mutex);\n    if (writer_active)\n        pthread_cond_wait(&can_read, &mutex);\n    reader_count++;\n    pthread_mutex_unlock(&mutex);\n}\nvoid end_read(void) {\n    pthread_mutex_lock(&mutex);\n    reader_count--;\n    if (reader_count == 1)\n        pthread_cond_signal(&can_write);\n    pthread_mutex_unlock(&mutex);\n}",
+     "answer": [
+      3,
+      11
+     ],
+     "explain": "Line 3 must be `while` (spurious wakeups / barging). Line 11 must test `reader_count == 0` - the *last* reader out wakes a writer."
+    },
+    {
+     "id": "b4",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "OpenMP tasks",
+     "prompt": "Complete the OpenMP task-parallel merge sort launch and recursion.",
+     "code": "void msort_par(int *a, int *t, int l, int r, int depth) {\n    if (l >= r) return;\n    if (depth > 10) { merge_sort(a, t, l, r); return; }\n    int m = (l + r) / 2;\n    ⟦1⟧\n    msort_par(a, t, l, m, depth + 1);\n    #pragma omp task\n    msort_par(a, t, m + 1, r, depth + 1);\n    ⟦2⟧\n    merge(a, t, l, m, r);\n}\n/* caller */\n#pragma omp parallel\n{\n    ⟦3⟧\n    msort_par(arr, temp, 0, SIZE - 1, 0);\n}",
+     "blanks": [
+      {
+       "options": [
+        "#pragma omp for",
+        "#pragma omp task",
+        "#pragma omp critical",
+        "#pragma omp barrier"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "#pragma omp barrier",
+        "#pragma omp flush",
+        "#pragma omp taskwait",
+        "#pragma omp single"
+       ],
+       "answer": 2
+      },
+      {
+       "options": [
+        "#pragma omp single",
+        "#pragma omp master nowait",
+        "#pragma omp task",
+        "#pragma omp for"
+       ],
+       "answer": 0
+      }
+     ],
+     "explain": "Both halves become tasks; `taskwait` waits for the two children before merging (a `barrier` inside a task is illegal). `single` makes one thread start the recursion."
+    },
+    {
+     "id": "b5",
+     "kind": "spot",
+     "marks": 5,
+     "lab": "Work stealing",
+     "prompt": "Work-stealing deque: the owner pops from the back, thieves steal from the front. Click the faulty line.",
+     "code": "int deque_pop(deque_t *d) {\n    pthread_mutex_lock(&d->lock);\n    int t = -1;\n    if (d->back > d->front) t = d->items[--d->back];\n    pthread_mutex_unlock(&d->lock);\n    return t;\n}\nint deque_steal(deque_t *d) {\n    pthread_mutex_lock(&d->lock);\n    int t = -1;\n    if (d->back > d->front) t = d->items[--d->back];\n    pthread_mutex_unlock(&d->lock);\n    return t;\n}",
+     "answer": [
+      11
+     ],
+     "explain": "A thief must take from the front: `t = d->items[d->front++];`. Line 11 makes thieves pop the owner’s end, so they contend with the owner and grab small, cache-hot tasks."
+    },
+    {
+     "id": "b6",
+     "kind": "order",
+     "marks": 5,
+     "lab": "Pipelines",
+     "prompt": "Arrange the middle-stage thread of a three-stage pipeline (dequeue, process, forward; on the poison pill, pass it on to the last stage and stop).",
+     "lines": [
+      "void *stage2_thread(void *arg) {",
+      "    for (;;) {",
+      "        int item = queue_deq(&q12);",
+      "        if (item == POISON) { queue_enq(&q23, POISON); break; }",
+      "        int r = stage2_process(item);",
+      "        queue_enq(&q23, r);",
+      "    }",
+      "    return NULL; }"
+     ],
+     "explain": "Stage 1 sends one pill per stage-2 worker; each worker forwards its pill to stage 3 and exits, and stage 3 stops after it has counted one pill per stage-2 worker. Processing before checking for the pill would push garbage downstream."
+    },
+    {
+     "id": "b7",
+     "kind": "fill",
+     "marks": 5,
+     "lab": "Atomic operations",
+     "prompt": "Complete the wait-free and lock-free increments.",
+     "code": "void inc_faa(void) {\n    ⟦1⟧;\n}\nvoid inc_cas(void) {\n    long old;\n    do {\n        old = ⟦2⟧;\n    } while (!__sync_bool_compare_and_swap(&counter, ⟦3⟧, old + 1));\n}",
+     "blanks": [
+      {
+       "options": [
+        "counter++",
+        "__sync_fetch_and_add(&counter, 1)",
+        "__sync_bool_compare_and_swap(&counter, counter, counter + 1)",
+        "pthread_mutex_lock(&m)"
+       ],
+       "answer": 1
+      },
+      {
+       "options": [
+        "counter",
+        "counter + 1",
+        "old + 1",
+        "0"
+       ],
+       "answer": 0
+      },
+      {
+       "options": [
+        "counter",
+        "old",
+        "old + 1",
+        "&old"
+       ],
+       "answer": 1
+      }
+     ],
+     "explain": "FAA is a single always-succeeding atomic. In the CAS loop, read `counter` into `old`, then swap only if `counter` still equals `old`."
+    },
+    {
+     "id": "b8",
+     "kind": "spot",
+     "marks": 5,
+     "lab": "OpenMP",
+     "prompt": "This OpenMP Monte Carlo π code gives a wrong (and varying) answer with 4 threads. Click the line that causes it.",
+     "code": "int count = 0;\n#pragma omp parallel\n{\n    unsigned int seed = 42 + omp_get_thread_num();\n    #pragma omp for\n    for (int i = 0; i < NUM_DARTS; i++) {\n        double x = (double)rand_r(&seed) / RAND_MAX;\n        double y = (double)rand_r(&seed) / RAND_MAX;\n        if (x * x + y * y <= 1.0) count++;\n    }\n}",
+     "answer": [
+      9
+     ],
+     "explain": "`count` is shared and `count++` races. Add `reduction(+:count)` to the pragma, or `#pragma omp atomic` before the increment."
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C - Full code",
+   "blurb": "One complete program, 10 marks. After you submit, the model solution and a rubric appear - tick what you achieved.",
+   "questions": [
+    {
+     "id": "c1",
+     "kind": "code",
+     "marks": 10,
+     "lab": "Semaphores",
+     "prompt": "Write a complete C program that uses **POSIX semaphores only** (no condition variables) for a bounded buffer of size 10 shared by **P producers and C consumers** (P, C and K from `argv`).\n\n- Producer `p` puts `p*1000 + j` for `j = 0 … K−1`.\n- Each consumer takes items until it receives a sentinel `-1`; `main` must arrange exactly **C** sentinels after all producers finish.\n- Count the items consumed (protect the counter) and print `produced=… consumed=… MATCH` (or `MISMATCH`).",
+     "starter": "#include <stdio.h>\n#include <stdlib.h>\n#include <pthread.h>\n#include <semaphore.h>\n\n#define N 10\n\n/* buffer, indices, semaphores, counters */\n\nvoid put(int x) {\n}\n\nint get(void) {\n}\n\nvoid *producer(void *arg) {\n}\n\nvoid *consumer(void *arg) {\n}\n\nint main(int argc, char *argv[]) {\n}\n",
+     "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <stdint.h>\n#include <pthread.h>\n#include <semaphore.h>\n\n#define N 10\n\nint buf[N];\nint head = 0, tail = 0;\nint P, C, K;\nlong consumed = 0;\nsem_t spaces, items, mutex, count_lock;\n\nvoid put(int x) {\n    sem_wait(&spaces);             /* counting semaphore first ... */\n    sem_wait(&mutex);              /* ... then the buffer lock      */\n    buf[tail] = x;\n    tail = (tail + 1) % N;\n    sem_post(&mutex);\n    sem_post(&items);\n}\n\nint get(void) {\n    sem_wait(&items);\n    sem_wait(&mutex);\n    int x = buf[head];\n    head = (head + 1) % N;\n    sem_post(&mutex);\n    sem_post(&spaces);\n    return x;\n}\n\nvoid *producer(void *arg) {\n    int p = (int)(intptr_t)arg;\n    for (int j = 0; j < K; j++) put(p * 1000 + j);\n    return NULL;\n}\n\nvoid *consumer(void *arg) {\n    for (;;) {\n        int x = get();\n        if (x == -1) break;        /* sentinel: this consumer is done */\n        sem_wait(&count_lock);\n        consumed++;\n        sem_post(&count_lock);\n    }\n    return NULL;\n}\n\nint main(int argc, char *argv[]) {\n    if (argc != 4) { fprintf(stderr, \"Usage: %s P C K\\n\", argv[0]); return 1; }\n    P = atoi(argv[1]); C = atoi(argv[2]); K = atoi(argv[3]);\n    sem_init(&spaces, 0, N);\n    sem_init(&items, 0, 0);\n    sem_init(&mutex, 0, 1);\n    sem_init(&count_lock, 0, 1);\n\n    pthread_t *pt = malloc(P * sizeof *pt), *ct = malloc(C * sizeof *ct);\n    for (int i = 0; i < C; i++) pthread_create(&ct[i], NULL, consumer, NULL);\n    for (int i = 0; i < P; i++) pthread_create(&pt[i], NULL, producer, (void *)(intptr_t)i);\n\n    for (int i = 0; i < P; i++) pthread_join(pt[i], NULL);\n    for (int i = 0; i < C; i++) put(-1);          /* one sentinel per consumer */\n    for (int i = 0; i < C; i++) pthread_join(ct[i], NULL);\n\n    long produced = (long)P * K;\n    printf(\"produced=%ld consumed=%ld %s\\n\", produced, consumed,\n           produced == consumed ? \"MATCH\" : \"MISMATCH\");\n\n    sem_destroy(&spaces); sem_destroy(&items); sem_destroy(&mutex); sem_destroy(&count_lock);\n    free(pt); free(ct);\n    return 0;\n}\n",
+     "rubric": [
+      {
+       "text": "Semaphores initialised correctly: `spaces` = N, `items` = 0, `mutex` = 1",
+       "marks": 2
+      },
+      {
+       "text": "`put`/`get` wait on the counting semaphore **before** the mutex, and post the opposite counter after unlocking",
+       "marks": 2
+      },
+      {
+       "text": "Circular indices updated inside the mutex",
+       "marks": 1
+      },
+      {
+       "text": "Producers generate `p*1000 + j`; ids passed safely (by value or a per-thread slot)",
+       "marks": 1
+      },
+      {
+       "text": "Exactly C sentinels, put only after all producers are joined; every consumer stops on one",
+       "marks": 2
+      },
+      {
+       "text": "Consumed count protected (semaphore/mutex or atomic) and compared with P × K",
+       "marks": 1
+      },
+      {
+       "text": "All threads created and joined; semaphores destroyed",
+       "marks": 1
+      }
+     ],
+     "explain": "Tick each rubric item your program fully satisfies. The classic mistakes: waiting on `mutex` before `spaces` (deadlock on a full buffer), one sentinel for several consumers (hang at the end), or passing `&i` as the producer id."
+    }
+   ]
+  }
+ ]
+}

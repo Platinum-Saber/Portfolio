@@ -14,6 +14,7 @@ Everything except this file lives in [`docs/`](./docs).
 | [`docs/DESIGN-LANGUAGE.md`](./docs/DESIGN-LANGUAGE.md) | The console metaphor and the rules every surface follows |
 | [`docs/PHASE-5-SUPABASE.md`](./docs/PHASE-5-SUPABASE.md) | Contact-form setup runbook |
 | [`docs/DEPLOY-CLOUDFLARE.md`](./docs/DEPLOY-CLOUDFLARE.md) | Hosting on Cloudflare Workers - config, dashboard settings, secrets |
+| [`docs/NOTES.md`](./docs/NOTES.md) | Members-only study guides (`/notes/cse`) - sign-in, gate, adding a guide |
 
 ## Stack
 
